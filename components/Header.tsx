@@ -8,6 +8,7 @@ import { useUserStore } from "@/store/user";
 import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 import { useProfile } from "@/hooks/profile";
+import { usePathname } from "next/navigation";
 
 interface HeaderProps {
   color?: string;
@@ -17,13 +18,21 @@ export default function Header({ color }: HeaderProps) {
   const { user } = useUserStore();
   const { data: profile } = useProfile();
   const [isOpen, setIsOpen] = useState(false);
+  const pathname = usePathname();
 
-  const linkClasses = (isBtn?: boolean) =>
+  const linkClasses = (isActive?: boolean) =>
     `${
       color === "black"
         ? "text-black hover:text-black/60"
         : "text-white hover:text-white/80"
-    } p-2 px-4 rounded-md cursor-pointer ${isBtn ? "" : ""}`;
+    } relative py-2 rounded-md cursor-pointer transition-colors duration-200 after:absolute after:left-0 after:bottom-0 after:h-0.5 after:w-full after:origin-left after:scale-x-0 after:bg-current after:transition-transform after:duration-300 hover:after:scale-x-100 data-[active=true]:after:scale-x-100`;
+
+  const linkClassesPlain = () =>
+    `${
+      color === "black"
+        ? "text-black hover:text-black/60"
+        : "text-white hover:text-white/80"
+    } px-4 py-2 rounded-md cursor-pointer transition-colors duration-200`;
 
   const { toast } = useToast();
 
@@ -54,22 +63,38 @@ export default function Header({ color }: HeaderProps) {
       </Link>
 
       {/* Desktop Menu */}
-      <div className="hidden md:flex items-center space-x-6">
-        <Link href={"/listing"} className={linkClasses()}>
+      <div className="hidden md:flex items-center space-x-10">
+        <Link
+          href={"/listing"}
+          className={linkClasses(pathname.startsWith("/listing"))}
+          data-active={pathname.startsWith("/listing")}
+        >
           All-listing
         </Link>
-        <Link href={"/auction"} className={linkClasses()}>
+        <Link
+          href={"/auction"}
+          className={linkClasses(pathname.startsWith("/auction"))}
+          data-active={pathname.startsWith("/auction")}
+        >
           Auctions
         </Link>
-        <Link href={"/favorites"} className={linkClasses()}>
+        <Link
+          href={"/favorites"}
+          className={linkClasses(pathname.startsWith("/favorites"))}
+          data-active={pathname.startsWith("/favorites")}
+        >
           Favourites
         </Link>
-        <Link href={"/mylistings"} className={linkClasses()}>
+        <Link
+          href={"/mylistings"}
+          className={linkClasses(pathname.startsWith("/mylistings"))}
+          data-active={pathname.startsWith("/mylistings")}
+        >
           My Ads
         </Link>
         <Link
           href={user.email ? "profile" : "/signin"}
-          className={linkClasses()}
+          className={linkClassesPlain()}
         >
           {user.email || profile?.first_name ? (
             <span
@@ -91,7 +116,7 @@ export default function Header({ color }: HeaderProps) {
             color === "black"
               ? " bg-zinc-800 hover:bg-zinc-900"
               : " bg-white/10 hover:bg-white/20"
-          } p-2 px-4 rounded-md cursor-pointer`}
+          } px-4 py-2 rounded-md cursor-pointer transition-colors duration-200`}
           onClick={(e) => {
             if (!user.email) {
               e.preventDefault();

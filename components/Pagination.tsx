@@ -37,7 +37,7 @@ export default function Pagination({
 
   return (
     <div
-      className="mx-auto flex items-center gap-3 rounded-full border border-gray-200 bg-white px-6 py-3 shadow-sm"
+      className="mx-auto flex items-center gap-3 rounded-full border border-gray-200 bg-white px-6 py-3"
       aria-label="Pagination"
     >
       <button
