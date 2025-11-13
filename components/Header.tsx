@@ -65,11 +65,13 @@ export default function Header({ color }: HeaderProps) {
       {/* Desktop Menu */}
       <div className="hidden md:flex items-center space-x-10">
         <Link
-          href={"/listing"}
-          className={linkClasses(pathname.startsWith("/listing"))}
-          data-active={pathname.startsWith("/listing")}
+          href={"/"}
+          className={linkClasses(
+            pathname === "/" || pathname.startsWith("/listing")
+          )}
+          data-active={pathname === "/" || pathname.startsWith("/listing")}
         >
-          All-listing
+          All inventory
         </Link>
         <Link
           href={"/auction"}
@@ -176,11 +178,11 @@ export default function Header({ color }: HeaderProps) {
               </button>
 
               <Link
-                href={"/listing"}
+                href={"/"}
                 onClick={() => setIsOpen(false)}
                 className="text-gray-800 hover:text-gray-500"
               >
-                All-listing
+                Home
               </Link>
               <Link
                 href={"/auction"}

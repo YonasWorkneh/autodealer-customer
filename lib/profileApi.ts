@@ -17,7 +17,7 @@ export const getProfile = async () => {
     const profile: UserProfile = await res.json();
     return profile;
   } catch (err: any) {
-    console.error(err.message);
+    // console.error(err.message);
     throw err;
   }
 };
@@ -43,9 +43,9 @@ export const upgradeProfile = async (obj: any) => {
       body: JSON.stringify(data),
     });
     if (!res.ok) throw new Error("Something went wrong");
-    console.log(res);
+    // console.log(res);
     const upgraded = await res.json();
-    console.log("upgraded", upgraded);
+    // console.log("upgraded", upgraded);
     return upgraded;
   } catch (err: any) {
     // console.error(err.message);
