@@ -1,67 +1,324 @@
 "use client";
 
-import { Auction } from "@/app/types/auction";
 import Header from "@/components/Header";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ArrowLeft, RefreshCw } from "lucide-react";
 import Image from "next/image";
-import { useParams } from "next/navigation";
-import { useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { useState, useMemo, useEffect } from "react";
+import { useCar } from "@/hooks/cars";
+import type { FetchedCar } from "@/app/types/Car";
 
-const mockAuctions: Auction[] = [
-  {
-    id: 1,
-    title: "2013 Subaru Forester Premium Plus",
-    location: "Subaru Champlin, Othoberg, HI 78276",
-    auctionNumber: "#20199884",
-    details: "11 475 Miles • White • AWD • 4-Cylinder Turbo",
-    timeLeft: "10d 12hrs",
-    endTime: "Sunday, 9:38PM",
-    activeBids: 18,
-    currentBid: "$14,000",
-    images: [
-      "/bmw-front.jpeg",
-      "/bmw-back.jpg",
-      "/bmw-side.jpg",
-      "/bmw-side2.jpg",
-    ],
-    brand: "S",
-    brandColor: "bg-blue-600",
-  },
-  {
-    id: 2,
-    title: "2018 BMW 330i xDrive",
-    location: "BMW Manhattan, New York, NY 10019",
-    auctionNumber: "#20199885",
-    details: "45 230 Miles • Black • AWD • 4-Cylinder Turbo",
-    timeLeft: "2d 8hrs",
-    endTime: "Friday, 3:15PM",
-    activeBids: 24,
-    currentBid: "$18,500",
-    images: [
-      "/bmw-front.jpeg",
-      "/bmw-back.jpg",
-      "/bmw-side.jpg",
-      "/bmw-side2.jpg",
-    ],
-    brand: "B",
-    brandColor: "bg-gray-800",
-  },
-];
+// Utility function to calculate time remaining
+const calculateTimeLeft = (endDate: string | null): string => {
+  if (!endDate) return "N/A";
+  const now = new Date();
+  const end = new Date(endDate);
+  const diff = end.getTime() - now.getTime();
+
+  if (diff <= 0) return "Ended";
+
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+
+  if (days > 0) {
+    return `${days}d ${hours}hrs`;
+  }
+  return `${hours}hrs`;
+};
+
+// Utility function to format end time
+const formatEndTime = (endDate: string | null): string => {
+  if (!endDate) return "N/A";
+  const end = new Date(endDate);
+  const days = [
+    "Sunday",
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+  ];
+  const dayName = days[end.getDay()];
+  const hours = end.getHours();
+  const minutes = end.getMinutes();
+  const ampm = hours >= 12 ? "PM" : "AM";
+  const displayHours = hours % 12 || 12;
+  const displayMinutes = minutes.toString().padStart(2, "0");
+  return `${dayName}, ${displayHours}:${displayMinutes}${ampm}`;
+};
+
+// Utility function to get highest bid
+const getHighestBid = (bids: any[]): number => {
+  if (!bids || bids.length === 0) return 0;
+  return Math.max(
+    ...bids.map((bid) => parseFloat(bid.amount || bid.price || "0"))
+  );
+};
+
+// Utility function to format car details
+const formatCarDetails = (car: FetchedCar): string => {
+  const parts = [];
+  if (car.mileage) parts.push(`${car.mileage.toLocaleString()} Miles`);
+  if (car.exterior_color) parts.push(car.exterior_color);
+  if (car.drivetrain) parts.push(car.drivetrain.toUpperCase());
+  if (car.engine) parts.push(car.engine);
+  return parts.join(" • ");
+};
 
 const AuctionDetailView = () => {
   const params = useParams();
-  const id = params.id || "";
-  const auction = mockAuctions.find((auction) => auction.id == +id);
+  const router = useRouter();
+  const id = params.id as string;
+  const { data: car, isLoading, error, refetch, isRefetching } = useCar(id);
 
-  const [mainImage, setMainImage] = useState(
-    auction?.images ? auction.images[0] : ""
-  );
+  // Transform car data to auction display format
+  const auction = useMemo(() => {
+    if (!car) return null;
 
-  if (!auction) return null;
+    // Check if car is an auction (case-insensitive)
+    const saleType = car.sale_type?.toLowerCase();
+    if (saleType !== "auction") return null;
+
+    const highestBid = getHighestBid(car.bids || []);
+    const currentBid = highestBid > 0 ? highestBid : parseFloat(car.price);
+
+    // Sort images so featured image comes first
+    const sortedImages = car.images
+      ? [...car.images].sort((a, b) => {
+          if (a.is_featured && !b.is_featured) return -1;
+          if (!a.is_featured && b.is_featured) return 1;
+          return 0;
+        })
+      : [];
+
+    return {
+      id: car.id,
+      title: `${car.year} ${car.make} ${car.model}${
+        car.trim ? ` ${car.trim}` : ""
+      }`,
+      location: "Location TBD", // You may want to add location to the car data
+      auctionNumber: `#${car.id.toString().padStart(8, "0")}`,
+      details: formatCarDetails(car),
+      timeLeft: calculateTimeLeft(car.auction_end),
+      endTime: formatEndTime(car.auction_end),
+      activeBids: car.bids?.length || 0,
+      currentBid: `$${currentBid.toLocaleString(undefined, {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+      })}`,
+      currentBidValue: currentBid,
+      images:
+        sortedImages.length > 0
+          ? sortedImages.map((img) => img.image_url)
+          : ["/placeholder.svg"],
+      car: car,
+    };
+  }, [car]);
+
+  const [mainImage, setMainImage] = useState("/placeholder.svg");
+
+  // Update main image when auction data loads
+  useEffect(() => {
+    if (auction?.images && auction.images.length > 0) {
+      setMainImage(auction.images[0]);
+    }
+  }, [auction]);
+
+  useEffect(() => {
+    if (error) {
+      console.log(error);
+    }
+  }, [error]);
+
+  if (isLoading) {
+    return (
+      <div className="bg-white min-h-screen">
+        <Header color="black" />
+        <div className="px-4 sm:px-6 md:px-20 lg:px-40 py-8 sm:py-10">
+          {/* Back Button Skeleton */}
+          <div className="mb-6 flex items-center gap-2">
+            <Skeleton className="h-4 w-4 rounded" />
+            <Skeleton className="h-6 w-32" />
+          </div>
+
+          <div className="flex flex-col lg:flex-row gap-8">
+            {/* Left Column - Images Skeleton */}
+            <div className="flex-1 space-y-4">
+              <Skeleton className="w-full aspect-[4/3] rounded-lg" />
+              {/* Thumbnail Gallery Skeleton */}
+              <div className="flex gap-2 overflow-x-auto pb-2">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <Skeleton
+                    key={i}
+                    className="w-20 h-20 sm:w-24 sm:h-24 rounded-lg flex-shrink-0"
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* Right Column - Details Skeleton */}
+            <div className="flex-1 space-y-6">
+              {/* Title Skeleton */}
+              <div className="space-y-2">
+                <Skeleton className="h-8 w-3/4" />
+                <Skeleton className="h-4 w-full" />
+              </div>
+
+              {/* Auction Stats Skeleton */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="space-y-2">
+                    <Skeleton className="h-6 w-16" />
+                    <Skeleton className="h-4 w-20" />
+                  </div>
+                ))}
+              </div>
+
+              {/* Vehicle Details Skeleton */}
+              <div className="space-y-3">
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="flex justify-between py-2 border-b border-gray-200"
+                  >
+                    <Skeleton className="h-4 w-24" />
+                    <Skeleton className="h-4 w-32" />
+                  </div>
+                ))}
+              </div>
+
+              {/* Bid Section Skeleton */}
+              <div className="space-y-4">
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <Skeleton className="flex-1 h-12 sm:h-16 rounded-md" />
+                  <Skeleton className="w-full sm:w-32 h-12 sm:h-16 rounded-md" />
+                </div>
+                <div className="space-y-2">
+                  <Skeleton className="h-5 w-24" />
+                  <Skeleton className="h-20 w-full rounded" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Handle error state
+  if (error) {
+    return (
+      <div className="bg-white min-h-screen">
+        <Header color="black" />
+        <div className="px-4 sm:px-6 md:px-20 lg:px-40 py-8 sm:py-10">
+          <div className="mb-6 flex items-center justify-between">
+            <Button
+              variant="ghost"
+              onClick={() => router.push("/auction")}
+              className="text-gray-600 hover:text-gray-900 bg-gray-100 cursor-pointer hover:bg-gray-200 px-3 py-2 rounded-md flex items-center gap-2"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back to auctions
+            </Button>
+            <Button
+              variant="ghost"
+              onClick={() => refetch()}
+              disabled={isRefetching || isLoading}
+              className="text-gray-600 hover:text-gray-900 bg-gray-100 cursor-pointer hover:bg-gray-200 px-3 py-2 rounded-md flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Retry loading auction"
+            >
+              <RefreshCw
+                className={`h-4 w-4 ${isRefetching ? "animate-spin" : ""}`}
+              />
+              {isRefetching ? "Retrying..." : "Retry"}
+            </Button>
+          </div>
+          <div className="text-center py-12">
+            <p className="text-gray-500 text-lg">Error loading auction</p>
+            <p className="text-gray-400 text-sm mt-2">Please try again later</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Handle case where car exists but is not an auction
+  if (car && !auction) {
+    return (
+      <div className="bg-white min-h-screen">
+        <Header color="black" />
+        <div className="px-4 sm:px-6 md:px-20 lg:px-40 py-8 sm:py-10">
+          <Button
+            variant="ghost"
+            onClick={() => router.push("/auction")}
+            className="mb-6 text-gray-600 hover:text-gray-900 bg-gray-100 cursor-pointer hover:bg-gray-200 px-3 py-2 rounded-md flex items-center gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to auctions
+          </Button>
+          <div className="text-center py-12">
+            <p className="text-gray-500 text-lg">
+              This is not an auction listing
+            </p>
+            <p className="text-gray-400 text-sm mt-2">
+              This car is listed as a fixed price sale
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Handle case where car is not found
+  if (!car && !isLoading) {
+    return (
+      <div className="bg-white min-h-screen">
+        <Header color="black" />
+        <div className="px-4 sm:px-6 md:px-20 lg:px-40 py-8 sm:py-10">
+          <Button
+            variant="ghost"
+            onClick={() => router.push("/auction")}
+            className="mb-6 text-gray-600 hover:text-gray-900 bg-gray-100 cursor-pointer hover:bg-gray-200 px-3 py-2 rounded-md flex items-center gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to auctions
+          </Button>
+          <div className="text-center py-12">
+            <p className="text-gray-500 text-lg">Auction not found</p>
+            <p className="text-gray-400 text-sm mt-2">
+              The auction you're looking for doesn't exist
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Safety check - if auction is still null at this point, show error
+  if (!auction) {
+    return (
+      <div className="bg-white min-h-screen">
+        <Header color="black" />
+        <div className="px-4 sm:px-6 md:px-20 lg:px-40 py-8 sm:py-10">
+          <Button
+            variant="ghost"
+            onClick={() => router.push("/auction")}
+            className="mb-6 text-gray-600 hover:text-gray-900 bg-gray-100 cursor-pointer hover:bg-gray-200 px-3 py-2 rounded-md flex items-center gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to auctions
+          </Button>
+          <div className="text-center py-12">
+            <p className="text-gray-500 text-lg">Unable to load auction</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white min-h-screen">
@@ -69,14 +326,28 @@ const AuctionDetailView = () => {
       <Header color="black" />
 
       <div className="px-4 sm:px-6 md:px-20 lg:px-40 py-8 sm:py-10">
-        <Button
-          variant="ghost"
-          onClick={() => history.back()}
-          className="mb-6 text-gray-600 hover:text-gray-900 bg-gray-100 cursor-pointer hover:bg-gray-200 px-3 py-2 rounded-md flex items-center gap-2"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back to auctions
-        </Button>
+        <div className="mb-6 flex items-center justify-between">
+          <Button
+            variant="ghost"
+            onClick={() => router.push("/auction")}
+            className="text-gray-600 hover:text-gray-900 bg-gray-100 cursor-pointer hover:bg-gray-200 px-3 py-2 rounded-md flex items-center gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to auctions
+          </Button>
+          <Button
+            variant="ghost"
+            onClick={() => refetch()}
+            disabled={isRefetching || isLoading}
+            className="text-gray-600 hover:text-gray-900 bg-gray-100 cursor-pointer hover:bg-gray-200 px-3 py-2 rounded-md flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            title="Reload auction data"
+          >
+            <RefreshCw
+              className={`h-4 w-4 ${isRefetching ? "animate-spin" : ""}`}
+            />
+            {isRefetching ? "Reloading..." : "Reload"}
+          </Button>
+        </div>
 
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Left Column - Images */}
@@ -154,28 +425,67 @@ const AuctionDetailView = () => {
             {/* Vehicle Details */}
             <div className="space-y-2 sm:space-y-3">
               {[
-                ["Title", "Salvage"],
-                ["Loss Type", "Collision"],
-                ["Damage", "Front Left"],
-                ["Vin Code", "WA1LFAFP9DA******"],
-                ["Highlights", "Run and Drive"],
-                ["Transmission", "Automatic"],
-                ["Est. Retail Value", "$9,050"],
-              ].map(([label, value], idx) => (
-                <div
-                  key={idx}
-                  className={`flex justify-between py-2 ${
-                    idx < 6 ? "border-b border-gray-200" : ""
-                  }`}
-                >
-                  <span className="text-gray-600 text-sm sm:text-base">
-                    {label}
-                  </span>
-                  <span className="text-gray-900 text-sm sm:text-base">
-                    {value}
-                  </span>
-                </div>
-              ))}
+                ["Year", auction.car.year?.toString() || "N/A"],
+                ["Make", auction.car.make || "N/A"],
+                ["Model", auction.car.model || "N/A"],
+                ["Trim", auction.car.trim || "N/A"],
+                [
+                  "Condition",
+                  auction.car.condition
+                    ? auction.car.condition.charAt(0).toUpperCase() +
+                      auction.car.condition.slice(1)
+                    : "N/A",
+                ],
+                [
+                  "Body Type",
+                  auction.car.body_type
+                    ? auction.car.body_type.charAt(0).toUpperCase() +
+                      auction.car.body_type.slice(1)
+                    : "N/A",
+                ],
+                [
+                  "Fuel Type",
+                  auction.car.fuel_type
+                    ? auction.car.fuel_type.charAt(0).toUpperCase() +
+                      auction.car.fuel_type.slice(1)
+                    : "N/A",
+                ],
+                [
+                  "Drivetrain",
+                  auction.car.drivetrain
+                    ? auction.car.drivetrain.toUpperCase()
+                    : "N/A",
+                ],
+                ["Engine", auction.car.engine || "N/A"],
+                ["Exterior Color", auction.car.exterior_color || "N/A"],
+                ["Interior Color", auction.car.interior_color || "N/A"],
+                [
+                  "Mileage",
+                  auction.car.mileage
+                    ? `${auction.car.mileage.toLocaleString()} miles`
+                    : "N/A",
+                ],
+                [
+                  "Starting Price",
+                  `$${parseFloat(auction.car.price).toLocaleString()}`,
+                ],
+              ]
+                .filter(([_, value]) => value && value !== "N/A")
+                .map(([label, value], idx, arr) => (
+                  <div
+                    key={label}
+                    className={`flex justify-between py-2 ${
+                      idx < arr.length - 1 ? "border-b border-gray-200" : ""
+                    }`}
+                  >
+                    <span className="text-gray-600 text-sm sm:text-base">
+                      {label}
+                    </span>
+                    <span className="text-gray-900 text-sm sm:text-base">
+                      {value}
+                    </span>
+                  </div>
+                ))}
             </div>
 
             {/* Bid Section */}
@@ -184,12 +494,24 @@ const AuctionDetailView = () => {
                 <Input
                   placeholder={`Enter your bid (Minimum ${auction.currentBid})`}
                   type="number"
+                  min={auction.currentBidValue}
+                  step="100"
                   className="flex-1 bg-white border-gray-300 text-gray-900 placeholder:text-gray-500 py-3 sm:py-8"
                 />
                 <Button className="bg-zinc-900 hover:bg-zinc-800 text-white px-8 py-3 sm:py-8">
                   Place Bid
                 </Button>
               </div>
+              {auction.car.description && (
+                <div className="mt-4">
+                  <h3 className="font-semibold text-gray-900 mb-2">
+                    Description
+                  </h3>
+                  <p className="text-gray-600 text-sm sm:text-base whitespace-pre-wrap">
+                    {auction.car.description}
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         </div>

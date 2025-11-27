@@ -1,15 +1,17 @@
 "use client";
 
 import Header from "@/components/Header";
-import { Heart, Link, CarFrontIcon } from "lucide-react";
+import { Heart, CarFrontIcon, LogIn } from "lucide-react";
+import Link from "next/link";
 import { useCarFavorites, useRemoveFavorite } from "@/hooks/cars";
-
 import { useToast } from "@/hooks/use-toast";
-
+import { useUserStore } from "@/store/user";
+import { Button } from "@/components/ui/button";
 import FavoriteCarCard from "@/components/FavouriteCarCard";
 
 export default function FavoritesPage() {
   const { toast } = useToast();
+  const { user } = useUserStore();
   const { data: favorites, isLoading: favoritesLoading } = useCarFavorites();
 
   const onRemoveSuccess = () => {
@@ -33,6 +35,9 @@ export default function FavoritesPage() {
     onRemoveError
   );
 
+  // Check if user is logged in
+  const isLoggedIn = !!user.email;
+
   return (
     <>
       <Header color="black" />
@@ -40,15 +45,42 @@ export default function FavoritesPage() {
         {/* Header */}
         <div className="mb-6">
           <h1 className="text-2xl sm:text-3xl font-semibold text-black">
-            Favorites {!favoritesLoading && `(${favorites?.length || 0})`}
+            Favorites{" "}
+            {isLoggedIn && !favoritesLoading && `(${favorites?.length || 0})`}
           </h1>
           <p className="text-gray-500 text-sm sm:text-base mt-2">
-            These are the cars you have marked as favorites.
+            {isLoggedIn
+              ? "These are the cars you have marked as favorites."
+              : "Sign in to view and manage your favorite cars."}
           </p>
         </div>
 
-        {/* Loading State */}
-        {favoritesLoading ? (
+        {/* Not Logged In State */}
+        {!isLoggedIn ? (
+          <div className="flex items-center justify-center min-h-[50vh]">
+            <div className="text-center max-w-md">
+              <div className="mb-6">
+                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <LogIn className="w-8 h-8 text-gray-400" />
+                </div>
+                <h2 className="text-2xl font-semibold text-gray-900 mb-2">
+                  Login Required
+                </h2>
+                <p className="text-gray-600 mb-6">
+                  Please sign in to add cars to your favorites and view your
+                  saved listings.
+                </p>
+              </div>
+              <Link href="/signin">
+                <Button className="bg-zinc-800 hover:bg-zinc-900 text-white px-6 py-6 flex items-center gap-2 mx-auto">
+                  <LogIn className="w-4 h-4" />
+                  <span>Sign In</span>
+                </Button>
+              </Link>
+            </div>
+          </div>
+        ) : favoritesLoading ? (
+          /* Loading State */
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {Array.from({ length: 6 }).map((_, index) => (
               <div key={index} className="animate-pulse">
@@ -77,15 +109,11 @@ export default function FavoritesPage() {
                   them here.
                 </p>
               </div>
-              <Link
-                href={`/listing`}
-                className="text-sm font-medium text-white bg-zinc-800 hover:bg-zinc-900 cursor-pointer flex items-center gap-1 group p-4 py-2 rounded-sm"
-              >
-                <CarFrontIcon />
-                <span>Browse cars</span>
-                <span className="group-hover:translate-x-1 transition-all">
-                  →
-                </span>
+              <Link href="/listing">
+                <Button className="bg-zinc-800 hover:bg-zinc-900 text-white px-6 py-6 flex items-center gap-2 mx-auto">
+                  <CarFrontIcon className="w-4 h-4" />
+                  <span>Browse cars</span>
+                </Button>
               </Link>
             </div>
           </div>

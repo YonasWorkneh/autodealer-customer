@@ -221,7 +221,7 @@ export default function CarMarketplace() {
                       <Button
                         variant={viewMode === "list" ? "default" : "ghost"}
                         size="icon"
-                        className="rounded-full"
+                        className="rounded-full cursor-pointer!"
                         onClick={() => setViewMode("list")}
                         aria-label="List view"
                       >
@@ -230,7 +230,7 @@ export default function CarMarketplace() {
                       <Button
                         variant={viewMode === "grid" ? "default" : "ghost"}
                         size="icon"
-                        className="rounded-full"
+                        className="rounded-full cursor-pointer!"
                         onClick={() => setViewMode("grid")}
                         aria-label="Grid view"
                       >

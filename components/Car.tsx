@@ -9,6 +9,7 @@ import { Heart } from "lucide-react";
 import { useCarFavorites, useUpdateFavorite } from "@/hooks/cars";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+import { useUserStore } from "@/store/user";
 import { formatPrice } from "@/lib/utils";
 
 export default function Car({
@@ -22,9 +23,12 @@ export default function Car({
   highlightQuery?: string;
   variant?: "list" | "grid";
 }) {
+  const { user } = useUserStore();
   const { data: favorites } = useCarFavorites();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const isLoggedIn = !!user.email;
+
   const onSuccess = () => {
     queryClient.invalidateQueries({ queryKey: ["car-favorites"] });
     toast({
@@ -39,6 +43,24 @@ export default function Car({
     });
   const { mutate } = useUpdateFavorite(onSuccess, onError);
   const favorited = favorites?.findIndex((favorite) => favorite.car === car.id);
+
+  const handleFavoriteClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+
+    if (!isLoggedIn) {
+      toast({
+        title: "❌ Login Required",
+        description: "Please log in to add cars to your favorites.",
+        variant: "destructive",
+        color: "white",
+        className: "text-white bg-red-600",
+      });
+      return;
+    }
+
+    mutate(car.id);
+  };
 
   // Format price from string to currency
   const formattedPrice = formatPrice(car.price);
@@ -88,15 +110,11 @@ export default function Car({
                 variant="ghost"
                 size="sm"
                 className="absolute top-2 right-2 bg-white/80 hover:bg-white cursor-pointer"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  e.preventDefault();
-                  mutate(car.id);
-                }}
+                onClick={handleFavoriteClick}
               >
                 <Heart
                   className="h-4 w-4"
-                  fill={favorited !== -1 ? "black" : "none"}
+                  fill={isLoggedIn && favorited !== -1 ? "black" : "none"}
                 />
               </Button>
             </div>
@@ -107,7 +125,9 @@ export default function Car({
               <p className="text-gray-600 text-sm">
                 {car.mileage?.toLocaleString()} miles
               </p>
-              <p className="text-gray-600 text-sm capitalize">{car.body_type}</p>
+              <p className="text-gray-600 text-sm capitalize">
+                {car.body_type}
+              </p>
               <Badge
                 variant="secondary"
                 className={`${
@@ -121,7 +141,9 @@ export default function Car({
             </div>
             <div className="flex items-end justify-between">
               <div>
-                <p className="text-xl sm:text-2xl font-bold">{formattedPrice}</p>
+                <p className="text-xl sm:text-2xl font-bold">
+                  {formattedPrice}
+                </p>
                 <p className="text-sm text-gray-600 capitalize">
                   {car.sale_type}
                 </p>
@@ -160,15 +182,11 @@ export default function Car({
               variant="ghost"
               size="sm"
               className="absolute top-2 right-2 bg-white/80 hover:bg-white cursor-pointer"
-              onClick={(e) => {
-                e.stopPropagation();
-                e.preventDefault();
-                mutate(car.id);
-              }}
+              onClick={handleFavoriteClick}
             >
               <Heart
                 className="h-4 w-4"
-                fill={favorited !== -1 ? "black" : "none"}
+                fill={isLoggedIn && favorited !== -1 ? "black" : "none"}
               />
             </Button>
           </div>
