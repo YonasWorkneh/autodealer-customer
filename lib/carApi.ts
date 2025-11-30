@@ -28,11 +28,7 @@ export async function fetchCars(): Promise<FetchedCar[]> {
 
 export async function fetchCarById(id: string): Promise<FetchedCar> {
   const credential = await getCredentials();
-  return fetcher<FetchedCar>(`/inventory/cars/${id}`, {
-    headers: {
-      Authorization: `Bearer ${credential.access}`,
-    },
-  });
+  return fetcher<FetchedCar>(`/inventory/cars/${id}`);
 }
 
 export async function fetchMakes(): Promise<Make[]> {
@@ -165,6 +161,30 @@ export async function getMarketData() {
         Authorization: `Bearer ${credential.access}`,
       },
     });
+  } catch (err) {
+    throw err;
+  }
+}
+
+export async function placeBid(car: number, amount: number) {
+  const credential = await getCredentials();
+  try {
+    const res = await fetch(`${BASE_URL}/api/bids/`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${credential.access}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ car, amount }),
+    });
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({}));
+      throw new Error(
+        errorData.message ||
+          `Failed to place bid: ${res.status} ${res.statusText}`
+      );
+    }
+    return await res.json();
   } catch (err) {
     throw err;
   }

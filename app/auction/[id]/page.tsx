@@ -8,7 +8,9 @@ import { ArrowLeft, RefreshCw } from "lucide-react";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import { useState, useMemo, useEffect } from "react";
-import { useCar } from "@/hooks/cars";
+import { useCar, usePlaceBid } from "@/hooks/cars";
+import { useToast } from "@/hooks/use-toast";
+import { useUserStore } from "@/store/user";
 import type { FetchedCar } from "@/app/types/Car";
 
 // Utility function to calculate time remaining
@@ -73,7 +75,10 @@ const AuctionDetailView = () => {
   const params = useParams();
   const router = useRouter();
   const id = params.id as string;
+  const { user } = useUserStore();
+  const { toast } = useToast();
   const { data: car, isLoading, error, refetch, isRefetching } = useCar(id);
+  const [bidAmount, setBidAmount] = useState<string>("");
 
   // Transform car data to auction display format
   const auction = useMemo(() => {
@@ -133,6 +138,72 @@ const AuctionDetailView = () => {
       console.log(error);
     }
   }, [error]);
+
+  // Place bid handlers
+  const onBidSuccess = () => {
+    toast({
+      title: "✅ Bid Placed Successfully",
+      description: "Your bid has been placed successfully.",
+    });
+    setBidAmount("");
+    refetch(); // Refresh auction data to show updated bids
+  };
+
+  const onBidError = (error: Error) => {
+    toast({
+      title: "❌ Failed to Place Bid",
+      description:
+        error.message || "Something went wrong while placing your bid.",
+      variant: "destructive",
+      className: "text-white bg-red-600",
+    });
+  };
+
+  const { mutate: placeBidMutation, isPending: isPlacingBid } = usePlaceBid(
+    onBidSuccess,
+    onBidError
+  );
+
+  const handlePlaceBid = () => {
+    if (!user.email) {
+      toast({
+        title: "❌ Login Required",
+        description: "Please log in to place a bid.",
+        variant: "destructive",
+        className: "text-white bg-red-600",
+      });
+      return;
+    }
+
+    if (!auction) return;
+
+    const amount = parseFloat(bidAmount);
+    if (isNaN(amount) || amount <= 0) {
+      toast({
+        title: "❌ Invalid Bid Amount",
+        description: "Please enter a valid bid amount.",
+        variant: "destructive",
+        className: "text-white bg-red-600",
+      });
+      return;
+    }
+
+    // Validate bid is not below current bid
+    if (amount < auction.currentBidValue) {
+      toast({
+        title: "❌ Bid Below Minimum",
+        description: `Minimum bid is ${auction.currentBid}`,
+        variant: "destructive",
+        className: "text-white bg-red-600",
+      });
+      return;
+    }
+
+    placeBidMutation({
+      car: auction.car.id,
+      amount: amount,
+    });
+  };
 
   if (isLoading) {
     return (
@@ -215,20 +286,22 @@ const AuctionDetailView = () => {
       <div className="bg-white min-h-screen">
         <Header color="black" />
         <div className="px-4 sm:px-6 md:px-20 lg:px-40 py-8 sm:py-10">
-          <div className="mb-6 flex items-center justify-between">
-            <Button
-              variant="ghost"
-              onClick={() => router.push("/auction")}
-              className="text-gray-600 hover:text-gray-900 bg-gray-100 cursor-pointer hover:bg-gray-200 px-3 py-2 rounded-md flex items-center gap-2"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Back to auctions
-            </Button>
+          <Button
+            variant="ghost"
+            onClick={() => router.push("/auction")}
+            className="mb-6 text-gray-600 hover:text-gray-900 bg-gray-100 cursor-pointer hover:bg-gray-200 px-3 py-2 rounded-md flex items-center gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to auctions
+          </Button>
+          <div className="text-center py-12">
+            <p className="text-gray-500 text-lg">Error loading auction</p>
+            <p className="text-gray-400 text-sm mt-2">Please try again later</p>
             <Button
               variant="ghost"
               onClick={() => refetch()}
               disabled={isRefetching || isLoading}
-              className="text-gray-600 hover:text-gray-900 bg-gray-100 cursor-pointer hover:bg-gray-200 px-3 py-2 rounded-md flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="mt-6  hover:text-white bg-zinc-800 hover:bg-zinc-900 text-white cursor-pointer px-4 py-2 rounded-md flex items-center gap-2 mx-auto disabled:opacity-50 disabled:cursor-not-allowed"
               title="Retry loading auction"
             >
               <RefreshCw
@@ -236,10 +309,6 @@ const AuctionDetailView = () => {
               />
               {isRefetching ? "Retrying..." : "Retry"}
             </Button>
-          </div>
-          <div className="text-center py-12">
-            <p className="text-gray-500 text-lg">Error loading auction</p>
-            <p className="text-gray-400 text-sm mt-2">Please try again later</p>
           </div>
         </div>
       </div>
@@ -334,18 +403,6 @@ const AuctionDetailView = () => {
           >
             <ArrowLeft className="h-4 w-4" />
             Back to auctions
-          </Button>
-          <Button
-            variant="ghost"
-            onClick={() => refetch()}
-            disabled={isRefetching || isLoading}
-            className="text-gray-600 hover:text-gray-900 bg-gray-100 cursor-pointer hover:bg-gray-200 px-3 py-2 rounded-md flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-            title="Reload auction data"
-          >
-            <RefreshCw
-              className={`h-4 w-4 ${isRefetching ? "animate-spin" : ""}`}
-            />
-            {isRefetching ? "Reloading..." : "Reload"}
           </Button>
         </div>
 
@@ -465,10 +522,7 @@ const AuctionDetailView = () => {
                     ? `${auction.car.mileage.toLocaleString()} miles`
                     : "N/A",
                 ],
-                [
-                  "Starting Price",
-                  `$${parseFloat(auction.car.price).toLocaleString()}`,
-                ],
+                ["Current Bid", auction.currentBid],
               ]
                 .filter(([_, value]) => value && value !== "N/A")
                 .map(([label, value], idx, arr) => (
@@ -496,10 +550,31 @@ const AuctionDetailView = () => {
                   type="number"
                   min={auction.currentBidValue}
                   step="100"
-                  className="flex-1 bg-white border-gray-300 text-gray-900 placeholder:text-gray-500 py-3 sm:py-8"
+                  value={bidAmount}
+                  onChange={(e) => setBidAmount(e.target.value)}
+                  onBlur={(e) => {
+                    // Validate on blur - show warning if bid is below minimum
+                    if (e.target.value && auction) {
+                      const amount = parseFloat(e.target.value);
+                      if (!isNaN(amount) && amount < auction.currentBidValue) {
+                        toast({
+                          title: "❌ Bid Below Minimum",
+                          description: `Minimum bid is ${auction.currentBid}`,
+                          variant: "destructive",
+                          className: "text-white bg-red-600",
+                        });
+                      }
+                    }
+                  }}
+                  disabled={isPlacingBid}
+                  className="flex-1 bg-white border-gray-300 text-gray-900 placeholder:text-gray-500 py-3 sm:py-8 disabled:opacity-50"
                 />
-                <Button className="bg-zinc-900 hover:bg-zinc-800 text-white px-8 py-3 sm:py-8">
-                  Place Bid
+                <Button
+                  onClick={handlePlaceBid}
+                  disabled={isPlacingBid || !bidAmount}
+                  className="bg-zinc-900 hover:bg-zinc-800 text-white px-8 py-3 sm:py-8 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isPlacingBid ? "Placing Bid..." : "Place Bid"}
                 </Button>
               </div>
               {auction.car.description && (

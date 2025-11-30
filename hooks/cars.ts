@@ -12,6 +12,7 @@ import {
   removeCarFavorite,
   getPopularCars,
   getMarketData,
+  placeBid,
 } from "@/lib/carApi";
 import type { FetchedCar } from "@/app/types/Car";
 
@@ -149,5 +150,25 @@ export function useMarketData() {
   return useQuery({
     queryKey: ["market-data"],
     queryFn: getMarketData,
+  });
+}
+
+export function usePlaceBid(
+  onSuccess?: () => void,
+  onError?: (error: Error) => void
+) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ car, amount }: { car: number; amount: number }) =>
+      placeBid(car, amount),
+    onSuccess: () => {
+      onSuccess?.();
+      // Invalidate car queries to refresh bid data
+      queryClient.invalidateQueries({ queryKey: ["car"] });
+      queryClient.invalidateQueries({ queryKey: ["cars"] });
+    },
+    onError: (error: Error) => {
+      onError?.(error);
+    },
   });
 }
