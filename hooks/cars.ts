@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from "@tanstack/react-query";
 import {
   fetchCars,
   fetchCarById,
@@ -19,7 +19,22 @@ import type { FetchedCar } from "@/app/types/Car";
 export function useCars() {
   return useQuery<FetchedCar[]>({
     queryKey: ["cars"],
-    queryFn: fetchCars,
+    queryFn: () => fetchCars(1, 1000), // Fetch all for backward compatibility
+  });
+}
+
+export function useCarsInfinite() {
+  return useInfiniteQuery<FetchedCar[]>({
+    queryKey: ["cars-infinite"],
+    queryFn: ({ pageParam = 1 }) => fetchCars(pageParam, 20),
+    getNextPageParam: (lastPage, allPages) => {
+      // If last page has fewer items than limit, we've reached the end
+      if (lastPage.length < 20) {
+        return undefined;
+      }
+      return allPages.length + 1;
+    },
+    initialPageParam: 1,
   });
 }
 

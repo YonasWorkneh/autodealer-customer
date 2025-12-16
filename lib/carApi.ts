@@ -22,8 +22,12 @@ async function fetcher<T>(endpoint: string, options?: RequestInit): Promise<T> {
   return res.json() as Promise<T>;
 }
 
-export async function fetchCars(): Promise<FetchedCar[]> {
-  return fetcher<FetchedCar[]>("/inventory/cars/");
+export async function fetchCars(
+  page: number = 1,
+  limit: number = 20
+): Promise<FetchedCar[]> {
+  const url = `/inventory/cars/?page=${page}&limit=${limit}`;
+  return fetcher<FetchedCar[]>(url);
 }
 
 export async function fetchCarById(id: string): Promise<FetchedCar> {
@@ -169,7 +173,7 @@ export async function getMarketData() {
 export async function placeBid(car: number, amount: number) {
   const credential = await getCredentials();
   try {
-    const res = await fetch(`${BASE_URL}/api/bids/`, {
+    const res = await fetch(`${BASE_URL}/bids/`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${credential.access}`,

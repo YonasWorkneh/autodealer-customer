@@ -101,6 +101,8 @@ export default function PlaceAddForm() {
   const watchedMake = watch("make");
   const { data: makes, isLoading: isMakesLoading } = useMakes();
   const { data: models, isLoading: isModelsLoading } = useModels(watchedMake);
+  console.log(models);
+  console.log(makes);
   const { data: carData, isLoading: isCarLoading } = useCar(c_id ? c_id : "");
 
   const onSuccess = () => {
@@ -871,7 +873,7 @@ export default function PlaceAddForm() {
                               ) : (
                                 models
                                   ?.filter(
-                                    (model) => model.make.id === watchedMake
+                                    (model) => model.make_id === watchedMake
                                   )
                                   .map((model) => (
                                     <SelectItem

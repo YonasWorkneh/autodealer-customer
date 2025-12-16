@@ -1,5 +1,6 @@
 export interface Model {
   id: number;
   name: string;
-  make: Make;
+  make_id: number;
+  make_name: string;
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef, useCallback } from "react";
 import { Search, Filter, LayoutGrid, List } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,25 +14,58 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 import { CarDetailModal } from "./CarDetailModal";
 import FilterSidebar from "@/components/Filter";
 import Car from "@/components/Car";
-import { useCars } from "@/hooks/cars";
-import Pagination from "@/components/Pagination";
+import { useCarsInfinite } from "@/hooks/cars";
 
 export default function CarMarketplace() {
   const [detailOpened, setDetailOpened] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
   const [selectedCar, setSelectedCar] = useState<any>(null);
-  const { data: cars, isLoading } = useCars();
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
+    useCarsInfinite();
   const [query, setQuery] = useState("");
   const [activeQuery, setActiveQuery] = useState("");
   const [filters, setFilters] = useState<any>({});
   const [showSuggest, setShowSuggest] = useState(false);
   const [sortBy, setSortBy] = useState<string>("best");
-  const [viewMode, setViewMode] = useState<"list" | "grid">("list");
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  const itemsPerPage = 10;
+  const [viewMode, setViewMode] = useState<"list" | "grid">("grid");
+
+  // Flatten all pages into a single array
+  const cars = useMemo(() => {
+    return data?.pages.flat() || [];
+  }, [data]);
+
+  // Intersection Observer for infinite scroll
+  const observerTarget = useRef<HTMLDivElement>(null);
+
+  const handleObserver = useCallback(
+    (entries: IntersectionObserverEntry[]) => {
+      const [target] = entries;
+      if (target.isIntersecting && hasNextPage && !isFetchingNextPage) {
+        fetchNextPage();
+      }
+    },
+    [hasNextPage, isFetchingNextPage, fetchNextPage]
+  );
+
+  useEffect(() => {
+    const element = observerTarget.current;
+    if (!element) return;
+
+    const observer = new IntersectionObserver(handleObserver, {
+      threshold: 0.1,
+    });
+
+    observer.observe(element);
+    return () => {
+      if (element) {
+        observer.unobserve(element);
+      }
+    };
+  }, [handleObserver]);
 
   const normalized = (str: string) => str.toLowerCase();
 
@@ -94,25 +127,11 @@ export default function CarMarketplace() {
       .map((label) => ({ label, value: label }));
   }, [cars, query]);
 
+  // Reset to first page when filters/search/sort change
   useEffect(() => {
-    setCurrentPage(1);
+    // Note: With infinite scroll, we might want to refetch from page 1
+    // For now, filtering happens client-side on all loaded pages
   }, [activeQuery, JSON.stringify(filters), sortBy, viewMode]);
-
-  const totalCars = filteredCars.length;
-  const totalPages = Math.max(1, Math.ceil(totalCars / itemsPerPage));
-  const currentPageSafe = Math.min(currentPage, totalPages);
-  const startIndex = totalCars === 0 ? 0 : (currentPageSafe - 1) * itemsPerPage;
-  const endIndex =
-    totalCars === 0 ? 0 : Math.min(startIndex + itemsPerPage, totalCars);
-  const paginatedCars = filteredCars.slice(startIndex, endIndex);
-
-  const goToPage = (page: number) => {
-    const next = Math.min(Math.max(page, 1), totalPages);
-    setCurrentPage(next);
-    if (typeof window !== "undefined") {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }
-  };
 
   return (
     <div className="min-h-screen bg-white">
@@ -219,15 +238,6 @@ export default function CarMarketplace() {
                     </div>
                     <div className="flex items-center gap-2">
                       <Button
-                        variant={viewMode === "list" ? "default" : "ghost"}
-                        size="icon"
-                        className="rounded-full cursor-pointer!"
-                        onClick={() => setViewMode("list")}
-                        aria-label="List view"
-                      >
-                        <List className="h-4 w-4" />
-                      </Button>
-                      <Button
                         variant={viewMode === "grid" ? "default" : "ghost"}
                         size="icon"
                         className="rounded-full cursor-pointer!"
@@ -235,6 +245,15 @@ export default function CarMarketplace() {
                         aria-label="Grid view"
                       >
                         <LayoutGrid className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant={viewMode === "list" ? "default" : "ghost"}
+                        size="icon"
+                        className="rounded-full cursor-pointer!"
+                        onClick={() => setViewMode("list")}
+                        aria-label="List view"
+                      >
+                        <List className="h-4 w-4" />
                       </Button>
                     </div>
                   </div>
@@ -248,11 +267,11 @@ export default function CarMarketplace() {
                 All Vehicles
               </h2>
               <p className="mt-2 text-xs uppercase tracking-[0.25em] text-[#4a4a4a]">
-                {totalCars === 0
+                {filteredCars.length === 0
                   ? "Showing 0 entries"
-                  : `Showing ${
-                      startIndex + 1
-                    } - ${endIndex} entries of ${totalCars}`}
+                  : `Showing ${filteredCars.length} ${
+                      filteredCars.length === 1 ? "vehicle" : "vehicles"
+                    }`}
               </p>
             </div>
 
@@ -285,38 +304,70 @@ export default function CarMarketplace() {
                   </div>
                 ))
               ) : filteredCars && filteredCars.length > 0 ? (
-                paginatedCars.map((car) => (
-                  <Car
-                    setDetailOpened={(status) => {
-                      setDetailOpened(status);
-                      if (status) {
-                        setSelectedCar(car);
-                      }
-                    }}
-                    car={car}
-                    key={car.id}
-                    highlightQuery={activeQuery}
-                    variant={viewMode}
-                  />
-                ))
+                <>
+                  {filteredCars.map((car) => (
+                    <Car
+                      setDetailOpened={(status) => {
+                        setDetailOpened(status);
+                        if (status) {
+                          setSelectedCar(car);
+                        }
+                      }}
+                      car={car}
+                      key={car.id}
+                      highlightQuery={activeQuery}
+                      variant={viewMode}
+                    />
+                  ))}
+                  {/* Infinite scroll trigger */}
+                  <div ref={observerTarget} className="h-10" />
+                  {isFetchingNextPage && (
+                    <div className="text-center py-8">
+                      <p className="text-gray-500">Loading more cars...</p>
+                    </div>
+                  )}
+                  {!hasNextPage && filteredCars.length > 0 && (
+                    <div
+                      className={`${
+                        viewMode === "grid" ? "col-span-full" : "w-full"
+                      } flex flex-col items-center justify-center py-12 px-4`}
+                    >
+                      <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-4">
+                        <svg
+                          className="w-8 h-8 text-gray-400"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
+                        </svg>
+                      </div>
+                      <p className="text-gray-600 font-medium text-lg mb-1">
+                        You've reached the end
+                      </p>
+                      <p className="text-gray-400 text-sm">
+                        All available vehicles have been loaded
+                      </p>
+                    </div>
+                  )}
+                </>
               ) : (
                 <div className="text-center py-12">
                   <p className="text-gray-500 text-lg">No cars found</p>
                 </div>
               )}
             </div>
-
-            {/* Pagination */}
-            <div className="flex justify-center border-t border-gray-200 pt-6">
-              <Pagination
-                currentPage={currentPageSafe}
-                totalPages={totalPages}
-                onPageChange={goToPage}
-              />
-            </div>
           </div>
         </div>
       </div>
+
+      {/* Footer */}
+      <Footer />
 
       {/* Mobile Filter Panel */}
       {filterOpen && (
