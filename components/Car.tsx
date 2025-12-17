@@ -98,18 +98,17 @@ export default function Car({
   if (variant === "grid") {
     return (
       <Link key={car.id} href={`/listing/${car.id}`} className="block h-full">
-        <Card className="shadow-none border-gray-200 hover:shadow-lg transition-shadow cursor-pointer h-full flex flex-col">
-          <CardContent className="p-4 sm:p-6 flex flex-col gap-4 h-full">
+        <Card className="shadow-none border-gray-200 hover:shadow-lg transition-shadow cursor-pointer h-full flex flex-col p-0 overflow-hidden rounded-xl">
             <div className="relative">
               <img
                 src={mainImage}
                 alt={`${car.year} ${car.make} ${car.model}`}
-                className="w-full h-48 object-cover rounded-lg"
+                className="w-full h-48 object-cover"
               />
               <Button
                 variant="ghost"
                 size="sm"
-                className="absolute top-2 right-2 bg-white/80 hover:bg-white cursor-pointer"
+                className="absolute top-2 right-2 bg-white/80 hover:bg-white cursor-pointer rounded-full"
                 onClick={handleFavoriteClick}
               >
                 <Heart
@@ -118,6 +117,7 @@ export default function Car({
                 />
               </Button>
             </div>
+          <CardContent className="p-4 sm:p-6 flex flex-col gap-4 h-full"> 
             <div className="space-y-2 flex-1">
               <h3 className="text-lg sm:text-xl font-semibold text-black">
                 {renderTitle()}

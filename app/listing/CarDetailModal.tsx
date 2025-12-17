@@ -152,7 +152,7 @@ export function CarDetailModal({ car, isOpen, onClose }: CarListingModalProps) {
 
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
-                  <Car className="size-6 text-gray-600" />
+                  <Palette />
                 </div>
                 <div>
                   <div className="text-sm font-medium text-gray-900">
