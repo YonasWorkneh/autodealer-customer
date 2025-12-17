@@ -102,32 +102,16 @@ export default function MyListingsPage() {
 
   // Skeleton loader component
   const SkeletonCard = () => (
-    <Card className="bg-transparent shadow-none border border-gray-200 animate-pulse">
-      <CardContent className="p-6">
-        <div className="flex items-start gap-4">
-          <div className="w-5 h-5 bg-gray-200 rounded mt-1"></div>
-          <div className="relative w-32 h-24 bg-gray-200 rounded-lg overflow-hidden"></div>
-          <div className="flex-1">
-            <div className="flex items-start justify-between mb-2">
-              <div>
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="h-6 w-40 bg-gray-200 rounded"></div>
-                </div>
-                <div className="h-7 w-24 bg-gray-200 rounded"></div>
-              </div>
-              <div className="w-8 h-8 bg-gray-200 rounded-full"></div>
-            </div>
-            <div className="flex items-center gap-6 text-sm text-gray-600 mb-4">
-              <div className="flex items-center gap-1">
-                <div className="h-4 w-4 bg-gray-200 rounded"></div>
-                <div className="h-4 w-32 bg-gray-200 rounded"></div>
-              </div>
-              <div className="flex items-center gap-1">
-                <div className="h-4 w-4 bg-gray-200 rounded"></div>
-                <div className="h-4 w-32 bg-gray-200 rounded"></div>
-              </div>
-            </div>
-          </div>
+    <Card className="p-0 bg-transparent shadow-none border border-gray-200 animate-pulse overflow-hidden rounded-xl flex flex-col h-full">
+      <div className="w-full aspect-[4/3] bg-gray-200"></div>
+      <CardContent className="p-4 flex-1 flex flex-col gap-3">
+        <div className="flex justify-between items-start">
+          <div className="h-6 w-3/4 bg-gray-200 rounded"></div>
+        </div>
+        <div className="h-8 w-1/3 bg-gray-200 rounded mt-auto"></div>
+        <div className="flex items-center gap-4 mt-2">
+            <div className="h-4 w-20 bg-gray-200 rounded"></div>
+            <div className="h-4 w-20 bg-gray-200 rounded"></div>
         </div>
       </CardContent>
     </Card>
@@ -174,7 +158,7 @@ export default function MyListingsPage() {
         ) : (
           <>
             {/* Tabs */}
-            <div className="flex gap-2 mb-8 border-b border-gray-200">
+            {/* <div className="flex gap-2 mb-8 border-b border-gray-200">
               {[
                 "all",
                 "live",
@@ -200,7 +184,7 @@ export default function MyListingsPage() {
                   )
                 </button>
               ))}
-            </div>
+            </div> */}
 
             {/* Ad selection */}
             <div className="flex items-center justify-between mb-6">
@@ -234,8 +218,8 @@ export default function MyListingsPage() {
 
               {isLoading ? (
                 // Display skeleton cards while loading
-                <div className="space-y-6">
-                  {Array.from({ length: 3 }).map((_, index) => (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {Array.from({ length: 6 }).map((_, index) => (
                     <SkeletonCard key={index} />
                   ))}
                 </div>
@@ -260,48 +244,43 @@ export default function MyListingsPage() {
                   </CardContent>
                 </Card>
               ) : (
-                filteredAds.map((ad) => (
-                  <Card
-                    key={ad.id}
-                    className="bg-transparent shadow-none border border-gray-200"
-                  >
-                    <CardContent className="p-6">
-                      <div className="flex items-start gap-4">
-                        <Checkbox
-                          checked={selectedAds.includes(ad.id)}
-                          onCheckedChange={() => handleSelectAd(ad.id)}
-                          className="mt-1"
-                        />
-                        <div className="relative w-32 h-24 bg-gray-100 rounded-lg overflow-hidden">
-                          {ad.images.length === 0 ? (
-                            <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">
-                              No Image
-                            </div>
-                          ) : (
-                            <Image
-                              src={ad.images[0].image_url}
-                              alt={ad.make + " " + ad.model}
-                              fill
-                              className="object-cover"
-                            />
-                          )}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {filteredAds.map((ad) => (
+                    <Card
+                      key={ad.id}
+                      className="p-0 bg-white shadow-sm border border-gray-200 rounded-xl overflow-hidden hover:shadow-md transition-shadow flex flex-col gap-0"
+                    >
+                      <div className="relative w-full aspect-[4/3] bg-gray-100 group">
+                        {ad.images.length === 0 ? (
+                          <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">
+                            No Image
+                          </div>
+                        ) : (
+                          <Image
+                            src={ad.images[0].image_url}
+                            alt={ad.make + " " + ad.model}
+                            fill
+                            className="object-cover"
+                          />
+                        )}
+                        {/* Overlay Gradient for better visibility of top controls */}
+                        <div className="absolute top-0 left-0 right-0 h-16 bg-gradient-to-b from-black/50 to-transparent opacity-60"></div>
+
+                        {/* Checkbox */}
+                        <div className="absolute top-3 left-3 z-10">
+                          <Checkbox
+                            checked={selectedAds.includes(ad.id)}
+                            onCheckedChange={() => handleSelectAd(ad.id)}
+                            className="bg-white/90 border-transparent data-[state=checked]:bg-zinc-900 data-[state=checked]:border-zinc-900"
+                          />
                         </div>
-                        <div className="flex-1">
-                          <div className="flex items-start justify-between mb-2">
-                            <div>
-                              <div className="flex items-center gap-3 mb-2">
-                                <h3 className="text-lg font-semibold text-gray-900">
-                                  {ad.make} {ad.model} {ad.year}
-                                </h3>
-                              </div>
-                              <p className="text-xl font-bold text-gray-900">
-                                {formatPrice(ad.price)}
-                              </p>
-                            </div>
+
+                        {/* Actions Menu */}
+                        <div className="absolute top-2 right-2 z-10">
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
-                                <button className="p-2 hover:bg-gray-100 rounded-full">
-                                  <MoreVertical className="h-5 w-5 text-gray-400" />
+                                <button className="p-2 bg-white/90 hover:bg-white rounded-full shadow-sm transition-colors">
+                                  <MoreVertical className="h-4 w-4 text-gray-700" />
                                 </button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end" className="w-40">
@@ -323,28 +302,34 @@ export default function MyListingsPage() {
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
-                          </div>
-                          <div className="flex items-center gap-6 text-sm text-gray-600 mb-4">
-                            <div className="flex items-center gap-1">
-                              <Calendar className="h-4 w-4" />
-                              <span>
-                                Last Updated:{" "}
-                                {new Date(ad.updated_at).toLocaleDateString()}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <Clock className="h-4 w-4" />
-                              <span>
-                                Created:{" "}
-                                {new Date(ad.created_at).toLocaleDateString()}
-                              </span>
-                            </div>
-                          </div>
                         </div>
                       </div>
-                    </CardContent>
-                  </Card>
-                ))
+
+                      <CardContent className="p-4 flex flex-col flex-1">
+                        <div className="flex-1">
+                            <h3 className="text-lg font-semibold text-gray-900 leading-tight mb-1">
+                                {ad.make} {ad.model} {ad.year}
+                            </h3>
+                            <p className="text-xl font-bold text-gray-900 mb-3">
+                                {formatPrice(ad.price)}
+                            </p>
+                        </div>
+
+                        <div className="pt-3 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500">
+                          <div className="flex items-center gap-1">
+                            <Calendar className="h-3.5 w-3.5" />
+                            <span>
+                                {new Date(ad.updated_at).toLocaleDateString()}
+                            </span>
+                          </div>
+                           <Badge variant="outline" className="text-xs font-normal border-gray-200 text-gray-600 capitalize">
+                                {ad.status}
+                           </Badge>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
               )}
             </div>
             {modalOpened && (
