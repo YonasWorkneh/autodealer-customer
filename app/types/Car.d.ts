@@ -164,6 +164,9 @@ export type FetchedCar = {
   created_at: string; // ISO timestamp
   updated_at: string; // ISO timestamp
 
+  vin: string;
+  origin: string;
+
   // Features (booleans)
   bluetooth: boolean;
   heated_seats: boolean;

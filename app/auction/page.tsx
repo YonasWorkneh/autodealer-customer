@@ -395,45 +395,35 @@ const AuctionListView = () => {
             </div>
 
             {isLoading ? (
-              <div className="grid gap-6 md:gap-8 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-1">
-                {Array.from({ length: 3 }).map((_, index) => (
+              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                {Array.from({ length: 9 }).map((_, index) => (
                   <Card
                     key={index}
-                    className="shadow-none bg-white border-gray-200 overflow-hidden"
+                    className="shadow-none bg-white border-gray-200 overflow-hidden h-full flex flex-col p-0 rounded-xl"
                   >
-                    <div className="p-4 md:p-6">
-                      <div className="flex flex-col sm:flex-row gap-4 md:gap-6">
-                        {/* Car Image Skeleton */}
-                        <div className="w-full sm:w-48 h-48 sm:h-32 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
-                          <Skeleton className="w-full h-full" />
+                    <div className="relative h-48 bg-gray-100">
+                      <Skeleton className="w-full h-full" />
+                    </div>
+                    <div className="p-4 flex flex-col gap-4 flex-1">
+                      <div className="flex items-center justify-between">
+                         <div className="flex items-center gap-2">
+                            <Skeleton className="w-6 h-6 rounded-full" />
+                            <Skeleton className="w-20 h-4" />
+                         </div>
+                         <Skeleton className="w-16 h-5" />
+                      </div>
+                      <div className="space-y-2">
+                        <Skeleton className="h-6 w-3/4" />
+                        <Skeleton className="h-4 w-full" />
+                      </div>
+                      <div className="grid grid-cols-2 gap-4 mt-auto">
+                        <div className="space-y-1">
+                           <Skeleton className="h-5 w-16" />
+                           <Skeleton className="h-3 w-10" />
                         </div>
-
-                        {/* Auction Details Skeleton */}
-                        <div className="flex-1 space-y-2 md:space-y-3">
-                          {/* Header Skeleton */}
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2 md:gap-3">
-                              <Skeleton className="w-8 h-8 rounded-full" />
-                              <Skeleton className="h-4 w-32 md:w-48" />
-                            </div>
-                            <Skeleton className="h-5 w-20" />
-                          </div>
-
-                          {/* Car Title Skeleton */}
-                          <div className="space-y-2">
-                            <Skeleton className="h-6 w-3/4 md:w-2/3" />
-                            <Skeleton className="h-4 w-full md:w-4/5" />
-                          </div>
-
-                          {/* Auction Stats Skeleton */}
-                          <div className="flex flex-wrap gap-4 md:gap-8">
-                            {Array.from({ length: 4 }).map((_, statIndex) => (
-                              <div key={statIndex} className="space-y-1">
-                                <Skeleton className="h-5 w-16 md:w-20" />
-                                <Skeleton className="h-3 w-12 md:w-16" />
-                              </div>
-                            ))}
-                          </div>
+                         <div className="space-y-1">
+                           <Skeleton className="h-5 w-16" />
+                           <Skeleton className="h-3 w-10" />
                         </div>
                       </div>
                     </div>
@@ -459,95 +449,72 @@ const AuctionListView = () => {
                   </p>
                 </div>
 
-                <div className="grid gap-6 md:gap-8 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-1">
+                <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                   {paginatedAuctions.map((auction) => (
                     <Card
                       key={auction.id}
-                      className="shadow-none bg-white border-gray-200 overflow-hidden cursor-pointer hover:shadow-sm transition-shadow"
+                      className="group shadow-sm hover:shadow-lg transition-all duration-300 bg-white border-gray-200 overflow-hidden cursor-pointer flex flex-col h-full rounded-xl p-0 gap-0"
                       onClick={() => router.push(`/auction/${auction.id}`)}
                     >
-                      <div className="p-4 md:p-6">
-                        <div className="flex flex-col sm:flex-row gap-4 md:gap-6">
-                          {/* Car Image */}
-                          <div className="w-full sm:w-48 h-48 sm:h-32 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
-                            <Image
-                              src={auction.images[0] || "/placeholder.svg"}
-                              alt={auction.title}
-                              width={200}
-                              height={130}
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-
-                          {/* Auction Details */}
-                          <div className="flex-1 space-y-2 md:space-y-3">
-                            {/* Header */}
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2 md:gap-3">
-                                <div
-                                  className={`w-8 h-8 ${auction.brandColor} rounded-full flex items-center justify-center`}
-                                >
-                                  <span className="text-white text-sm font-bold">
-                                    {auction.brand}
-                                  </span>
-                                </div>
-                                <span className="text-gray-600 text-xs md:text-sm">
-                                  {auction.location}
+                      {/* Car Image - Full Width Top */}
+                      <div className="relative h-48 w-full overflow-hidden bg-gray-100">
+                        <Image
+                          src={auction.images[0] || "/placeholder.svg"}
+                          alt={auction.title}
+                          fill
+                          className="object-cover group-hover:scale-105 transition-transform duration-500"
+                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                        />
+                        <div className="absolute top-3 right-3">
+                           <Badge
+                            variant="secondary"
+                            className="bg-white/90 backdrop-blur-sm shadow-sm text-gray-900 font-medium hover:bg-white"
+                          >
+                            {auction.auctionNumber}
+                          </Badge>
+                        </div>
+                         <div className="absolute bottom-3 left-3 flex items-center gap-2">
+                             <div
+                                className={`w-6 h-6 ${auction.brandColor} rounded-full flex items-center justify-center shadow-sm`}
+                              >
+                                <span className="text-white text-[10px] font-bold">
+                                  {auction.brand}
                                 </span>
                               </div>
-                              <Badge
-                                variant="secondary"
-                                className="bg-gray-100 text-gray-700 text-xs md:text-sm"
-                              >
-                                {auction.auctionNumber}
-                              </Badge>
-                            </div>
+                              <span className="text-white text-xs font-medium drop-shadow-md bg-black/30 px-2 py-0.5 rounded-full backdrop-blur-[2px]">
+                                {auction.location}
+                              </span>
+                         </div>
+                      </div>
 
-                            {/* Car Title */}
-                            <div>
-                              <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-1">
-                                {auction.title}
-                              </h3>
-                              <p className="text-gray-600 text-xs md:text-sm">
-                                {auction.details}
-                              </p>
-                            </div>
+                      <div className="p-4 flex flex-col gap-4 flex-1">
+                        {/* Title & Details */}
+                        <div>
+                          <h3 className="text-lg font-bold text-gray-900 line-clamp-1 group-hover:text-blue-600 transition-colors">
+                            {auction.title}
+                          </h3>
+                          <p className="text-gray-500 text-sm line-clamp-1 mt-1">
+                            {auction.details}
+                          </p>
+                        </div>
 
-                            {/* Auction Stats */}
-                            <div className="flex flex-wrap gap-4 md:gap-8 text-xs md:text-sm">
-                              <div>
-                                <div className="text-sm md:text-lg font-bold text-gray-900">
-                                  {auction.timeLeft}
-                                </div>
-                                <div className="text-xs text-gray-600">
-                                  Time Left
-                                </div>
-                              </div>
-                              <div>
-                                <div className="text-sm md:text-lg font-bold text-gray-900">
-                                  {auction.endTime}
-                                </div>
-                                <div className="text-xs text-gray-600">
-                                  Auction Ending
-                                </div>
-                              </div>
-                              <div>
-                                <div className="text-sm md:text-lg font-bold text-gray-900">
-                                  {auction.activeBids}
-                                </div>
-                                <div className="text-xs text-gray-600">
-                                  Active bids
-                                </div>
-                              </div>
-                              <div>
-                                <div className="text-sm md:text-lg font-bold text-gray-900">
-                                  {auction.currentBid}
-                                </div>
-                                <div className="text-xs text-gray-600">
-                                  Current bid
-                                </div>
-                              </div>
-                            </div>
+                        {/* Stats Grid */}
+                        <div className="grid grid-cols-2 gap-y-3 gap-x-2 mt-auto pt-4 border-t border-gray-100">
+                          <div>
+                            <p className="text-xs text-gray-400 font-medium uppercase tracking-wider">Time Left</p>
+                            <p className="text-sm font-bold text-gray-900">{auction.timeLeft}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-gray-400 font-medium uppercase tracking-wider">Current Bid</p>
+                            <p className="text-sm font-bold text-blue-600">{auction.currentBid}</p>
+                          </div>
+                           <div>
+                            <p className="text-xs text-gray-400 font-medium uppercase tracking-wider">Active Bids</p>
+                            <p className="text-sm font-bold text-gray-900">{auction.activeBids}</p>
+                          </div>
+                           <div>
+                            <p className="text-xs text-gray-400 font-medium uppercase tracking-wider">Ends on</p>
+                            <p className="text-sm font-bold text-gray-900 truncate">{auction.endTime.split(',')[0]}</p>
                           </div>
                         </div>
                       </div>

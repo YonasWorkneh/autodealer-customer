@@ -54,7 +54,10 @@ const formSchema = z.object({
   description: z.string().min(1, "Description is required"),
   images: z.array(z.instanceof(File)).min(1, "At least one image is required"),
   bodyType: z.string().min(1, "Body type is required"),
+  vin: z.string().min(1, "VIN is required"),
+  origin: z.string().min(1, "Origin is required"),
 });
+
 
 type FormData = z.infer<typeof formSchema>;
 
@@ -95,14 +98,14 @@ export default function PlaceAddForm() {
       description: "",
       images: [],
       bodyType: "",
+      vin: "",
+      origin: "",
     },
   });
 
   const watchedMake = watch("make");
   const { data: makes, isLoading: isMakesLoading } = useMakes();
   const { data: models, isLoading: isModelsLoading } = useModels(watchedMake);
-  console.log(models);
-  console.log(makes);
   const { data: carData, isLoading: isCarLoading } = useCar(c_id ? c_id : "");
 
   const onSuccess = () => {
@@ -121,6 +124,8 @@ export default function PlaceAddForm() {
       description: "",
       images: [],
       bodyType: "",
+      vin: "",
+      origin: "",
     });
     setImages([]);
     setFeaturedImageIndex(0);
@@ -149,6 +154,8 @@ export default function PlaceAddForm() {
       description: "",
       images: [],
       bodyType: "",
+      vin: "",
+      origin: "",
     });
     setImages([]);
     setFeaturedImageIndex(0);
@@ -523,6 +530,8 @@ export default function PlaceAddForm() {
             carData.sale_type === "fixed_price" ? "Fixed Price" : "Auction",
           description: carData.description,
           bodyType: carData.body_type,
+          vin: carData.vin,
+          origin: carData.origin,
           images: [],
         });
 
@@ -589,7 +598,10 @@ export default function PlaceAddForm() {
             "bodyColor",
             "interiorColor",
             "fuelType",
+            "fuelType",
             "bodyType",
+            "vin",
+            "origin",
           ]
         : ["price", "salesType", "description", "images"];
 
@@ -647,6 +659,8 @@ export default function PlaceAddForm() {
       );
       carForm.append("description", data.description);
       carForm.append("body_type", data.bodyType);
+      carForm.append("vin", data.vin);
+      carForm.append("origin", data.origin);
 
       // Add images to FormData
       data.images.forEach((image, index) => {
@@ -717,7 +731,7 @@ export default function PlaceAddForm() {
   return (
     <div>
       <Header color="black" />
-      <div className="grid my-auto place-items-center pt-20">
+      <div className="grid my-auto place-items-center pt-5">
         <div className="w-full max-w-2xl bg-transparent rounded-lg p-8">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-semibold text-black/70 uppercase text-center">
@@ -809,16 +823,12 @@ export default function PlaceAddForm() {
                               setValue("model", 0); // reset model when make changes
                             }}
                           >
-                            <SelectTrigger
-                              className={`w-full h-12 border-black/10 rounded-md py-8 ${
-                                errors.make ? "border-red-500" : ""
-                              }`}
-                            >
+                            <SelectTrigger className="w-full h-12 border-black/10 rounded-md py-8">
                               <SelectValue placeholder="Select Make" />
                             </SelectTrigger>
-                            <SelectContent>
+                            <SelectContent className="max-h-56">
                               {isMakesLoading ? (
-                                <SelectItem value="loading" disabled>
+                                <SelectItem value="0" disabled>
                                   Loading...
                                 </SelectItem>
                               ) : (
@@ -841,6 +851,7 @@ export default function PlaceAddForm() {
                         </p>
                       )}
                     </div>
+
 
                     {/* Model Selection */}
                     <div className="space-y-2">
@@ -893,6 +904,42 @@ export default function PlaceAddForm() {
                           {errors.model.message}
                         </p>
                       )}
+                    </div>
+
+                    {/* Vin and Origin */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="vin" className="text-sm text-gray-500">
+                          VIN
+                        </Label>
+                        <Input
+                          id="vin"
+                          placeholder="Enter VIN"
+                          {...control.register("vin")}
+                          className="w-full h-12 border-black/10 rounded-md"
+                        />
+                         {errors.vin && (
+                        <p className="text-red-500 text-sm">
+                          {errors.vin.message}
+                        </p>
+                      )}
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="origin" className="text-sm text-gray-500">
+                            Origin
+                        </Label>
+                        <Input
+                            id="origin"
+                            placeholder="Enter Origin"
+                            {...control.register("origin")}
+                            className="w-full h-12 border-black/10 rounded-md"
+                        />
+                         {errors.origin && (
+                        <p className="text-red-500 text-sm">
+                          {errors.origin.message}
+                        </p>
+                      )}
+                    </div>
                     </div>
 
                     {/* Year and Mileage Row */}

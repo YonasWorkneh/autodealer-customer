@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, useRef, useCallback } from "react";
-import { Search, Filter, LayoutGrid, List } from "lucide-react";
+import { Search, Filter, LayoutGrid, List, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -76,7 +76,8 @@ export default function CarMarketplace() {
         ? [c.make, c.model, c.body_type, String(c.year)]
             .filter(Boolean)
             .map((s) => normalized(String(s)))
-            .some((s) => s.includes(q))
+            .join(" ")
+            .includes(q)
         : true;
       if (!matchesQuery) return false;
       if (
@@ -262,17 +263,38 @@ export default function CarMarketplace() {
             </div>
 
             {/* Results Count */}
-            <div className="mb-6">
-              <h2 className="text-3xl font-semibold text-[#1a1a1a]">
-                All Vehicles
-              </h2>
-              <p className="mt-2 text-xs uppercase tracking-[0.25em] text-[#4a4a4a]">
-                {filteredCars.length === 0
-                  ? "Showing 0 entries"
-                  : `Showing ${filteredCars.length} ${
-                      filteredCars.length === 1 ? "vehicle" : "vehicles"
-                    }`}
-              </p>
+            <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h2 className="text-3xl font-semibold text-[#1a1a1a]">
+                  {activeQuery ? (
+                    <span className="flex items-center gap-2">
+                      Results for "{activeQuery}"
+                    </span>
+                  ) : (
+                    "All Vehicles"
+                  )}
+                </h2>
+                <p className="mt-2 text-xs uppercase tracking-[0.25em] text-[#4a4a4a]">
+                  {filteredCars.length === 0
+                    ? "Showing 0 entries"
+                    : `Showing ${filteredCars.length} ${
+                        filteredCars.length === 1 ? "vehicle" : "vehicles"
+                      }`}
+                </p>
+              </div>
+              {activeQuery && (
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setActiveQuery("");
+                    setQuery("");
+                  }}
+                  className="gap-2 self-start sm:self-auto"
+                >
+                  <X className="h-4 w-4" />
+                  Clear Search
+                </Button>
+              )}
             </div>
 
             {/* Car Listings */}
