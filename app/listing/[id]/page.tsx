@@ -28,6 +28,7 @@ import { useCar, useCarFavorites, useUpdateFavorite } from "@/hooks/cars";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { formatPrice } from "@/lib/utils";
+import ReviewSection from "@/components/ReviewSection";
 import {
   DropdownMenu,
   DropdownMenuItem,
@@ -118,9 +119,8 @@ export default function CarListingPage() {
 
   // Share functionality
   const shareData = {
-    title: `${car?.year} ${car?.make} ${car?.model} ${
-      car?.trim ? `(${car.trim})` : ""
-    }`,
+    title: `${car?.year} ${car?.make} ${car?.model} ${car?.trim ? `(${car.trim})` : ""
+      }`,
     text: `${message.slice(0, 100)}... Price: ${formatPrice(car?.price || "")}`,
     url: window.location.href,
     image: carImages[currentImageIndex],
@@ -309,9 +309,8 @@ export default function CarListingPage() {
               onClick={() => toggleFavorite(car.id)}
             >
               <Heart
-                className={`w-4 h-4 ${
-                  favorited !== -1 ? "fill-zinc-800 text-zinc-800" : ""
-                }`}
+                className={`w-4 h-4 ${favorited !== -1 ? "fill-zinc-800 text-zinc-800" : ""
+                  }`}
               />
               {favorited !== -1 ? "Favorited" : "Favorite"}
             </Button>
@@ -584,14 +583,17 @@ export default function CarListingPage() {
                   {Array.from({ length: 5 }).map((_, index) => (
                     <Star
                       key={index}
-                      className={`${
-                        index < 4
-                          ? "text-yellow-500 fill-amber-400"
-                          : "text-black"
-                      } `}
+                      className={`${index < 4
+                        ? "text-yellow-500 fill-amber-400"
+                        : "text-black"
+                        } `}
                     />
                   ))}
                   <p className="text-gray-500 text-xs sm:text-sm">4/5</p>
+                </div>
+
+                <div className="mt-6 pt-6 border-t border-gray-100">
+                  <ReviewSection carId={id as string} />
                 </div>
               </CardContent>
             </Card>
@@ -641,9 +643,8 @@ export default function CarListingPage() {
                 onClick={() => toggleFavorite(car.id)}
               >
                 <Heart
-                  className={`w-4 h-4 ${
-                    favorited !== -1 ? "fill-zinc-800 text-zinc-800" : ""
-                  }`}
+                  className={`w-4 h-4 ${favorited !== -1 ? "fill-zinc-800 text-zinc-800" : ""
+                    }`}
                 />
                 {favorited !== -1 ? "Favorited" : "Favorite"}
               </button>

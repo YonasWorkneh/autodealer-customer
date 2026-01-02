@@ -19,6 +19,25 @@ import { CarDetailModal } from "./CarDetailModal";
 import FilterSidebar from "@/components/Filter";
 import Car from "@/components/Car";
 import { useCarsInfinite } from "@/hooks/cars";
+import Slider from "@/components/Slider";
+
+ const carLogos = [
+    { image: "/logo/byd.webp", title: "BYD" },
+    { image: "/logo/hyundai.webp", title: "Hyundai" },
+    { image: "/logo/Jetour_Logo.svg", title: "Jetour" },
+    { image: "/logo/liffan.png", title: "Lifan" },
+    { image: "/logo/suzuki.png", title: "Suzuki" },
+    { image: "/logo/toyota.png", title: "Toyota" },
+    { image: "/logo/vk.svg.png", title: "VK" },
+    { image: "/logo/nissan.png", title: "Nissan" },
+    { image: "/logo/ford.webp", title: "Ford" },
+    { image: "/logo/audi.png", title: "Audi" },
+    { image: "/logo/mist.png", title: "Mitsubishi" },
+    { image: "/logo/bmw.png", title: "BMW" },
+    { image: "/logo/infinity.png", title: "Infinity" },
+    { image: "/logo/mercedes.webp", title: "Mercedes" },
+    { image: "/logo/lexus.png", title: "Lexus" },
+  ];
 
 export default function CarMarketplace() {
   const [detailOpened, setDetailOpened] = useState(false);
@@ -386,6 +405,10 @@ export default function CarMarketplace() {
             </div>
           </div>
         </div>
+      </div>
+
+      <div className="px-4 sm:px-6 md:px-10 lg:px-20 xl:px-40 py-16">
+        <Slider items={carLogos} />
       </div>
 
       {/* Footer */}
