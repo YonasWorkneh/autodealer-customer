@@ -1,65 +1,83 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Star, ChevronDown, ChevronUp, Send, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { motion, AnimatePresence } from "framer-motion";
 import { Review } from "@/app/types/Review";
+import { useRatingAnalytics, usePostCarRating } from "@/hooks/cars";
+import { useToast } from "@/hooks/use-toast";
 
 interface ReviewSectionProps {
     carId: string;
 }
 
-const INITIAL_REVIEWS: Review[] = [
-    {
-        id: "1",
-        user_name: "John Doe",
-        rating: 5,
-        comment: "This car is in excellent condition. Highly recommended!",
-        created_at: new Date().toISOString(),
-    },
-    {
-        id: "2",
-        user_name: "Jane Smith",
-        rating: 4,
-        comment: "Great deal, but the interior could have been cleaner. Overall happy.",
-        created_at: new Date().toISOString(),
-    },
-    {
-        id: "3",
-        user_name: "Mike Johnson",
-        rating: 5,
-        comment: "Smooth transaction and vertex car. The dealer was very professional.",
-        created_at: new Date().toISOString(),
-    },
-];
-
 export default function ReviewSection({ carId }: ReviewSectionProps) {
-    const [reviews, setReviews] = useState<Review[]>(INITIAL_REVIEWS);
+    const { data: ratingData, isLoading } = useRatingAnalytics(carId);
+    const { toast } = useToast();
+    
+    const { mutate: postRating, isPending: isPosting } = usePostCarRating(
+        carId,
+        () => {
+            // Success callback
+            toast({
+                title: "✅ Success",
+                description: "Your review has been posted successfully!",
+            });
+            setNewComment("");
+            setSelectedRating(0);
+        },
+        (error: Error) => {
+            // Error callback
+            toast({
+                title: "❌ Error",
+                description: error.message || "Failed to post review. Please try again.",
+            });
+        }
+    );
+    
+    // Transform API reviews to component Review format
+    const apiReviews: Review[] = useMemo(() => {
+        if (!ratingData || ratingData.length === 0) return [];
+        const analytics = ratingData[0];
+        return analytics.reviews.map((review, index) => ({
+            id: `api-${index}-${review.created_at}`,
+            user_name: review.email.split('@')[0] || "Anonymous",
+            rating: review.rating,
+            comment: review.comment,
+            created_at: review.created_at,
+        }));
+    }, [ratingData]);
+
+    const reviews = apiReviews;
     const [isExpanded, setIsExpanded] = useState(false);
     const [newComment, setNewComment] = useState("");
     const [hoverRating, setHoverRating] = useState(0);
     const [selectedRating, setSelectedRating] = useState(0);
 
     const handlePostReview = () => {
-        if (!newComment || selectedRating === 0) return;
+        if (!newComment || selectedRating === 0 || isPosting) return;
 
-        const newReview: Review = {
-            id: Math.random().toString(36).substr(2, 9),
-            user_name: "You",
+        postRating({
             rating: selectedRating,
             comment: newComment,
-            created_at: new Date().toISOString(),
-        };
-
-        setReviews([newReview, ...reviews]);
-        setNewComment("");
-        setSelectedRating(0);
+        });
     };
 
     const visibleReviews = isExpanded ? reviews : [];
+
+    if (isLoading) {
+        return (
+            <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                    <h3 className="font-semibold text-sm sm:text-base">User Reviews</h3>
+                </div>
+                <p className="text-xs text-gray-500">Loading reviews...</p>
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-4">
@@ -159,13 +177,13 @@ export default function ReviewSection({ carId }: ReviewSectionProps) {
                     />
                     <button
                         onClick={handlePostReview}
-                        disabled={!newComment || selectedRating === 0}
-                        className={`absolute bottom-2 right-2 p-1.5 rounded-lg transition-colors ${newComment && selectedRating > 0
+                        disabled={!newComment || selectedRating === 0 || isPosting}
+                        className={`absolute bottom-2 right-2 p-1.5 rounded-lg transition-colors ${newComment && selectedRating > 0 && !isPosting
                             ? "bg-black text-white hover:bg-gray-800 cursor-pointer"
                             : "bg-gray-100 text-gray-400 cursor-not-allowed"
                             }`}
                     >
-                        <Send className="w-4 h-4" />
+                        <Send className={`w-4 h-4 ${isPosting ? "animate-pulse" : ""}`} />
                     </button>
                 </div>
             </div>

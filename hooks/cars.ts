@@ -13,8 +13,11 @@ import {
   getPopularCars,
   getMarketData,
   placeBid,
+  fetchRatingAnalytics,
+  postCarRating,
 } from "@/lib/carApi";
 import type { FetchedCar } from "@/app/types/Car";
+import type { RatingAnalytics } from "@/app/types/RatingAnalytics";
 
 export function useCars() {
   return useQuery<FetchedCar[]>({
@@ -181,6 +184,34 @@ export function usePlaceBid(
       // Invalidate car queries to refresh bid data
       queryClient.invalidateQueries({ queryKey: ["car"] });
       queryClient.invalidateQueries({ queryKey: ["cars"] });
+    },
+    onError: (error: Error) => {
+      onError?.(error);
+    },
+  });
+}
+
+export function useRatingAnalytics(carId: string | number | undefined) {
+  return useQuery<RatingAnalytics[]>({
+    queryKey: ["rating-analytics", carId],
+    queryFn: () => fetchRatingAnalytics(carId as string | number),
+    enabled: !!carId,
+  });
+}
+
+export function usePostCarRating(
+  carId: string | number | undefined,
+  onSuccess?: () => void,
+  onError?: (error: Error) => void
+) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ rating, comment }: { rating: number; comment: string }) =>
+      postCarRating(Number(carId), rating, comment),
+    onSuccess: () => {
+      onSuccess?.();
+      // Invalidate rating analytics to refresh the data
+      queryClient.invalidateQueries({ queryKey: ["rating-analytics", carId] });
     },
     onError: (error: Error) => {
       onError?.(error);

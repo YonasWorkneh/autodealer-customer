@@ -4,6 +4,7 @@ import type { Make } from "@/app/types/Make";
 import type { Model } from "@/app/types/Model";
 import { getCredentials } from "./credential";
 import type { MarketData } from "@/app/types/Market";
+import type { RatingAnalytics } from "@/app/types/RatingAnalytics";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL as string;
 
@@ -186,6 +187,48 @@ export async function placeBid(car: number, amount: number) {
       throw new Error(
         errorData.message ||
           `Failed to place bid: ${res.status} ${res.statusText}`
+      );
+    }
+    return await res.json();
+  } catch (err) {
+    throw err;
+  }
+}
+
+export async function fetchRatingAnalytics(carId: string | number): Promise<RatingAnalytics[]> {
+  const credential = await getCredentials();
+  try {
+    const url = `/analytics/rating_analytics/?car_id=${carId}`;
+    return fetcher<RatingAnalytics[]>(url, {
+      headers: {
+        Authorization: `Bearer ${credential.access}`,
+      },
+    });
+  } catch (err) {
+    throw err;
+  }
+}
+
+export async function postCarRating(carId: number, rating: number, comment: string) {
+  const credential = await getCredentials();
+  try {
+    const res = await fetch(`${BASE_URL}/ratings/car-ratings/`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${credential.access}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        car: carId,
+        rating: rating,
+        comment: comment,
+      }),
+    });
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({}));
+      throw new Error(
+        errorData.message ||
+          `Failed to post rating: ${res.status} ${res.statusText}`
       );
     }
     return await res.json();

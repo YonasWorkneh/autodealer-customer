@@ -20,11 +20,12 @@ import {
   Instagram,
   Facebook,
   MoreVertical,
+  ArrowLeft,
 } from "lucide-react";
 import Image from "next/image";
 import Header from "@/components/Header";
-import { useParams } from "next/navigation";
-import { useCar, useCarFavorites, useUpdateFavorite } from "@/hooks/cars";
+import { useParams, useRouter } from "next/navigation";
+import { useCar, useCarFavorites, useUpdateFavorite, useRatingAnalytics } from "@/hooks/cars";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { formatPrice } from "@/lib/utils";
@@ -45,13 +46,20 @@ export default function CarListingPage() {
   const [isShareDropdownOpen, setIsShareDropdownOpen] = useState(false);
 
   const searchParams = useParams();
+  const router = useRouter();
   const { id } = searchParams;
 
   const { data: car, isLoading, error } = useCar(id as string);
   const { data: favorites } = useCarFavorites();
+  const { data: ratingData } = useRatingAnalytics(id as string);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [ip, setIp] = useState<string | null>(null);
+
+  // Extract rating data
+  const ratingAnalytics = ratingData?.[0];
+  const averageRating = ratingAnalytics?.average_rating || 0;
+  const totalRatings = ratingAnalytics?.total_ratings || 0;
 
   const onSuccess = () => {
     queryClient.invalidateQueries({ queryKey: ["car-favorites"] });
@@ -257,6 +265,16 @@ export default function CarListingPage() {
     <div className="min-h-screen bg-gray-50 p-4">
       <Header color="black" />
       <div className="px-0 sm:px-6 lg:px-50 py-6 md:py-10">
+        {/* Back Button */}
+        <Button
+          variant="ghost"
+          onClick={() => router.push("/listing")}
+          className="mb-4 flex items-center gap-2 text-gray-600 hover:text-black hover:bg-gray-100 cursor-pointer"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back to Listing
+        </Button>
+        
         {/* Main Car Image */}
         <div className="relative mb-6">
           <div className="relative overflow-hidden rounded-lg bg-white shadow-lg">
@@ -583,13 +601,16 @@ export default function CarListingPage() {
                   {Array.from({ length: 5 }).map((_, index) => (
                     <Star
                       key={index}
-                      className={`${index < 4
+                      className={`${index < Math.round(averageRating)
                         ? "text-yellow-500 fill-amber-400"
-                        : "text-black"
+                        : "text-gray-300"
                         } `}
                     />
                   ))}
-                  <p className="text-gray-500 text-xs sm:text-sm">4/5</p>
+                  <p className="text-gray-500 text-xs sm:text-sm">
+                    {averageRating > 0 ? `${averageRating.toFixed(1)}/5` : "No ratings yet"}
+                    {totalRatings > 0 && ` (${totalRatings} ${totalRatings === 1 ? 'rating' : 'ratings'})`}
+                  </p>
                 </div>
 
                 <div className="mt-6 pt-6 border-t border-gray-100">
