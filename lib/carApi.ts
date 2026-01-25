@@ -236,3 +236,31 @@ export async function postCarRating(carId: number, rating: number, comment: stri
     throw err;
   }
 }
+
+export async function postLead(name: string, contact: string) {
+  const credential = await getCredentials();
+  try {
+    const res = await fetch(`${BASE_URL}/sales/leads/`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${credential.access}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        name: name,
+        contact: contact,
+        status: "inquiry",
+      }),
+    });
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({}));
+      throw new Error(
+        errorData.message ||
+          `Failed to submit inquiry: ${res.status} ${res.statusText}`
+      );
+    }
+    return await res.json();
+  } catch (err) {
+    throw err;
+  }
+}

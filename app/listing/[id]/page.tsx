@@ -25,11 +25,22 @@ import {
 import Image from "next/image";
 import Header from "@/components/Header";
 import { useParams, useRouter } from "next/navigation";
-import { useCar, useCarFavorites, useUpdateFavorite, useRatingAnalytics } from "@/hooks/cars";
+import { useCar, useCarFavorites, useUpdateFavorite, useRatingAnalytics, usePostLead } from "@/hooks/cars";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { formatPrice } from "@/lib/utils";
 import ReviewSection from "@/components/ReviewSection";
+import { useProfile } from "@/hooks/profile";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   DropdownMenu,
   DropdownMenuItem,
@@ -44,6 +55,9 @@ export default function CarListingPage() {
   const [showAllFeatures, setShowAllFeatures] = useState(false);
   const [readIndex, setReadIndex] = useState<number>(140);
   const [isShareDropdownOpen, setIsShareDropdownOpen] = useState(false);
+  const [isContactDialogOpen, setIsContactDialogOpen] = useState(false);
+  const [contactName, setContactName] = useState("");
+  const [contactNumber, setContactNumber] = useState("");
 
   const searchParams = useParams();
   const router = useRouter();
@@ -52,9 +66,50 @@ export default function CarListingPage() {
   const { data: car, isLoading, error } = useCar(id as string);
   const { data: favorites } = useCarFavorites();
   const { data: ratingData } = useRatingAnalytics(id as string);
+  const { data: profile } = useProfile();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [ip, setIp] = useState<string | null>(null);
+
+  // Pre-fill form with profile data when dialog opens
+  useEffect(() => {
+    if (isContactDialogOpen && profile) {
+      const fullName = profile.first_name && profile.last_name
+        ? `${profile.first_name} ${profile.last_name}`
+        : profile.first_name || profile.last_name || "";
+      setContactName(fullName);
+      setContactNumber(profile.contact || "");
+    }
+  }, [isContactDialogOpen, profile]);
+
+  const { mutate: postLead, isPending: isSubmittingLead } = usePostLead(
+    () => {
+      toast({
+        title: "✅ Success",
+        description: "Your inquiry has been submitted successfully!",
+      });
+      setIsContactDialogOpen(false);
+      setContactName("");
+      setContactNumber("");
+    },
+    (error: Error) => {
+      toast({
+        title: "❌ Error",
+        description: error.message || "Failed to submit inquiry. Please try again.",
+      });
+    }
+  );
+
+  const handleSubmitContact = () => {
+    if (!contactName.trim() || !contactNumber.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Please fill in both name and contact fields.",
+      });
+      return;
+    }
+    postLead({ name: contactName, contact: contactNumber });
+  };
 
   // Extract rating data
   const ratingAnalytics = ratingData?.[0];
@@ -577,23 +632,12 @@ export default function CarListingPage() {
                   View All Cars
                 </Button>
                 <div className="flex flex-wrap gap-2 sm:gap-3 mt-4 border-t py-4">
-                  <Button className="w-full sm:w-auto bg-black hover:bg-gray-800 text-white flex items-center justify-center gap-2 cursor-pointer">
-                    <Phone className="w-4 h-4" />
-                    Call
-                  </Button>
                   <Button
-                    variant="outline"
-                    className="w-full sm:w-auto flex items-center justify-center gap-2 bg-green-50 cursor-pointer"
+                    onClick={() => setIsContactDialogOpen(true)}
+                    className="w-full sm:w-auto bg-black hover:bg-gray-800 text-white flex items-center justify-center gap-2 cursor-pointer"
                   >
-                    <MessageCircle className="w-4 h-4 text-green-600" />
-                    WhatsApp
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="w-full sm:w-auto flex items-center justify-center gap-2 bg-blue-50 cursor-pointer"
-                  >
-                    <Send className="w-4 h-4 text-blue-600" />
-                    Telegram
+                    <MessageCircle className="w-4 h-4" />
+                    Contact
                   </Button>
                 </div>
                 {/* rating */}
@@ -726,6 +770,57 @@ export default function CarListingPage() {
             </div>
           </div>
         )}
+
+        {/* Contact Dialog */}
+        <Dialog open={isContactDialogOpen} onOpenChange={setIsContactDialogOpen}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Contact Dealer</DialogTitle>
+              <DialogDescription>
+                Fill in your details to inquire about this vehicle. We'll get back to you soon.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="name">Name</Label>
+                <Input
+                  id="name"
+                  placeholder="Enter your full name"
+                  value={contactName}
+                  onChange={(e) => setContactName(e.target.value)}
+                  disabled={isSubmittingLead}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="contact">Contact</Label>
+                <Input
+                  id="contact"
+                  type="tel"
+                  placeholder="Enter your phone number"
+                  value={contactNumber}
+                  onChange={(e) => setContactNumber(e.target.value)}
+                  disabled={isSubmittingLead}
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setIsContactDialogOpen(false)}
+                disabled={isSubmittingLead}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleSubmitContact}
+                disabled={isSubmittingLead || !contactName.trim() || !contactNumber.trim()}
+                className="bg-black hover:bg-gray-800 text-white"
+              >
+                {isSubmittingLead ? "Submitting..." : "Submit Inquiry"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );

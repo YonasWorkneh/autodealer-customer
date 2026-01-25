@@ -15,6 +15,7 @@ import {
   placeBid,
   fetchRatingAnalytics,
   postCarRating,
+  postLead,
 } from "@/lib/carApi";
 import type { FetchedCar } from "@/app/types/Car";
 import type { RatingAnalytics } from "@/app/types/RatingAnalytics";
@@ -212,6 +213,22 @@ export function usePostCarRating(
       onSuccess?.();
       // Invalidate rating analytics to refresh the data
       queryClient.invalidateQueries({ queryKey: ["rating-analytics", carId] });
+    },
+    onError: (error: Error) => {
+      onError?.(error);
+    },
+  });
+}
+
+export function usePostLead(
+  onSuccess?: () => void,
+  onError?: (error: Error) => void
+) {
+  return useMutation({
+    mutationFn: ({ name, contact }: { name: string; contact: string }) =>
+      postLead(name, contact),
+    onSuccess: () => {
+      onSuccess?.();
     },
     onError: (error: Error) => {
       onError?.(error);
