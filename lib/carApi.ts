@@ -254,10 +254,13 @@ export async function postLead(name: string, contact: string) {
     });
     if (!res.ok) {
       const errorData = await res.json().catch(() => ({}));
-      throw new Error(
+      const error = new Error(
         errorData.message ||
           `Failed to submit inquiry: ${res.status} ${res.statusText}`
-      );
+      ) as Error & { response?: any; data?: any };
+      error.response = errorData;
+      error.data = errorData;
+      throw error;
     }
     return await res.json();
   } catch (err) {

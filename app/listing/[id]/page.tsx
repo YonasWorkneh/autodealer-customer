@@ -58,6 +58,8 @@ export default function CarListingPage() {
   const [isContactDialogOpen, setIsContactDialogOpen] = useState(false);
   const [contactName, setContactName] = useState("");
   const [contactNumber, setContactNumber] = useState("");
+  const [nameError, setNameError] = useState("");
+  const [contactError, setContactError] = useState("");
 
   const searchParams = useParams();
   const router = useRouter();
@@ -80,6 +82,11 @@ export default function CarListingPage() {
       setContactName(fullName);
       setContactNumber(profile.contact || "");
     }
+    // Clear errors when dialog opens
+    if (isContactDialogOpen) {
+      setNameError("");
+      setContactError("");
+    }
   }, [isContactDialogOpen, profile]);
 
   const { mutate: postLead, isPending: isSubmittingLead } = usePostLead(
@@ -91,24 +98,60 @@ export default function CarListingPage() {
       setIsContactDialogOpen(false);
       setContactName("");
       setContactNumber("");
+      setNameError("");
+      setContactError("");
     },
-    (error: Error) => {
-      toast({
-        title: "❌ Error",
-        description: error.message || "Failed to submit inquiry. Please try again.",
-      });
+    (error: any) => {
+      // Parse API error response
+      const errorData = error?.response || error?.data || {};
+      
+      // Clear previous errors
+      setNameError("");
+      setContactError("");
+      
+      // Set field-specific errors
+      if (errorData.name && Array.isArray(errorData.name)) {
+        setNameError(errorData.name[0]);
+      }
+      if (errorData.contact && Array.isArray(errorData.contact)) {
+        setContactError(errorData.contact[0]);
+      }
+      
+      // Show general error toast if no field-specific errors
+      if (!errorData.name && !errorData.contact) {
+        toast({
+          title: "❌ Error",
+          description: error.message || "Failed to submit inquiry. Please try again.",
+        });
+      }
     }
   );
 
   const handleSubmitContact = () => {
+    // Clear previous errors
+    setNameError("");
+    setContactError("");
+    
     if (!contactName.trim() || !contactNumber.trim()) {
-      toast({
-        title: "Validation Error",
-        description: "Please fill in both name and contact fields.",
-      });
+      if (!contactName.trim()) {
+        setNameError("Name is required");
+      }
+      if (!contactNumber.trim()) {
+        setContactError("Contact is required");
+      }
       return;
     }
     postLead({ name: contactName, contact: contactNumber });
+  };
+
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setContactName(e.target.value);
+    if (nameError) setNameError("");
+  };
+
+  const handleContactChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setContactNumber(e.target.value);
+    if (contactError) setContactError("");
   };
 
   // Extract rating data
@@ -787,20 +830,28 @@ export default function CarListingPage() {
                   id="name"
                   placeholder="Enter your full name"
                   value={contactName}
-                  onChange={(e) => setContactName(e.target.value)}
+                  onChange={handleNameChange}
                   disabled={isSubmittingLead}
+                  className={nameError ? "border-red-500 focus-visible:border-red-500 focus-visible:ring-red-500/50" : ""}
                 />
+                {nameError && (
+                  <p className="text-sm text-red-500 mt-1">{nameError}</p>
+                )}
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="contact">Contact</Label>
                 <Input
                   id="contact"
                   type="tel"
-                  placeholder="Enter your phone number"
+                  placeholder="Enter your phone number or email"
                   value={contactNumber}
-                  onChange={(e) => setContactNumber(e.target.value)}
+                  onChange={handleContactChange}
                   disabled={isSubmittingLead}
+                  className={contactError ? "border-red-500 focus-visible:border-red-500 focus-visible:ring-red-500/50" : ""}
                 />
+                {contactError && (
+                  <p className="text-sm text-red-500 mt-1">{contactError}</p>
+                )}
               </div>
             </div>
             <DialogFooter>
