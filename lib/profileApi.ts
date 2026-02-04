@@ -72,3 +72,21 @@ export const updateProfile = async (data: any) => {
     throw err;
   }
 };
+
+export const getProfileById = async (id: number) => {
+  try {
+    const credential = await getCredentials();
+    const { access } = credential;
+
+    const res = await fetch(`${API_URL}/users/profiles/${id}`, {
+      headers: {
+        Authorization: `Bearer ${access}`,
+      },
+    });
+    if (!res.ok) throw new Error("Something went wrong");
+    const profile: UserProfile = await res.json();
+    return profile;
+  } catch (err: any) {
+    throw err;
+  }
+};

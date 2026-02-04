@@ -1,25 +1,46 @@
 "use client";
 
-import type React from "react";
-
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { Mail, Zap } from "lucide-react";
+import { Mail, Loader2 } from "lucide-react";
 import Link from "next/link";
-import Image from "next/image";
 import { useForm } from "react-hook-form";
+import { useToast } from "@/hooks/use-toast";
+import { requestPasswordReset } from "@/lib/auth/signin";
+
+type ForgotPasswordFormValues = {
+  email: string;
+};
 
 export default function ForgotPasswordForm() {
-  const [email, setEmail] = useState("");
-  const { handleSubmit, register, formState, setError } = useForm();
-  const { errors } = formState;
+  const { toast } = useToast();
+  const { handleSubmit, register, formState, setError } =
+    useForm<ForgotPasswordFormValues>();
+  const { errors, isSubmitting } = formState;
 
-  const onSubmit = async () => {
+  const onSubmit = async (data: ForgotPasswordFormValues) => {
     try {
+      await requestPasswordReset(data.email);
+
+      toast({
+        title: "Success",
+        description:
+          "If an account exists for this email, a reset link has been sent.",
+        variant: "success",
+      });
+      setError("email", {
+        type: "manual",
+        message: "If an account exists for this email, a reset link has been sent.",
+      });
     } catch (err: any) {
-      setError("email", { message: "Something went wrong. Try again." });
+      const message = err?.message || "Something went wrong. Try again.";
+      setError("email", { message });
+      toast({
+        title: "Error",
+        description: message,
+        variant: "destructive",
+      });
     }
   };
 
@@ -59,7 +80,6 @@ export default function ForgotPasswordForm() {
                   id="email"
                   type="email"
                   placeholder="Enter your email"
-                  value={email}
                   {...register("email", { required: "Email is required" })}
                   className="pl-10 h-12 border-gray-300 focus:border-gray-400 focus:ring-gray-400"
                 />
@@ -73,9 +93,14 @@ export default function ForgotPasswordForm() {
 
             <Button
               type="submit"
-              className="w-full h-12 bg-zinc-900 hover:bg-zinc-800 text-white font-medium cursor-pointer"
+              disabled={isSubmitting}
+              className="w-full h-12 bg-primary text-primary-foreground hover:bg-primary-hover font-medium cursor-pointer disabled:opacity-70 disabled:pointer-events-none"
             >
-              Reset Password
+              {isSubmitting ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                "Reset Password"
+              )}
             </Button>
           </form>
 

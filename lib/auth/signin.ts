@@ -107,16 +107,28 @@ export const getUser = async () => {
   }
 };
 
-export const forgotPassword = async (email: string) => {
-  try {
-    const cookie = await cookies();
-    const access = cookie.get("access");
-    const refresh = cookie.get("refresh");
-    return { access, refresh };
-  } catch (err: any) {
-    console.error(err.message);
-    throw err;
+export const requestPasswordReset = async (email: string) => {
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/auth/password/reset`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email }),
+    }
+  );
+
+  if (!res.ok) {
+    const errData = await res.json().catch(() => ({}));
+    const message =
+      (errData?.email && Array.isArray(errData.email) && errData.email[0]) ||
+      errData?.detail ||
+      "Something went wrong. Try again.";
+    throw new Error(message);
   }
+
+  return { success: true };
 };
 
 export const getUserRole = async () => {

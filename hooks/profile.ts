@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getProfile, updateProfile, upgradeProfile } from "@/lib/profileApi"; // adjust path
+import { getProfile, updateProfile, upgradeProfile, getProfileById } from "@/lib/profileApi"; // adjust path
 import { useToast } from "./use-toast";
 
 // Fetch user profile
@@ -9,6 +9,16 @@ export function useProfile() {
   return useQuery({
     queryKey: ["profile"],
     queryFn: getProfile,
+    staleTime: 5 * 60 * 1000, // cache for 5 min
+  });
+}
+
+// Fetch profile by ID
+export function useProfileById(id: number | null | undefined) {
+  return useQuery({
+    queryKey: ["profile", id],
+    queryFn: () => getProfileById(id!),
+    enabled: !!id,
     staleTime: 5 * 60 * 1000, // cache for 5 min
   });
 }
