@@ -70,7 +70,7 @@ export default function Pagination({
                 onClick={() => onPageChange(pageNumber)}
                 className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium transition cursor-pointer ${
                   isActive
-                    ? "bg-black text-white"
+                    ? "bg-primary text-primary-foreground"
                     : "text-gray-700 hover:bg-gray-100"
                 }`}
                 aria-current={isActive ? "page" : undefined}

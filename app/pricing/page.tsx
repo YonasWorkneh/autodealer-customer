@@ -110,7 +110,7 @@ export default function PricingPage() {
     setSelectedPackage(null);
   };
   return (
-    <div className="min-h-screen bg-gray-50 ">
+    <div className="min-h-screen bg-background ">
       <Header color="black" />
       <div className="max-w-6xl mx-auto py-16">
         {/* Header Section */}
@@ -137,7 +137,7 @@ export default function PricingPage() {
             >
               {pkg.id === 2 && (
                 <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                  <Badge className="bg-zinc-900 text-white px-4 py-1 rounded-full flex items-center gap-1">
+                  <Badge className="bg-primary text-primary-foreground px-4 py-1 rounded-full flex items-center gap-1">
                     <Star className="h-4 w-4 fill-current" />
                     Popular
                   </Badge>
@@ -172,7 +172,7 @@ export default function PricingPage() {
                   onClick={() => handleSelectPackage(pkg)}
                   className={`cursor-pointer w-full mb-4  ${
                     pkg.featured
-                      ? "bg-zinc-800 hover:bg-zinc-900"
+                      ? "bg-primary text-primary-foreground hover:bg-primary-hover"
                       : "bg-gray-100 hover:bg-gray-200 text-black"
                   }`}
                 >

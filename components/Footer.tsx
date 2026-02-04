@@ -5,20 +5,25 @@ import { Facebook, Instagram, Twitter } from "lucide-react";
 
 export default function Footer() {
   return (
-    <footer className="bg-black text-white py-10 px-6 md:px-40">
-      <div className=" grid grid-cols-1 md:grid-cols-4 gap-8 border-b border-gray-700 pb-8">
+    <footer className="bg-primary text-primary-foreground py-10 px-6 md:px-40">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-8 border-b border-primary-foreground/15 pb-8">
         {/* Logo & Description */}
         <div>
-          <Link href="/" className="flex items-center space-x-3">
+          <Link
+            href="/"
+            className="flex items-center space-x-3 transition-opacity hover:opacity-90"
+          >
             <Image
               src="/wheel copy.png"
               alt="Car Dealer Logo"
               width={40}
               height={40}
             />
-            <span className="text-xl font-bold">AUTO&mdash;DEALER</span>
+            <span className="text-xl font-bold tracking-tight">
+              AUTO&mdash;DEALER
+            </span>
           </Link>
-          <p className="mt-4 text-gray-400 text-sm">
+          <p className="mt-4 text-primary-foreground/80 text-sm leading-relaxed">
             Premium cars. Exceptional service. Your trusted dealership for the
             perfect automobile.
           </p>
@@ -26,25 +31,39 @@ export default function Footer() {
 
         {/* Quick Links */}
         <div>
-          <h3 className="text-lg font-semibold mb-4">Quick Links</h3>
-          <ul className="space-y-2 text-gray-400 text-sm">
+          <h3 className="text-lg font-semibold mb-4 text-primary-foreground">
+            Quick Links
+          </h3>
+          <ul className="space-y-2.5 text-sm">
             <li>
-              <Link href="/" className="hover:text-white">
+              <Link
+                href="/"
+                className="text-primary-foreground/80 hover:text-primary-foreground transition-colors duration-200"
+              >
                 Home
               </Link>
             </li>
             <li>
-              <Link href="/listing" className="hover:text-white">
+              <Link
+                href="/listing"
+                className="text-primary-foreground/80 hover:text-primary-foreground transition-colors duration-200"
+              >
                 Search
               </Link>
             </li>
             <li>
-              <Link href="/favorites" className="hover:text-white">
+              <Link
+                href="/favorites"
+                className="text-primary-foreground/80 hover:text-primary-foreground transition-colors duration-200"
+              >
                 Favourites
               </Link>
             </li>
             <li>
-              <Link href="/place-add" className="hover:text-white">
+              <Link
+                href="/place-add"
+                className="text-primary-foreground/80 hover:text-primary-foreground transition-colors duration-200"
+              >
                 Sell my Car
               </Link>
             </li>
@@ -53,20 +72,31 @@ export default function Footer() {
 
         {/* Services */}
         <div>
-          <h3 className="text-lg font-semibold mb-4">Services</h3>
-          <ul className="space-y-2 text-gray-400 text-sm">
+          <h3 className="text-lg font-semibold mb-4 text-primary-foreground">
+            Services
+          </h3>
+          <ul className="space-y-2.5 text-sm">
             <li>
-              <Link href="/auction" className="hover:text-white">
+              <Link
+                href="/auction"
+                className="text-primary-foreground/80 hover:text-primary-foreground transition-colors duration-200"
+              >
                 Trade-In
               </Link>
             </li>
             <li>
-              <Link href="/test-drive" className="hover:text-white">
+              <Link
+                href="/test-drive"
+                className="text-primary-foreground/80 hover:text-primary-foreground transition-colors duration-200"
+              >
                 Book a Test Drive
               </Link>
             </li>
             <li>
-              <Link href="/place-add" className="hover:text-white">
+              <Link
+                href="/place-add"
+                className="text-primary-foreground/80 hover:text-primary-foreground transition-colors duration-200"
+              >
                 Sell your car
               </Link>
             </li>
@@ -75,22 +105,40 @@ export default function Footer() {
 
         {/* Contact Info */}
         <div>
-          <h3 className="text-lg font-semibold mb-4">Contact</h3>
-          <p className="text-gray-400 text-sm">
+          <h3 className="text-lg font-semibold mb-4 text-primary-foreground">
+            Contact
+          </h3>
+          <p className="text-primary-foreground/80 text-sm">
             123 Main Street, Addis Ababa, Ethiopia
           </p>
-          <p className="text-gray-400 text-sm">Email: info@autodealer.com</p>
-          <p className="text-gray-400 text-sm">Phone: +251 900 123 456</p>
+          <p className="text-primary-foreground text-sm mt-1">
+            Email: info@autodealer.com
+          </p>
+          <p className="text-primary-foreground/80 text-sm mt-1">
+            Phone: +251 900 123 456
+          </p>
 
           {/* Socials */}
           <div className="flex space-x-4 mt-4">
-            <Link href="#" className="hover:text-white">
+            <Link
+              href="#"
+              className="text-primary-foreground/80 hover:text-primary-foreground transition-colors duration-200"
+              aria-label="Facebook"
+            >
               <Facebook size={20} />
             </Link>
-            <Link href="#" className="hover:text-white">
+            <Link
+              href="#"
+              className="text-primary-foreground/80 hover:text-primary-foreground transition-colors duration-200"
+              aria-label="Instagram"
+            >
               <Instagram size={20} />
             </Link>
-            <Link href="#" className="hover:text-white">
+            <Link
+              href="#"
+              className="text-primary-foreground/80 hover:text-primary-foreground transition-colors duration-200"
+              aria-label="Twitter"
+            >
               <Twitter size={20} />
             </Link>
           </div>
@@ -98,11 +146,10 @@ export default function Footer() {
       </div>
 
       {/* Bottom Bar */}
-      <div className="mt-6 flex flex-col md:flex-row justify-center items-center text-gray-500 text-sm">
+      <div className="mt-6 flex flex-col md:flex-row justify-center items-center text-primary-foreground/70 text-sm">
         <p>
           © {new Date().getFullYear()} Auto&mdash;Dealer. All rights reserved.
         </p>
-        {/* <p>Designed with ❤️ by DriveX Motors</p> */}
       </div>
     </footer>
   );

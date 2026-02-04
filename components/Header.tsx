@@ -23,9 +23,9 @@ export default function Header({ color }: HeaderProps) {
   const linkClasses = (isActive?: boolean) =>
     `${
       color === "black"
-        ? "text-black hover:text-black/60"
-        : "text-white hover:text-white/80"
-    } relative py-2 rounded-md cursor-pointer transition-colors duration-200 after:absolute after:left-0 after:bottom-0 after:h-0.5 after:w-full after:origin-left after:scale-x-0 after:bg-current after:transition-transform after:duration-300 hover:after:scale-x-100 data-[active=true]:after:scale-x-100`;
+        ? "text-black hover:text-primary data-[active=true]:text-primary"
+        : "text-white hover:text-primary data-[active=true]:text-primary"
+    } relative py-2 rounded-md cursor-pointer transition-colors duration-200 after:absolute after:left-0 after:bottom-0 after:h-0.5 after:w-full after:origin-left after:scale-x-0 after:bg-primary after:transition-transform after:duration-300 hover:after:scale-x-100 data-[active=true]:after:scale-x-100`;
 
   const linkClassesPlain = () =>
     `${
@@ -102,7 +102,7 @@ export default function Header({ color }: HeaderProps) {
             <span
               className={`${
                 color === "black"
-                  ? "bg-zinc-800 hover:bg-zinc-900 text-white"
+                  ? "bg-primary text-primary-foreground hover:bg-primary-hover"
                   : " bg-white/10 hover:bg-white/20"
               } size-10 flex justify-center items-center rounded-full uppercase`}
             >
@@ -116,7 +116,7 @@ export default function Header({ color }: HeaderProps) {
           href={"/place-add"}
           className={`text-white ${
             color === "black"
-              ? " bg-zinc-800 hover:bg-zinc-900"
+              ? " bg-primary text-primary-foreground hover:bg-primary-hover"
               : " bg-white/10 hover:bg-white/20"
           } px-4 py-2 rounded-md cursor-pointer transition-colors duration-200`}
           onClick={(e) => {
@@ -219,7 +219,7 @@ export default function Header({ color }: HeaderProps) {
                   }
                   setIsOpen(false);
                 }}
-                className="bg-zinc-800 text-white py-2 px-4 rounded-md hover:bg-zinc-900"
+                className="bg-primary text-primary-foreground py-2 px-4 rounded-md hover:bg-primary-hover"
               >
                 Sell my Car
               </Link>

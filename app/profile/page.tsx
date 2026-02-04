@@ -70,8 +70,9 @@ export default function UserProfile() {
 
   const onSuccess = () =>
     toast({
-      title: "✅ Succesfull!",
-      description: "Your changes have been saved succesfully.",
+      title: "Success",
+      description: "Your changes have been saved successfully.",
+      variant: "success",
     });
   const onError = () =>
     toast({
@@ -180,7 +181,7 @@ export default function UserProfile() {
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="absolute bottom-0 right-0 p-1.5 bg-black rounded-full text-white shadow-md hover:bg-gray-800 cursor-pointer"
+                className="absolute bottom-0 right-0 p-1.5 bg-primary rounded-full text-primary-foreground shadow-md hover:bg-primary-hover cursor-pointer"
               >
                 <Camera size={16} />
               </button>
@@ -275,7 +276,7 @@ export default function UserProfile() {
                 <Button
                   type="submit"
                   disabled={isUpdating}
-                  className="bg-black text-white hover:bg-gray-800 w-full sm:w-auto py-6 cursor-pointer min-w-[125px]"
+                  className="bg-primary text-primary-foreground hover:bg-primary-hover w-full sm:w-auto py-6 cursor-pointer min-w-[125px]"
                 >
                   {isUpdating ? (
                     <Loader2 size={16} className="animate-spin" />

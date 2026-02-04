@@ -30,7 +30,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { formatPrice } from "@/lib/utils";
 import ReviewSection from "@/components/ReviewSection";
-import { useProfile } from "@/hooks/profile";
+import { useProfile, useProfileById } from "@/hooks/profile";
 import {
   Dialog,
   DialogContent,
@@ -41,6 +41,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   DropdownMenu,
   DropdownMenuItem,
@@ -60,6 +61,7 @@ export default function CarListingPage() {
   const [contactNumber, setContactNumber] = useState("");
   const [nameError, setNameError] = useState("");
   const [contactError, setContactError] = useState("");
+  const [contactTab, setContactTab] = useState<"phone" | "email">("phone");
 
   const searchParams = useParams();
   const router = useRouter();
@@ -73,6 +75,10 @@ export default function CarListingPage() {
   const queryClient = useQueryClient();
   const [ip, setIp] = useState<string | null>(null);
 
+  // Get dealer or broker ID (whichever is not null)
+  const dealerOrBrokerId = car?.dealer || car?.broker;
+  const { data: dealerBrokerProfile, isLoading: isLoadingProfile, error: profileError } = useProfileById(dealerOrBrokerId || null);
+
   // Pre-fill form with profile data when dialog opens
   useEffect(() => {
     if (isContactDialogOpen && profile) {
@@ -80,7 +86,27 @@ export default function CarListingPage() {
         ? `${profile.first_name} ${profile.last_name}`
         : profile.first_name || profile.last_name || "";
       setContactName(fullName);
-      setContactNumber(profile.contact || "");
+      
+      // Extract the remaining part if contact starts with +251
+      if (profile.contact) {
+        if (profile.contact.includes("@")) {
+          // It's an email
+          setContactNumber(profile.contact);
+          setContactTab("email");
+        } else if (profile.contact.startsWith("+251")) {
+          setContactNumber(profile.contact.substring(4)); // Remove +251
+          setContactTab("phone");
+        } else if (profile.contact.startsWith("251")) {
+          setContactNumber(profile.contact.substring(3)); // Remove 251
+          setContactTab("phone");
+        } else {
+          setContactNumber(profile.contact);
+          setContactTab("phone");
+        }
+      } else {
+        setContactNumber("");
+        setContactTab("phone");
+      }
     }
     // Clear errors when dialog opens
     if (isContactDialogOpen) {
@@ -92,8 +118,9 @@ export default function CarListingPage() {
   const { mutate: postLead, isPending: isSubmittingLead } = usePostLead(
     () => {
       toast({
-        title: "✅ Success",
+        title: "Success",
         description: "Your inquiry has been submitted successfully!",
+        variant: "success",
       });
       setIsContactDialogOpen(false);
       setContactName("");
@@ -127,21 +154,70 @@ export default function CarListingPage() {
     }
   );
 
+  const validateContact = (value: string, tab: "phone" | "email"): string => {
+    if (!value.trim()) {
+      return "Contact is required";
+    }
+    
+    if (tab === "email") {
+      // Basic email validation
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(value)) {
+        return "Please enter a valid email address";
+      }
+      return "";
+    } else {
+      // Phone number validation
+      const phoneDigits = value.replace(/\D/g, ""); // Remove non-digits
+      
+      if (phoneDigits.length === 0) {
+        return "Please enter a valid phone number";
+      }
+      
+      if (phoneDigits.length !== 9) {
+        return "Phone number must be exactly 9 digits";
+      }
+      
+      if (!phoneDigits.startsWith("7") && !phoneDigits.startsWith("9")) {
+        return "Phone number must start with 7 or 9 (Ethiopian mobile providers)";
+      }
+      
+      return "";
+    }
+  };
+
   const handleSubmitContact = () => {
     // Clear previous errors
     setNameError("");
     setContactError("");
     
-    if (!contactName.trim() || !contactNumber.trim()) {
-      if (!contactName.trim()) {
-        setNameError("Name is required");
-      }
-      if (!contactNumber.trim()) {
-        setContactError("Contact is required");
-      }
+    if (!contactName.trim()) {
+      setNameError("Name is required");
       return;
     }
-    postLead({ name: contactName, contact: contactNumber });
+    
+    if (!contactNumber.trim()) {
+      setContactError("Contact is required");
+      return;
+    }
+    
+    // Validate contact based on active tab
+    const contactValidationError = validateContact(contactNumber, contactTab);
+    if (contactValidationError) {
+      setContactError(contactValidationError);
+      return;
+    }
+    
+    // Format contact: if it's a phone number (9 digits), prepend +251
+    let formattedContact = contactNumber;
+    if (contactTab === "phone") {
+      const phoneDigits = contactNumber.replace(/\D/g, "");
+      if (phoneDigits.length === 9 && (phoneDigits.startsWith("7") || phoneDigits.startsWith("9"))) {
+        formattedContact = `+251${phoneDigits}`;
+      }
+    }
+    
+    postLead({ name: contactName, contact: formattedContact });
   };
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -150,8 +226,31 @@ export default function CarListingPage() {
   };
 
   const handleContactChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setContactNumber(e.target.value);
-    if (contactError) setContactError("");
+    let value = e.target.value;
+    
+    // If it's phone tab, only allow digits and limit to 9 digits
+    if (contactTab === "phone") {
+      // Remove non-digits
+      value = value.replace(/\D/g, "");
+      // Limit to 9 digits
+      value = value.slice(0, 9);
+    }
+    
+    setContactNumber(value);
+    
+    // Clear error if user is typing
+    if (contactError) {
+      const validationError = validateContact(value, contactTab);
+      if (!validationError) {
+        setContactError("");
+      }
+    }
+  };
+
+  const handleTabChange = (value: string) => {
+    setContactTab(value as "phone" | "email");
+    setContactNumber("");
+    setContactError("");
   };
 
   // Extract rating data
@@ -162,8 +261,9 @@ export default function CarListingPage() {
   const onSuccess = () => {
     queryClient.invalidateQueries({ queryKey: ["car-favorites"] });
     toast({
-      title: "✅ Successfull",
+      title: "Success",
       description: "Car has been marked as your favorite.",
+      variant: "success",
     });
   };
 
@@ -315,7 +415,7 @@ export default function CarListingPage() {
   // Loading state
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 p-4">
+      <div className="min-h-screen bg-background p-4">
         <Header color="black" />
         <div className="px-0 sm:px-6 lg:px-50 py-6 md:py-10">
           <div className="animate-pulse">
@@ -337,7 +437,7 @@ export default function CarListingPage() {
   // Error state
   if (error || !car) {
     return (
-      <div className="min-h-screen bg-gray-50 p-4">
+      <div className="min-h-screen bg-background p-4">
         <Header color="black" />
         <div className="px-0 sm:px-6 lg:px-50 py-6 md:py-10">
           <div className="text-center py-12">
@@ -349,7 +449,7 @@ export default function CarListingPage() {
             </p>
             <Button
               onClick={() => window.history.back()}
-              className="bg-black text-white hover:bg-gray-800"
+              className="bg-primary text-primary-foreground hover:bg-primary-hover"
             >
               Go Back
             </Button>
@@ -360,14 +460,14 @@ export default function CarListingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
+    <div className="min-h-screen bg-background p-4">
       <Header color="black" />
       <div className="px-0 sm:px-6 lg:px-50 py-6 md:py-10">
         {/* Back Button */}
         <Button
           variant="ghost"
           onClick={() => router.push("/listing")}
-          className="mb-4 flex items-center gap-2 text-gray-600 hover:text-black hover:bg-gray-100 cursor-pointer"
+          className="mb-4 flex items-center gap-2 text-gray-600 hover:text-foreground hover:bg-muted cursor-pointer"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Listing
@@ -425,7 +525,7 @@ export default function CarListingPage() {
               onClick={() => toggleFavorite(car.id)}
             >
               <Heart
-                className={`w-4 h-4 ${favorited !== -1 ? "fill-zinc-800 text-zinc-800" : ""
+                className={`w-4 h-4 ${favorited !== -1 ? "fill-primary text-primary" : ""
                   }`}
               />
               {favorited !== -1 ? "Favorited" : "Favorite"}
@@ -654,30 +754,76 @@ export default function CarListingPage() {
 
           {/* Sidebar */}
           <div className="space-y-6">
-            {/* Dealer Info */}
+            {/* Dealer/Broker Info */}
             <Card>
               <CardContent className="p-4 sm:p-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-black rounded-lg flex items-center justify-center text-white font-bold">
-                    F
+                {isLoadingProfile ? (
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-200 rounded-lg flex items-center justify-center text-gray-400 font-bold animate-pulse">
+                      ?
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-sm sm:text-base text-gray-400">
+                        Loading...
+                      </h3>
+                      <p className="text-xs sm:text-sm text-gray-400">Loading...</p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-semibold text-sm sm:text-base">
-                      FINANCE CAR VEHICLE TRADING LLC
-                    </h3>
-                    <p className="text-xs sm:text-sm text-gray-600">Dealer</p>
+                ) : profileError || !dealerBrokerProfile ? (
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-200 rounded-lg flex items-center justify-center text-gray-400 font-bold">
+                      ?
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-sm sm:text-base text-gray-600">
+                        {car?.dealer ? "Dealer" : car?.broker ? "Broker" : "Seller"}
+                      </h3>
+                      <p className="text-xs sm:text-sm text-gray-500">
+                        Profile unavailable
+                      </p>
+                    </div>
                   </div>
-                </div>
-                <Button
-                  variant="link"
-                  className="text-black p-0 h-auto text-xs sm:text-sm"
-                >
-                  View All Cars
-                </Button>
+                ) : (
+                  <div className="flex items-center gap-3 mb-4">
+                    {dealerBrokerProfile.image_url ? (
+                      <Image
+                        src={dealerBrokerProfile.image_url}
+                        alt={dealerBrokerProfile.dealer_profile?.company_name || `${dealerBrokerProfile.first_name} ${dealerBrokerProfile.last_name}`}
+                        width={48}
+                        height={48}
+                        className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg object-cover"
+                      />
+                    ) : (
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 bg-primary rounded-lg flex items-center justify-center text-primary-foreground font-bold">
+                        {(() => {
+                          // Get initial from company name (dealer) or name (broker)
+                          const displayName = dealerBrokerProfile.dealer_profile?.company_name ||
+                            `${dealerBrokerProfile.first_name} ${dealerBrokerProfile.last_name}`.trim() ||
+                            dealerBrokerProfile.first_name ||
+                            dealerBrokerProfile.last_name ||
+                            "?";
+                          return displayName.charAt(0).toUpperCase();
+                        })()}
+                      </div>
+                    )}
+                    <div>
+                      <h3 className="font-semibold text-sm sm:text-base">
+                        {dealerBrokerProfile.dealer_profile?.company_name ||
+                          `${dealerBrokerProfile.first_name} ${dealerBrokerProfile.last_name}`.trim() ||
+                          dealerBrokerProfile.first_name ||
+                          dealerBrokerProfile.last_name ||
+                          "Unknown"}
+                      </h3>
+                      <p className="text-xs sm:text-sm text-gray-600 capitalize">
+                        {car?.dealer ? "Dealer" : car?.broker ? "Broker" : "Seller"}
+                      </p>
+                    </div>
+                  </div>
+                )}
                 <div className="flex flex-wrap gap-2 sm:gap-3 mt-4 border-t py-4">
                   <Button
                     onClick={() => setIsContactDialogOpen(true)}
-                    className="w-full sm:w-auto bg-black hover:bg-gray-800 text-white flex items-center justify-center gap-2 cursor-pointer"
+                    className="w-full sm:w-auto bg-primary text-primary-foreground hover:bg-primary-hover flex items-center justify-center gap-2 cursor-pointer"
                   >
                     <MessageCircle className="w-4 h-4" />
                     Contact
@@ -707,7 +853,7 @@ export default function CarListingPage() {
             </Card>
 
             {/* Inspection Badge */}
-            <Card className="bg-zinc-900 text-white">
+            <Card className="bg-primary text-primary-foreground">
               <CardContent className="p-4">
                 <div className="text-center">
                   <h3 className="font-semibold mb-1 text-sm sm:text-base">
@@ -716,7 +862,7 @@ export default function CarListingPage() {
                   <p className="text-xs sm:text-sm mb-3">by AUTO—Dealer</p>
                   <Button
                     size="sm"
-                    className="bg-white text-black hover:bg-gray-100 cursor-pointer"
+                    className="bg-background text-foreground hover:bg-muted cursor-pointer"
                   >
                     View Listings
                   </Button>
@@ -751,7 +897,7 @@ export default function CarListingPage() {
                 onClick={() => toggleFavorite(car.id)}
               >
                 <Heart
-                  className={`w-4 h-4 ${favorited !== -1 ? "fill-zinc-800 text-zinc-800" : ""
+                  className={`w-4 h-4 ${favorited !== -1 ? "fill-primary text-primary" : ""
                     }`}
                 />
                 {favorited !== -1 ? "Favorited" : "Favorite"}
@@ -839,19 +985,66 @@ export default function CarListingPage() {
                 )}
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="contact">Contact</Label>
-                <Input
-                  id="contact"
-                  type="tel"
-                  placeholder="Enter your phone number or email"
-                  value={contactNumber}
-                  onChange={handleContactChange}
-                  disabled={isSubmittingLead}
-                  className={contactError ? "border-red-500 focus-visible:border-red-500 focus-visible:ring-red-500/50" : ""}
-                />
-                {contactError && (
-                  <p className="text-sm text-red-500 mt-1">{contactError}</p>
-                )}
+                <Tabs value={contactTab} onValueChange={handleTabChange} className="w-full">
+                  <div className="flex items-center justify-between mb-2">
+                    <Label htmlFor="contact">Contact</Label>
+                    <TabsList className="h-8 p-0 bg-transparent border-b border-gray-200">
+                      <TabsTrigger
+                        value="phone"
+                        className="cursor-pointer px-4 py-1.5 text-sm font-medium text-gray-600 data-[state=active]:text-black data-[state=active]:border-b-2 data-[state=active]:border-black rounded-none bg-transparent shadow-none"
+                      >
+                        Phone
+                      </TabsTrigger>
+                      <TabsTrigger
+                        value="email"
+                        className="cursor-pointer px-4 py-1.5 text-sm font-medium text-gray-600 data-[state=active]:text-black data-[state=active]:border-b-2 data-[state=active]:border-black rounded-none bg-transparent shadow-none"
+                      >
+                        Email
+                      </TabsTrigger>
+                    </TabsList>
+                  </div>
+                  
+                  <TabsContent value="phone" className="mt-0">
+                    <div className="flex items-center">
+                      <span className="inline-flex items-center px-3 py-2 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-700 text-sm">
+                        +251
+                      </span>
+                      <Input
+                        id="contact"
+                        type="tel"
+                        placeholder="912345678"
+                        value={contactNumber}
+                        onChange={handleContactChange}
+                        disabled={isSubmittingLead}
+                        className={`rounded-l-none ${contactError ? "border-red-500 focus-visible:border-red-500 focus-visible:ring-red-500/50" : ""}`}
+                      />
+                    </div>
+                    {contactError && (
+                      <p className="text-sm text-red-500 mt-1">{contactError}</p>
+                    )}
+                    <p className="text-xs text-gray-500 mt-1">
+                      Enter 9-digit phone number starting with 7 or 9
+                    </p>
+                  </TabsContent>
+                  
+                  <TabsContent value="email" className="mt-0">
+                    <Input
+                      id="contact-email"
+                      type="email"
+                      placeholder="your.email@example.com"
+                      value={contactNumber}
+                      onChange={handleContactChange}
+                      disabled={isSubmittingLead}
+                      className={contactError ? "border-red-500 focus-visible:border-red-500 focus-visible:ring-red-500/50" : ""}
+                    />
+                    {contactError && (
+                      <p className="text-sm text-red-500 mt-1">{contactError}</p>
+                    )}
+                    <p className="text-xs text-gray-500 mt-1">
+                      Enter your email address
+                    </p>
+                  </TabsContent>
+                </Tabs>
               </div>
             </div>
             <DialogFooter>
@@ -865,7 +1058,7 @@ export default function CarListingPage() {
               <Button
                 onClick={handleSubmitContact}
                 disabled={isSubmittingLead || !contactName.trim() || !contactNumber.trim()}
-                className="bg-black hover:bg-gray-800 text-white"
+                className="bg-primary text-primary-foreground hover:bg-primary-hover"
               >
                 {isSubmittingLead ? "Submitting..." : "Submit Inquiry"}
               </Button>

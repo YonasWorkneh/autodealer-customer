@@ -65,7 +65,7 @@ export default function About() {
             className="w-full h-auto object-cover rounded-lg"
           />
           <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white border border-black/10 p-4 rounded-xl w-72 sm:w-80">
-            <div className="flex justify-center items-center bg-black rounded-2xl p-3 w-fit mx-auto">
+            <div className="flex justify-center items-center bg-primary text-primary-foreground rounded-2xl p-3 w-fit mx-auto">
               <Smile className="text-white" />
             </div>
             <h3 className="mt-5 mb-2 text-xl font-semibold text-center">

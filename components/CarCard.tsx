@@ -43,8 +43,9 @@ export default function CarCard({
   const onSuccess = () => {
     queryClient.invalidateQueries({ queryKey: ["car-favorites"] });
     toast({
-      title: "✅ Successfull",
+      title: "Success",
       description: "Car has been marked as your favorite.",
+      variant: "success",
     });
   };
 
@@ -112,7 +113,7 @@ export default function CarCard({
           >
             <Heart
               className={`${
-                isFavorite === -1 ? "" : "fill-zinc-900"
+                isFavorite === -1 ? "" : "fill-primary text-primary"
               } cursor-pointer`}
             />
           </button>

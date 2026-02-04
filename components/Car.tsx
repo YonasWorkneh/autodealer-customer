@@ -32,8 +32,9 @@ export default function Car({
   const onSuccess = () => {
     queryClient.invalidateQueries({ queryKey: ["car-favorites"] });
     toast({
-      title: "✅ Successfull",
+      title: "Success",
       description: "Car has been marked as your favorite.",
+      variant: "success",
     });
   };
   const onError = () =>
@@ -185,8 +186,7 @@ export default function Car({
               onClick={handleFavoriteClick}
             >
               <Heart
-                className="h-4 w-4"
-                fill={isLoggedIn && favorited !== -1 ? "black" : "none"}
+                className={`h-4 w-4 ${isLoggedIn && favorited !== -1 ? "fill-primary text-primary" : ""}`}
               />
             </Button>
           </div>

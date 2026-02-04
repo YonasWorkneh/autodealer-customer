@@ -154,7 +154,7 @@ export default function CarMarketplace() {
   }, [activeQuery, JSON.stringify(filters), sortBy, viewMode]);
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-background">
       <Header color="black" />
 
       <div className="pt-16 px-4 sm:px-6 lg:px-50">
@@ -182,11 +182,11 @@ export default function CarMarketplace() {
           {/* Main Content */}
           <div className="lg:col-span-3 space-y-6 pb-10">
             {/* Search and Sort */}
-            <div className="sticky top-0 bg-white z-[100] pb-4">
-              <Card className="border-gray-200 rounded-3xl shadow-none py-4">
+            <div className="sticky top-0 bg-background z-[100] pb-4">
+              <Card className="border-border rounded-3xl shadow-none py-4">
                 <CardContent className="flex flex-col sm:flex-row flex-wrap justify-between items-center gap-4">
                   <div className="relative w-full sm:flex-1">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5" />
                     <Input
                       placeholder="Search by make, model, or body style"
                       className="pl-10 h-12 text-lg border-none shadow-none focus:ring-0 focus:outline-none w-full focus-visible:ring-0"
@@ -204,7 +204,7 @@ export default function CarMarketplace() {
                       }}
                     />
                     {showSuggest && suggestions.length > 0 && (
-                      <div className="absolute mt-2 left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-lg z-[200] max-h-80 overflow-auto">
+                      <div className="absolute mt-2 left-0 right-0 bg-background border border-border rounded-lg shadow-lg z-[200] max-h-80 overflow-auto">
                         {suggestions.map((s) => {
                           const idx = s.label
                             .toLowerCase()
@@ -215,16 +215,16 @@ export default function CarMarketplace() {
                           return (
                             <button
                               key={s.label}
-                              className="w-full text-left px-4 py-3 hover:bg-gray-50 cursor-pointer"
+                              className="w-full text-left px-4 py-3 hover:bg-primary/5 cursor-pointer transition-colors"
                               onClick={() => {
                                 setQuery(s.value);
                                 setActiveQuery(s.value);
                                 setShowSuggest(false);
                               }}
                             >
-                              <span className="text-gray-900">
+                              <span className="text-foreground">
                                 {before}
-                                <span className="font-semibold underline">
+                                <span className="font-semibold text-primary underline decoration-primary">
                                   {match}
                                 </span>
                                 {after}
@@ -236,9 +236,9 @@ export default function CarMarketplace() {
                     )}
                   </div>
 
-                  <div className="flex flex-col sm:flex-row border-t sm:border-t-0 sm:border-l border-gray-200 py-4 sm:py-0 pl-0 sm:pl-4 justify-center items-center gap-4 w-full sm:w-auto">
+                  <div className="flex flex-col sm:flex-row border-t sm:border-t-0 sm:border-l border-border py-4 sm:py-0 pl-0 sm:pl-4 justify-center items-center gap-4 w-full sm:w-auto">
                     <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4">
-                      <p className="font-bold text-xs text-center uppercase">
+                      <p className="font-bold text-xs text-center uppercase text-foreground">
                         Sort By
                       </p>
                       <Select value={sortBy} onValueChange={setSortBy}>
@@ -284,16 +284,16 @@ export default function CarMarketplace() {
             {/* Results Count */}
             <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
-                <h2 className="text-3xl font-semibold text-[#1a1a1a]">
+                <h2 className="text-3xl font-semibold text-foreground">
                   {activeQuery ? (
                     <span className="flex items-center gap-2">
-                      Results for "{activeQuery}"
+                      Results for "<span className="text-primary">{activeQuery}</span>"
                     </span>
                   ) : (
                     "All Vehicles"
                   )}
                 </h2>
-                <p className="mt-2 text-xs uppercase tracking-[0.25em] text-[#4a4a4a]">
+                <p className="mt-2 text-xs uppercase tracking-[0.25em] text-muted-foreground">
                   {filteredCars.length === 0
                     ? "Showing 0 entries"
                     : `Showing ${filteredCars.length} ${
@@ -328,17 +328,17 @@ export default function CarMarketplace() {
                 // Loading skeleton
                 Array.from({ length: 6 }).map((_, index) => (
                   <div key={index} className="animate-pulse">
-                    <div className="bg-gray-100 rounded-lg p-6">
+                    <div className="bg-muted rounded-lg p-6">
                       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        <div className="bg-gray-200 h-40 rounded-lg"></div>
+                        <div className="bg-primary/10 h-40 rounded-lg"></div>
                         <div className="md:col-span-2 space-y-2">
-                          <div className="h-6 bg-gray-200 rounded w-3/4"></div>
-                          <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-                          <div className="h-4 bg-gray-200 rounded w-1/3"></div>
+                          <div className="h-6 bg-primary/10 rounded w-3/4"></div>
+                          <div className="h-4 bg-primary/10 rounded w-1/2"></div>
+                          <div className="h-4 bg-primary/10 rounded w-1/3"></div>
                         </div>
                         <div className="space-y-2">
-                          <div className="h-6 bg-gray-200 rounded w-1/2 ml-auto"></div>
-                          <div className="h-4 bg-gray-200 rounded w-1/3 ml-auto"></div>
+                          <div className="h-6 bg-primary/10 rounded w-1/2 ml-auto"></div>
+                          <div className="h-4 bg-primary/10 rounded w-1/3 ml-auto"></div>
                         </div>
                       </div>
                     </div>
@@ -364,7 +364,7 @@ export default function CarMarketplace() {
                   <div ref={observerTarget} className="h-10" />
                   {isFetchingNextPage && (
                     <div className="text-center py-8">
-                      <p className="text-gray-500">Loading more cars...</p>
+                      <p className="text-muted-foreground">Loading more cars...</p>
                     </div>
                   )}
                   {!hasNextPage && filteredCars.length > 0 && (
@@ -373,9 +373,9 @@ export default function CarMarketplace() {
                         viewMode === "grid" ? "col-span-full" : "w-full"
                       } flex flex-col items-center justify-center py-12 px-4`}
                     >
-                      <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-4">
+                      <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
                         <svg
-                          className="w-8 h-8 text-gray-400"
+                          className="w-8 h-8 text-primary"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -388,10 +388,10 @@ export default function CarMarketplace() {
                           />
                         </svg>
                       </div>
-                      <p className="text-gray-600 font-medium text-lg mb-1">
+                      <p className="text-foreground font-medium text-lg mb-1">
                         You've reached the end
                       </p>
-                      <p className="text-gray-400 text-sm">
+                      <p className="text-muted-foreground text-sm">
                         All available vehicles have been loaded
                       </p>
                     </div>
@@ -399,7 +399,7 @@ export default function CarMarketplace() {
                 </>
               ) : (
                 <div className="text-center py-12">
-                  <p className="text-gray-500 text-lg">No cars found</p>
+                  <p className="text-muted-foreground text-lg">No cars found</p>
                 </div>
               )}
             </div>
@@ -417,9 +417,9 @@ export default function CarMarketplace() {
       {/* Mobile Filter Panel */}
       {filterOpen && (
         <div className="fixed inset-0 bg-black/30 z-50 flex justify-end">
-          <div className="bg-white w-3/4 max-w-xs p-4 h-full overflow-y-auto">
+          <div className="bg-background w-3/4 max-w-xs p-4 h-full overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="font-bold text-lg">Filters</h2>
+              <h2 className="font-bold text-lg text-foreground">Filters</h2>
               <Button variant="ghost" onClick={() => setFilterOpen(false)}>
                 Close
               </Button>

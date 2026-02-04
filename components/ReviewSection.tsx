@@ -23,8 +23,9 @@ export default function ReviewSection({ carId }: ReviewSectionProps) {
         () => {
             // Success callback
             toast({
-                title: "✅ Success",
+                title: "Success",
                 description: "Your review has been posted successfully!",
+                variant: "success",
             });
             setNewComment("");
             setSelectedRating(0);
@@ -179,7 +180,7 @@ export default function ReviewSection({ carId }: ReviewSectionProps) {
                         onClick={handlePostReview}
                         disabled={!newComment || selectedRating === 0 || isPosting}
                         className={`absolute bottom-2 right-2 p-1.5 rounded-lg transition-colors ${newComment && selectedRating > 0 && !isPosting
-                            ? "bg-black text-white hover:bg-gray-800 cursor-pointer"
+                            ? "bg-primary text-primary-foreground hover:bg-primary-hover cursor-pointer"
                             : "bg-gray-100 text-gray-400 cursor-not-allowed"
                             }`}
                     >

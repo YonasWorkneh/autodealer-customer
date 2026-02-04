@@ -1239,7 +1239,7 @@ export default function PlaceAddForm() {
                       <Button
                         type="button"
                         onClick={handleNext}
-                        className="px-8 py-3 bg-black hover:bg-gray-800 text-white rounded cursor-pointer"
+                        className="px-8 py-3 bg-primary text-primary-foreground hover:bg-primary-hover rounded cursor-pointer"
                       >
                         Next
                       </Button>

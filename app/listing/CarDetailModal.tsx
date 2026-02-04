@@ -26,8 +26,9 @@ export function CarDetailModal({ car, isOpen, onClose }: CarListingModalProps) {
   const onSuccess = () => {
     queryClient.invalidateQueries({ queryKey: ["car-favorites"] });
     toast({
-      title: "✅ Successfull",
+      title: "Success",
       description: "Car has been marked as your favorite.",
+      variant: "success",
     });
   };
 
@@ -89,8 +90,8 @@ export function CarDetailModal({ car, isOpen, onClose }: CarListingModalProps) {
               <Heart
                 className={`size-6 ${
                   favorited !== -1
-                    ? "text-zinc-800 fill-zinc-800"
-                    : "text-black hover:text-zinc-900"
+                    ? "text-primary fill-primary"
+                    : "text-black hover:text-primary"
                 }`}
               />
             </Button>
@@ -104,7 +105,7 @@ export function CarDetailModal({ car, isOpen, onClose }: CarListingModalProps) {
             <h3 className="font-semibold text-gray-900">KEY DETAILS</h3>
             <Link
               href={`/listing/${car.id}`}
-              className="text-sm font-medium text-white bg-zinc-800 hover:bg-zinc-900 cursor-pointer flex items-center gap-1 group p-4 py-2 rounded-sm"
+              className="text-sm font-medium text-primary-foreground bg-primary hover:bg-primary-hover cursor-pointer flex items-center gap-1 group p-4 py-2 rounded-sm"
             >
               <span>View more</span>
               <span className="group-hover:translate-x-1 transition-all">

@@ -47,7 +47,7 @@ export default function Popular() {
         <div className="flex justify-center items-center sm:justify-start mt-4 sm:mt-0">
           <Link
             href={"/listing"}
-            className="group h-[50px] bg-zinc-800 hover:bg-zinc-900 rounded-md text-white p-1 w-fit cursor-pointer flex gap-2 items-center px-3"
+            className="group h-[50px] bg-primary text-primary-foreground hover:bg-primary-hover rounded-md p-1 w-fit cursor-pointer flex gap-2 items-center px-3"
           >
             <span>View more</span>
             <span className="group-hover:translate-x-1 transition-all">→</span>

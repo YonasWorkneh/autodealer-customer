@@ -29,9 +29,11 @@ const toastVariants = cva(
   {
     variants: {
       variant: {
-        default: "border bg-background text-foreground",
+        default: "border border-border bg-background text-foreground",
         destructive:
-          "destructive group border-destructive bg-destructive text-destructive-foreground",
+          "destructive group border-red-200 bg-red-50 text-red-800 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-200",
+        success:
+          "success group border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-900/50 dark:bg-emerald-950/40 dark:text-emerald-200",
       },
     },
     defaultVariants: {
@@ -62,7 +64,7 @@ const ToastAction = React.forwardRef<
   <ToastPrimitives.Action
     ref={ref}
     className={cn(
-      "inline-flex h-8 shrink-0 items-center justify-center rounded-md border bg-transparent px-3 text-sm font-medium ring-offset-background transition-colors hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 group-[.destructive]:border-muted/40 group-[.destructive]:hover:border-destructive/30 group-[.destructive]:hover:bg-destructive group-[.destructive]:hover:text-destructive-foreground group-[.destructive]:focus:ring-destructive",
+      "inline-flex h-8 shrink-0 items-center justify-center rounded-md border bg-transparent px-3 text-sm font-medium ring-offset-background transition-colors hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 group-[.destructive]:border-red-200 group-[.destructive]:hover:border-red-300 group-[.destructive]:hover:bg-red-100 group-[.destructive]:hover:text-red-900 group-[.destructive]:focus:ring-red-300 dark:group-[.destructive]:border-red-800/50 dark:group-[.destructive]:hover:bg-red-900/30 dark:group-[.destructive]:hover:text-red-100 group-[.success]:border-emerald-200 group-[.success]:hover:border-emerald-300 group-[.success]:hover:bg-emerald-100 group-[.success]:hover:text-emerald-900 group-[.success]:focus:ring-emerald-300 dark:group-[.success]:border-emerald-800/50 dark:group-[.success]:hover:bg-emerald-900/30 dark:group-[.success]:hover:text-emerald-100",
       className
     )}
     {...props}
@@ -77,13 +79,13 @@ const ToastClose = React.forwardRef<
   <ToastPrimitives.Close
     ref={ref}
     className={cn(
-      "absolute right-2 top-2 rounded-md p-1 text-white opacity-0 transition-opacity hover:text-foreground focus:opacity-100 focus:outline-none focus:ring-2 group-hover:opacity-100 group-[.destructive]:text-white group-[.destructive]:hover:text-white group-[.destructive]:focus:ring-white group-[.destructive]:focus:ring-offset-red-600",
+      "absolute right-2 top-2 rounded-md p-1 text-muted-foreground opacity-70 transition-opacity hover:opacity-100 focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 group-hover:opacity-100 group-[.destructive]:text-red-600 group-[.destructive]:hover:text-red-800 group-[.destructive]:focus:ring-red-300 group-[.destructive]:focus:ring-offset-red-50 dark:group-[.destructive]:text-red-400 dark:group-[.destructive]:hover:text-red-200 group-[.success]:text-emerald-600 group-[.success]:hover:text-emerald-800 group-[.success]:focus:ring-emerald-300 group-[.success]:focus:ring-offset-emerald-50 dark:group-[.success]:text-emerald-400 dark:group-[.success]:hover:text-emerald-200",
       className
     )}
     toast-close=""
     {...props}
   >
-    <X className="h-4 w-4 text-white!" />
+    <X className="h-4 w-4" />
   </ToastPrimitives.Close>
 ));
 ToastClose.displayName = ToastPrimitives.Close.displayName;

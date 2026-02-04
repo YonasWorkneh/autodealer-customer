@@ -112,7 +112,7 @@ export default function PaymentConfirmation({
             <Label className="text-sm font-semibold text-gray-700 mb-3 block">
               Selected Package
             </Label>
-            <Card className="bg-gray-50 border-gray-200">
+            <Card className="bg-background border-border">
               <CardContent className="p-4 flex justify-between items-center">
                 <div>
                   <h3 className="font-semibold text-gray-900">
@@ -310,7 +310,7 @@ export default function PaymentConfirmation({
             <Button
               onClick={handleSubmit}
               disabled={!paymentMethod || !paymentProof || isSubmitting}
-              className="flex-1 h-12 bg-zinc-800 hover:bg-zinc-900"
+              className="flex-1 h-12 bg-primary text-primary-foreground hover:bg-primary-hover"
             >
               {isSubmitting ? "Submitting..." : "Submit Payment"}
             </Button>

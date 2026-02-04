@@ -37,8 +37,9 @@ export default function SignIn() {
       setErr("");
       const user = await signup({ ...data, password2: data.password1 });
       toast({
-        title: "✅ Sign up Success",
-        description: "Signed up succesfully. log into your account.",
+        title: "Sign up Success",
+        description: "Signed up successfully. Log into your account.",
+        variant: "success",
       });
       router.push("/signin");
     } catch (err) {

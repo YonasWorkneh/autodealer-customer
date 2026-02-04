@@ -82,8 +82,9 @@ export default function MyListingsPage() {
   const onSuccess = () => {
     setModalOpened(false);
     toast({
-      title: "✅ Delete Successfull !",
-      description: "Your add was succesfully removed.",
+      title: "Success",
+      description: "Your add was successfully removed.",
+      variant: "success",
     });
   };
 
@@ -118,7 +119,7 @@ export default function MyListingsPage() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       <Header color="black" />
 
       <div className="px-6 sm:px-40 lg:px-50 py-8">
@@ -148,7 +149,7 @@ export default function MyListingsPage() {
                 </p>
               </div>
               <Link href="/signin">
-                <Button className="bg-zinc-800 hover:bg-zinc-900 text-white px-6 py-6 flex items-center gap-2 mx-auto">
+                <Button className="bg-primary text-primary-foreground hover:bg-primary-hover px-6 py-6 flex items-center gap-2 mx-auto">
                   <LogIn className="w-4 h-4" />
                   <span>Sign In</span>
                 </Button>
@@ -237,7 +238,7 @@ export default function MyListingsPage() {
                     </p>
                     <Link
                       href={"/place-add"}
-                      className="bg-zinc-900 hover:bg-zinc-800 text-white px-4 py-2 rounded-sm"
+                      className="bg-primary text-primary-foreground hover:bg-primary-hover px-4 py-2 rounded-sm"
                     >
                       Post Your First Ad
                     </Link>
@@ -271,7 +272,7 @@ export default function MyListingsPage() {
                           <Checkbox
                             checked={selectedAds.includes(ad.id)}
                             onCheckedChange={() => handleSelectAd(ad.id)}
-                            className="bg-white/90 border-transparent data-[state=checked]:bg-zinc-900 data-[state=checked]:border-zinc-900"
+                            className="bg-white/90 border-transparent data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                           />
                         </div>
 

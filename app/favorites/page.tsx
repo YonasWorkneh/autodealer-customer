@@ -18,6 +18,7 @@ export default function FavoritesPage() {
     toast({
       title: "Removed from favorites",
       description: "Car has been removed from your favorites.",
+      variant: "success",
     });
   };
 
@@ -72,7 +73,7 @@ export default function FavoritesPage() {
                 </p>
               </div>
               <Link href="/signin">
-                <Button className="bg-zinc-800 hover:bg-zinc-900 text-white px-6 py-6 flex items-center gap-2 mx-auto">
+                <Button className="bg-primary text-primary-foreground hover:bg-primary-hover px-6 py-6 flex items-center gap-2 mx-auto">
                   <LogIn className="w-4 h-4" />
                   <span>Sign In</span>
                 </Button>
@@ -110,7 +111,7 @@ export default function FavoritesPage() {
                 </p>
               </div>
               <Link href="/listing">
-                <Button className="bg-zinc-800 hover:bg-zinc-900 text-white px-6 py-6 flex items-center gap-2 mx-auto">
+                <Button className="bg-primary text-primary-foreground hover:bg-primary-hover px-6 py-6 flex items-center gap-2 mx-auto">
                   <CarFrontIcon className="w-4 h-4" />
                   <span>Browse cars</span>
                 </Button>

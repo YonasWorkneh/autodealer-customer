@@ -61,7 +61,7 @@ export default function Page() {
         <div className="mt-8">
           <Button
             asChild
-            className="rounded-full bg-zinc-800 px-6 py-5 text-base font-semibold tracking-wide text-white hover:bg-zinc-900"
+            className="rounded-full bg-primary text-primary-foreground px-6 py-5 text-base font-semibold tracking-wide hover:bg-primary-hover"
           >
             <Link href="/">BACK TO HOMEPAGE</Link>
           </Button>

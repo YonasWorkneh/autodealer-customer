@@ -5,14 +5,25 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --background: oklch(1 0 0);
+  /*
+   * THEME: To change the primary color everywhere, edit only these three variables:
+   * --theme-primary (main color),
+   * --theme-primary-foreground (text on primary),
+   * --theme-primary-hover (hover state).
+   */
+  --theme-primary: #522084; /* main theme color */
+  --theme-primary-foreground: #f9f9f9; /* text on primary surfaces */
+  --theme-primary-hover: #6b2a9a; /* smooth hover: slightly lighter purple */
+  --theme-transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1); /* smooth easing */
+
+  --background: oklch(0.98 0 0); /* #f9f9f9 - page background */
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
+  --primary: var(--theme-primary);
+  --primary-foreground: var(--theme-primary-foreground);
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
   --muted: oklch(0.97 0 0);
@@ -84,6 +95,7 @@
   --color-popover-foreground: var(--popover-foreground);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
+  --color-primary-hover: var(--theme-primary-hover);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
@@ -120,5 +132,9 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+  /* Smooth transitions for primary surfaces (buttons, cards, etc.) */
+  [class~="bg-primary"] {
+    transition: background-color var(--theme-transition), color var(--theme-transition), box-shadow var(--theme-transition), transform var(--theme-transition);
   }
 }
