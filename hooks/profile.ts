@@ -1,7 +1,13 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getProfile, updateProfile, upgradeProfile, getProfileById } from "@/lib/profileApi"; // adjust path
+import {
+  getProfile,
+  updateProfile,
+  upgradeProfile,
+  getProfileById,
+} from "@/lib/profileApi"; // adjust path
+import { changePassword } from "@/lib/auth/password";
 import { useToast } from "./use-toast";
 
 // Fetch user profile
@@ -49,6 +55,18 @@ export function useUpdateProfile(onError: () => void, onSuccess: () => void) {
       queryClient.invalidateQueries({
         queryKey: ["profile"],
       });
+      onSuccess();
+    },
+  });
+}
+export function useChangePassword(
+  onError: (err: any) => void,
+  onSuccess: () => void,
+) {
+  return useMutation({
+    mutationFn: changePassword,
+    onError: (err: any) => onError(err),
+    onSuccess: () => {
       onSuccess();
     },
   });

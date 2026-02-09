@@ -13,12 +13,16 @@ import {
   User,
   Camera,
   MapPin,
+  Lock,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import Header from "@/components/Header";
 import { logout } from "@/lib/auth/logout";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
-import { useProfile, useUpdateProfile } from "@/hooks/profile";
+import { useProfile, useUpdateProfile, useChangePassword } from "@/hooks/profile";
+import { ChangePasswordParams } from "@/lib/auth/password";
 import { useToast } from "@/hooks/use-toast";
 import { useUserStore } from "@/store/user";
 
@@ -35,6 +39,8 @@ export default function UserProfile() {
   const { setUser } = useUserStore();
   const [loggingOut, setIsLoggingOut] = useState<boolean>(false);
   const [preview, setPreview] = useState<string | null>(null);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const router = useRouter();
   const { toast } = useToast();
@@ -83,6 +89,38 @@ export default function UserProfile() {
     onError,
     onSuccess
   );
+
+  const {
+    register: registerPassword,
+    handleSubmit: handlePasswordSubmit,
+    formState: { errors: passwordErrors },
+    reset: resetPassword,
+    watch: watchPassword,
+  } = useForm<ChangePasswordParams>();
+
+  const onPasswordSuccess = () => {
+    toast({
+      title: "Success",
+      description: "Your password has been changed successfully.",
+      variant: "success",
+    });
+    resetPassword();
+  };
+
+  const onPasswordError = (error: any) => {
+    toast({
+      title: "❌ Password change failed",
+      description: error.message || "Something went wrong.",
+      variant: "destructive",
+    });
+  };
+
+  const { mutate: changePassword, isPending: isChangingPassword } =
+    useChangePassword(onPasswordError, onPasswordSuccess);
+
+  const onPasswordSubmit = (data: ChangePasswordParams) => {
+    changePassword(data);
+  };
 
   const onSubmit = async (data: ProfileFormValues) => {
     try {
@@ -260,7 +298,7 @@ export default function UserProfile() {
                 <Button
                   variant="outline"
                   type="button"
-                  className="flex items-center gap-2 w-full sm:w-auto py-6 min-w-[100px]"
+                  className="flex items-center gap-2 w-full sm:w-auto py-6 min-w-[100px] cursor-pointer"
                   onClick={handleLogout}
                 >
                   {loggingOut ? (
@@ -286,6 +324,114 @@ export default function UserProfile() {
                 </Button>
               </div>
             </form>
+
+            {/* Change Password Section */}
+            <div className="mt-12 pt-12 border-t border-gray-200">
+              <div className="flex items-center gap-2 mb-6">
+                <div className="p-2 bg-secondary rounded-lg">
+                  <Lock className="w-5 h-5 text-secondary-foreground" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-black">Change Password</h2>
+                  <p className="text-sm text-gray-500">
+                    Update your password to keep your account secure
+                  </p>
+                </div>
+              </div>
+
+              <form
+                onSubmit={handlePasswordSubmit(onPasswordSubmit)}
+                className="space-y-4 max-w-2xl"
+              >
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-sm font-medium text-black mb-2 block">
+                      New Password
+                    </Label>
+                    <div className="relative">
+                      <Input
+                        type={showNewPassword ? "text" : "password"}
+                        placeholder="Enter new password"
+                        className="bg-gray-50 border-gray-200 focus:border-primary focus:ring-primary py-6 pr-12"
+                        {...registerPassword("new_password", {
+                          required: "New password is required",
+                          minLength: {
+                            value: 8,
+                            message: "Password must be at least 8 characters",
+                          },
+                        })}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowNewPassword(!showNewPassword)}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-black transition-colors"
+                      >
+                        {showNewPassword ? (
+                          <EyeOff size={20} />
+                        ) : (
+                          <Eye size={20} />
+                        )}
+                      </button>
+                    </div>
+                    {passwordErrors.new_password && (
+                      <p className="text-red-500 text-xs mt-1">
+                        {passwordErrors.new_password.message}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <Label className="text-sm font-medium text-black mb-2 block">
+                      Confirm New Password
+                    </Label>
+                    <div className="relative">
+                      <Input
+                        type={showConfirmPassword ? "text" : "password"}
+                        placeholder="Confirm new password"
+                        className="bg-gray-50 border-gray-200 focus:border-primary focus:ring-primary py-6 pr-12"
+                        {...registerPassword("confirm_password", {
+                          required: "Please confirm your password",
+                          validate: (value?: string) =>
+                            value === watchPassword("new_password") ||
+                            "Passwords do not match",
+                        })}
+                      />
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setShowConfirmPassword(!showConfirmPassword)
+                        }
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-black transition-colors"
+                      >
+                        {showConfirmPassword ? (
+                          <EyeOff size={20} />
+                        ) : (
+                          <Eye size={20} />
+                        )}
+                      </button>
+                    </div>
+                    {passwordErrors.confirm_password && (
+                      <p className="text-red-500 text-xs mt-1">
+                        {passwordErrors.confirm_password.message}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex justify-end pt-4">
+                  <Button
+                    type="submit"
+                    disabled={isChangingPassword}
+                    className="bg-primary text-primary-foreground hover:bg-primary-hover w-full sm:w-auto py-6 px-8 cursor-pointer"
+                  >
+                    {isChangingPassword ? (
+                      <Loader2 size={16} className="animate-spin mr-2" />
+                    ) : null}
+                    Update Password
+                  </Button>
+                </div>
+              </form>
+            </div>
           </div>
         )}
       </div>
