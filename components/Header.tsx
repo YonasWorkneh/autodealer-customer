@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Bell } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { useUserStore } from "@/store/user";
@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 import { useProfile } from "@/hooks/profile";
 import { usePathname } from "next/navigation";
+import { useNotifications } from "@/hooks/use-notifications";
 
 interface HeaderProps {
   color?: string;
@@ -17,8 +18,11 @@ interface HeaderProps {
 export default function Header({ color }: HeaderProps) {
   const { user } = useUserStore();
   const { data: profile } = useProfile();
+  const { data: notifications } = useNotifications();
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
+
+  const unreadCount = notifications?.filter((n: any) => !n.is_read).length || 0;
 
   const linkClasses = (isActive?: boolean) =>
     `${color === "black"
@@ -90,6 +94,26 @@ export default function Header({ color }: HeaderProps) {
         >
           My Ads
         </Link>
+
+
+        {user.email && (
+          <Link href="/notifications" className="relative group">
+            <div
+              className={`p-2 rounded-full transition-colors ${color === "black"
+                ? "text-black hover:bg-gray-100"
+                : "text-white hover:bg-white/10"
+                }`}
+            >
+              <Bell className="w-6 h-6" />
+              {unreadCount > 0 && (
+                <span className="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/4 -translate-y-1/4 bg-red-600 rounded-full">
+                  {unreadCount}
+                </span>
+              )}
+            </div>
+          </Link>
+        )}
+
         <Link
           href={user.email ? "profile" : "/signin"}
           className={linkClassesPlain()}
@@ -97,8 +121,8 @@ export default function Header({ color }: HeaderProps) {
           {user.email || profile?.first_name ? (
             <span
               className={`${color === "black"
-                  ? "bg-primary text-primary-foreground hover:bg-primary-hover"
-                  : " bg-white/10 hover:bg-white/20"
+                ? "bg-primary text-primary-foreground hover:bg-primary-hover"
+                : " bg-white/10 hover:bg-white/20"
                 } size-10 flex justify-center items-center rounded-full uppercase`}
             >
               {profile?.first_name[0] || user.email[0]}
@@ -110,8 +134,8 @@ export default function Header({ color }: HeaderProps) {
         <Link
           href={"/place-add"}
           className={`text-white ${color === "black"
-              ? " bg-primary text-primary-foreground hover:bg-primary-hover"
-              : " bg-white/10 hover:bg-white/20"
+            ? " bg-primary text-primary-foreground hover:bg-primary-hover"
+            : " bg-white/10 hover:bg-white/20"
             } px-4 py-2 rounded-md cursor-pointer transition-colors duration-200`}
           onClick={(e) => {
             if (!user.email) {
