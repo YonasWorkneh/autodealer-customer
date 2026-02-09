@@ -6,7 +6,7 @@ import { Toaster } from "@/components/ui/toaster";
 import Session from "./Session";
 
 export const metadata: Metadata = {
-  title: "Auto-Dealer",
+  title: "ET-Car",
 };
 
 export default function RootLayout({

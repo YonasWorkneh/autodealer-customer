@@ -20,7 +20,7 @@ export default function Footer() {
               height={40}
             />
             <span className="text-xl font-bold tracking-tight">
-              AUTO&mdash;DEALER
+              ET&mdash;CAR
             </span>
           </Link>
           <p className="mt-4 text-primary-foreground/80 text-sm leading-relaxed">
@@ -148,7 +148,7 @@ export default function Footer() {
       {/* Bottom Bar */}
       <div className="mt-6 flex flex-col md:flex-row justify-center items-center text-primary-foreground/70 text-sm">
         <p>
-          © {new Date().getFullYear()} Auto&mdash;Dealer. All rights reserved.
+          © {new Date().getFullYear()} ET-Car. All rights reserved.
         </p>
       </div>
     </footer>

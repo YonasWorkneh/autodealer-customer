@@ -68,7 +68,7 @@ export default function SignIn() {
               className="w-full h-full"
             />
           </div>
-          <h1>AUTO&mdash;DEALER</h1>
+          <h1>ET&mdash;CAR</h1>
         </Link>
         <CardTitle className="text-lg md:text-xl">Sign Up</CardTitle>
         <CardDescription className="text-xs md:text-sm">

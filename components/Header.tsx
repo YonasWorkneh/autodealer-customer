@@ -21,26 +21,23 @@ export default function Header({ color }: HeaderProps) {
   const pathname = usePathname();
 
   const linkClasses = (isActive?: boolean) =>
-    `${
-      color === "black"
-        ? "text-black hover:text-primary data-[active=true]:text-primary"
-        : "text-white hover:text-primary data-[active=true]:text-primary"
+    `${color === "black"
+      ? "text-black hover:text-primary data-[active=true]:text-primary"
+      : "text-white hover:text-primary data-[active=true]:text-primary"
     } relative py-2 rounded-md cursor-pointer transition-colors duration-200 after:absolute after:left-0 after:bottom-0 after:h-0.5 after:w-full after:origin-left after:scale-x-0 after:bg-primary after:transition-transform after:duration-300 hover:after:scale-x-100 data-[active=true]:after:scale-x-100`;
 
   const linkClassesPlain = () =>
-    `${
-      color === "black"
-        ? "text-black hover:text-black/60"
-        : "text-white hover:text-white/80"
+    `${color === "black"
+      ? "text-black hover:text-black/60"
+      : "text-white hover:text-white/80"
     } px-4 py-2 rounded-md cursor-pointer transition-colors duration-200`;
 
   const { toast } = useToast();
 
   return (
     <header
-      className={`relative z-20 flex items-center justify-between px-6 md:px-40 py-4 ${
-        color === "black" && "border-b"
-      }`}
+      className={`relative z-20 flex items-center justify-between px-6 md:px-40 py-4 ${color === "black" && "border-b"
+        }`}
     >
       {/* Logo */}
       <Link href={"/"} className="flex items-center space-x-2 cursor-pointer">
@@ -54,11 +51,10 @@ export default function Header({ color }: HeaderProps) {
           />
         </div>
         <span
-          className={`${
-            color === "black" ? "text-black" : "text-white"
-          } text-xl font-semibold`}
+          className={`${color === "black" ? "text-black" : "text-white"
+            } text-xl font-semibold`}
         >
-          AUTO&mdash;DEALER
+          ET&mdash;CAR
         </span>
       </Link>
 
@@ -100,11 +96,10 @@ export default function Header({ color }: HeaderProps) {
         >
           {user.email || profile?.first_name ? (
             <span
-              className={`${
-                color === "black"
+              className={`${color === "black"
                   ? "bg-primary text-primary-foreground hover:bg-primary-hover"
                   : " bg-white/10 hover:bg-white/20"
-              } size-10 flex justify-center items-center rounded-full uppercase`}
+                } size-10 flex justify-center items-center rounded-full uppercase`}
             >
               {profile?.first_name[0] || user.email[0]}
             </span>
@@ -114,11 +109,10 @@ export default function Header({ color }: HeaderProps) {
         </Link>
         <Link
           href={"/place-add"}
-          className={`text-white ${
-            color === "black"
+          className={`text-white ${color === "black"
               ? " bg-primary text-primary-foreground hover:bg-primary-hover"
               : " bg-white/10 hover:bg-white/20"
-          } px-4 py-2 rounded-md cursor-pointer transition-colors duration-200`}
+            } px-4 py-2 rounded-md cursor-pointer transition-colors duration-200`}
           onClick={(e) => {
             if (!user.email) {
               e.preventDefault();
@@ -141,9 +135,8 @@ export default function Header({ color }: HeaderProps) {
         aria-label="Open Menu"
       >
         <Menu
-          className={`h-7 w-7 ${
-            color === "black" ? "text-black" : "text-white"
-          }`}
+          className={`h-7 w-7 ${color === "black" ? "text-black" : "text-white"
+            }`}
         />
       </button>
 
