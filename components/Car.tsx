@@ -113,8 +113,7 @@ export default function Car({
                 onClick={handleFavoriteClick}
               >
                 <Heart
-                  className="h-4 w-4"
-                  fill={isLoggedIn && favorited !== -1 ? "black" : "none"}
+                  className={`h-4 w-4 ${isLoggedIn && favorited !== -1 ? "fill-primary text-primary" : ""}`}
                 />
               </Button>
             </div>
