@@ -18,7 +18,7 @@ interface HeaderProps {
 export default function Header({ color }: HeaderProps) {
   const { user } = useUserStore();
   const { data: profile } = useProfile();
-  const { data: notifications } = useNotifications();
+  const { notifications } = useNotifications();
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
 

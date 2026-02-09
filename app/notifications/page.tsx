@@ -1,17 +1,13 @@
 "use client";
 
-import React, { useState } from "react";
 import Header from "@/components/Header";
 import { useNotifications, useMarkNotificationAsRead } from "@/hooks/use-notifications";
 import { formatDistanceToNow } from "date-fns";
-import { Bell, Check, Trash2, RefreshCw } from "lucide-react";
-import Link from "next/link";
-import { useUserStore } from "@/store/user";
+import { Bell, Check, RefreshCw } from "lucide-react";
 
 export default function NotificationsPage() {
-    const { data: notifications, isLoading, refetch, isRefetching } = useNotifications();
+    const { notifications, isNotificationsLoading, refetchNotifications, isNotificationsRefetching } = useNotifications();
     const markAsRead = useMarkNotificationAsRead();
-    const { user } = useUserStore();
 
     const handleMarkAsRead = (id: number) => {
         markAsRead.mutate(id);
@@ -25,7 +21,7 @@ export default function NotificationsPage() {
         <main className="min-h-screen bg-gray-50 pb-20">
             <Header color="black" />
 
-            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+            <div className="px-4 sm:px-6 lg:px-8 py-10">
                 <div className="flex justify-between items-center mb-8">
                     <div>
                         <h1 className="text-3xl font-bold text-gray-900">Notifications</h1>
@@ -34,23 +30,23 @@ export default function NotificationsPage() {
                         </p>
                     </div>
                     <button
-                        onClick={() => refetch()}
-                        disabled={isRefetching}
-                        className={`p-2 rounded-full hover:bg-primary/10 cursor-pointer transition-colors ${isRefetching ? 'animate-spin' : ''}`}
+                        onClick={() => refetchNotifications()}
+                        disabled={isNotificationsRefetching}
+                        className={`p-2 rounded-full hover:bg-primary/10 cursor-pointer transition-colors ${isNotificationsRefetching ? 'animate-spin' : ''}`}
                         title="Refresh notifications"
                     >
                         <RefreshCw className="w-5 h-5 text-gray-600" />
                     </button>
                 </div>
 
-                {isLoading ? (
+                {isNotificationsLoading ? (
                     <div className="space-y-4">
                         {[...Array(3)].map((_, i) => (
-                            <div key={i} className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 animate-pulse h-24"></div>
+                            <div key={i} className="bg-white p-6 rounded-xl border border-gray-200 animate-pulse h-24"></div>
                         ))}
                     </div>
                 ) : sortedNotifications?.length === 0 ? (
-                    <div className="text-center py-20 bg-white rounded-xl shadow-sm border border-gray-100">
+                    <div className="text-center py-20 rounded-xl border border-gray-200">
                         <div className="bg-primary/10 p-4 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
                             <Bell className="w-8 h-8 text-primary" />
                         </div>
