@@ -726,6 +726,18 @@ export default function PlaceAddForm() {
     if (!user.email) router.push("/signin");
   }, [user.email, router]);
 
+  // If the user is not yet a dealer or broker, redirect them to pricing
+  // so they see offers before accessing the place-add form.
+  useEffect(() => {
+    if (!profile) return;
+    if (
+      profile.dealer_profile === null &&
+      profile.broker_profile === null
+    ) {
+      router.push("/pricing");
+    }
+  }, [profile, router]);
+
   if (!user.email) return null;
 
   return (

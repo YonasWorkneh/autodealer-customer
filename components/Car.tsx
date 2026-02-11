@@ -99,7 +99,7 @@ export default function Car({
   if (variant === "grid") {
     return (
       <Link key={car.id} href={`/listing/${car.id}`} className="block h-full">
-        <Card className="shadow-none border-gray-200 hover:shadow-lg transition-shadow cursor-pointer h-full flex flex-col p-0 overflow-hidden rounded-xl">
+        <Card className="shadow-none border-gray-200 hover:shadow-lg transition-shadow cursor-pointer flex flex-col p-0 rounded-xl min-h-[420px] max-h-[720px] overflow-hidden">
             <div className="relative">
               <img
                 src={mainImage}
@@ -117,9 +117,9 @@ export default function Car({
                 />
               </Button>
             </div>
-          <CardContent className="p-4 sm:p-6 flex flex-col gap-4 h-full"> 
+          <CardContent className="p-4 sm:p-6 flex flex-col gap-4"> 
             <div className="space-y-2 flex-1">
-              <h3 className="text-lg sm:text-xl font-semibold text-black">
+              <h3 className="text-lg sm:text-xl font-semibold text-black line-clamp-2">
                 {renderTitle()}
               </h3>
               <p className="text-gray-600 text-sm">
@@ -139,7 +139,7 @@ export default function Car({
                 {car.status}
               </Badge>
             </div>
-            <div className="flex items-end justify-between">
+            <div className="flex items-end justify-between max-[1700px]:flex-col max-[1700px]:items-start max-[1700px]:gap-3">
               <div>
                 <p className="text-xl sm:text-2xl font-bold">
                   {formattedPrice}
@@ -151,7 +151,7 @@ export default function Car({
               <Button
                 variant="ghost"
                 size="sm"
-                className="border border-gray-200 hover:bg-gray-100"
+                className="border border-gray-200 hover:bg-gray-100 max-[1700px]:self-stretch max-[1700px]:justify-center"
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
@@ -224,7 +224,7 @@ export default function Car({
         </CardContent>
       </Card>
       <Button
-        className="absolute top-[calc(50%-15px)] -right-3 z-50 cursor-pointer w-fit h-fit flex flex-col gap-1 bg-transparent shadow-none hover:bg-transparent border border-gray-200 rounded-xl p-2"
+        className="absolute top-1/2 -translate-y-1/2 right-2 z-20 cursor-pointer w-fit h-fit flex flex-col gap-1 bg-background/80 shadow-sm hover:bg-background border border-gray-200 rounded-xl p-2 max-[1700px]:top-auto max-[1700px]:bottom-4 max-[1700px]:absolute max-[1700px]:right-auto max-[1700px]:left-1/2 max-[1700px]:-translate-x-1/2"
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();

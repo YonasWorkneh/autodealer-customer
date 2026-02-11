@@ -8,7 +8,7 @@ import { useUserStore } from "@/store/user";
 import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 import { useProfile } from "@/hooks/profile";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useNotifications } from "@/hooks/use-notifications";
 
 interface HeaderProps {
@@ -20,6 +20,7 @@ export default function Header({ color }: HeaderProps) {
   const { data: profile } = useProfile();
   const { notifications } = useNotifications();
   const [isOpen, setIsOpen] = useState(false);
+  const router = useRouter();
   const pathname = usePathname();
 
   const unreadCount = notifications?.filter((n: any) => !n.is_read).length || 0;
@@ -133,18 +134,29 @@ export default function Header({ color }: HeaderProps) {
         </Link>
         <Link
           href={"/place-add"}
-          className={`text-white ${color === "black"
-            ? " bg-primary text-primary-foreground hover:bg-primary-hover"
-            : " bg-white/10 hover:bg-white/20"
-            } px-4 py-2 rounded-md cursor-pointer transition-colors duration-200`}
+          className={`text-white ${
+            color === "black"
+              ? " bg-primary text-primary-foreground hover:bg-primary-hover"
+              : " bg-white/10 hover:bg-white/20"
+          } px-4 py-2 rounded-md cursor-pointer transition-colors duration-200`}
           onClick={(e) => {
             if (!user.email) {
               e.preventDefault();
               toast({
-                // title: "",
                 description:
                   "❌   Log in or create an account to sell your car.",
               });
+              return;
+            }
+
+            // If the user is not yet a dealer or broker, show offers immediately
+            if (
+              profile &&
+              profile.dealer_profile === null &&
+              profile.broker_profile === null
+            ) {
+              e.preventDefault();
+              router.push("/pricing");
             }
           }}
         >
@@ -228,12 +240,24 @@ export default function Header({ color }: HeaderProps) {
                   if (!user.email) {
                     e.preventDefault();
                     toast({
-                      // title: "",
                       description:
                         "❌ Log in or create an account to sell your car.",
                     });
                     return;
                   }
+
+                  // If the user is not yet a dealer or broker, show offers immediately
+                  if (
+                    profile &&
+                    profile.dealer_profile === null &&
+                    profile.broker_profile === null
+                  ) {
+                    e.preventDefault();
+                    setIsOpen(false);
+                    router.push("/pricing");
+                    return;
+                  }
+
                   setIsOpen(false);
                 }}
                 className="bg-primary text-primary-foreground py-2 px-4 rounded-md hover:bg-primary-hover"
