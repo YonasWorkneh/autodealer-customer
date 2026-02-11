@@ -156,7 +156,6 @@ const AuctionDetailView = () => {
       description:
         error.message || "Something went wrong while placing your bid.",
       variant: "destructive",
-      className: "text-white bg-red-600",
     });
   };
 
@@ -171,7 +170,6 @@ const AuctionDetailView = () => {
         title: "❌ Login Required",
         description: "Please log in to place a bid.",
         variant: "destructive",
-        className: "text-white bg-red-600",
       });
       return;
     }
@@ -184,7 +182,6 @@ const AuctionDetailView = () => {
         title: "❌ Invalid Bid Amount",
         description: "Please enter a valid bid amount.",
         variant: "destructive",
-        className: "text-white bg-red-600",
       });
       return;
     }
@@ -195,7 +192,6 @@ const AuctionDetailView = () => {
         title: "❌ Bid Below Minimum",
         description: `Minimum bid is ${auction.currentBid}`,
         variant: "destructive",
-        className: "text-white bg-red-600",
       });
       return;
     }
@@ -562,7 +558,6 @@ const AuctionDetailView = () => {
                           title: "❌ Bid Below Minimum",
                           description: `Minimum bid is ${auction.currentBid}`,
                           variant: "destructive",
-                          className: "text-white bg-red-600",
                         });
                       }
                     }

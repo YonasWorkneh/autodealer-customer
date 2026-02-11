@@ -41,6 +41,7 @@ export default function Car({
     toast({
       title: "❌ Something went wrong",
       description: "Unable to make car your favorite.",
+      variant: "destructive",
     });
   const { mutate } = useUpdateFavorite(onSuccess, onError);
   const favorited = favorites?.findIndex((favorite) => favorite.car === car.id);
@@ -54,8 +55,6 @@ export default function Car({
         title: "❌ Login Required",
         description: "Please log in to add cars to your favorites.",
         variant: "destructive",
-        color: "white",
-        className: "text-white bg-red-600",
       });
       return;
     }
