@@ -44,6 +44,7 @@ export default function SignIn() {
       router.push("/signin");
     } catch (err) {
       toast({
+        variant: "destructive",
         title: "❌ Registration Failed",
         description: "Failed to register your account. Please try again.",
       });
@@ -181,7 +182,7 @@ export default function SignIn() {
           <div
             className={cn(
               "w-full gap-2 flex items-center",
-              "justify-between flex-col"
+              "justify-between flex-col",
             )}
           >
             <Button

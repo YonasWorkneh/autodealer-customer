@@ -21,6 +21,7 @@ import { useForm } from "react-hook-form";
 import { signin } from "@/lib/auth/signin";
 import { useUserStore } from "@/store/user";
 import { useRouter } from "next/navigation";
+import { useToast } from "@/hooks/use-toast";
 
 export default function SignIn() {
   const [showPassword, setShowPassword] = useState<boolean>(false);
@@ -30,7 +31,7 @@ export default function SignIn() {
   const [err, setErr] = useState("");
   const { setUser } = useUserStore();
   const router = useRouter();
-
+  const { toast } = useToast();
   const onSubmit = async (data: any) => {
     try {
       setLoading(true);
@@ -41,6 +42,11 @@ export default function SignIn() {
       setUser(user.user);
       router.push("/");
     } catch (err: any) {
+      toast({
+        variant: "destructive",
+        title: "❌ Login Failed",
+        description: "Failed to login. Please try again.",
+      });
       setErr(err.message);
     } finally {
       setLoading(false);
@@ -143,7 +149,7 @@ export default function SignIn() {
           <div
             className={cn(
               "w-full gap-2 flex items-center",
-              "justify-between flex-col"
+              "justify-between flex-col",
             )}
           >
             <Button
