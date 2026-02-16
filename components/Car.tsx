@@ -69,12 +69,12 @@ export default function Car({
   const daysOnMarket = car.created_at
     ? Math.floor(
         (new Date().getTime() - new Date(car.created_at).getTime()) /
-          (1000 * 60 * 60 * 24)
+          (1000 * 60 * 60 * 24),
       )
     : 0;
 
   // Get main image
-  const mainImage = car.images?.[0]?.image_url || "/placeholder.svg";
+  const mainImage = car.featured_image || "/placeholder.svg";
 
   const renderTitle = () => {
     const title = `${car.year} ${car.make} ${car.model}`;
@@ -99,31 +99,29 @@ export default function Car({
     return (
       <Link key={car.id} href={`/listing/${car.id}`} className="block h-full">
         <Card className="shadow-none border-gray-200 hover:shadow-lg transition-shadow cursor-pointer flex flex-col p-0 rounded-xl min-h-[420px] max-h-[720px] overflow-hidden">
-            <div className="relative">
-              <img
-                src={mainImage}
-                alt={`${car.year} ${car.make} ${car.model}`}
-                className="w-full h-48 object-cover"
+          <div className="relative">
+            <img
+              src={mainImage}
+              alt={`${car.year} ${car.make} ${car.model}`}
+              className="w-full h-48 object-cover"
+            />
+            <Button
+              variant="ghost"
+              size="sm"
+              className="absolute top-2 right-2 bg-white/80 hover:bg-white cursor-pointer rounded-full"
+              onClick={handleFavoriteClick}
+            >
+              <Heart
+                className={`h-4 w-4 ${isLoggedIn && favorited !== -1 ? "fill-primary text-primary" : ""}`}
               />
-              <Button
-                variant="ghost"
-                size="sm"
-                className="absolute top-2 right-2 bg-white/80 hover:bg-white cursor-pointer rounded-full"
-                onClick={handleFavoriteClick}
-              >
-                <Heart
-                  className={`h-4 w-4 ${isLoggedIn && favorited !== -1 ? "fill-primary text-primary" : ""}`}
-                />
-              </Button>
-            </div>
-          <CardContent className="p-4 sm:p-6 flex flex-col gap-4"> 
+            </Button>
+          </div>
+          <CardContent className="p-4 sm:p-6 flex flex-col gap-4">
             <div className="space-y-2 flex-1">
               <h3 className="text-lg sm:text-xl font-semibold text-black line-clamp-2">
                 {renderTitle()}
               </h3>
-              <p className="text-gray-600 text-sm">
-                {car.mileage?.toLocaleString()} miles
-              </p>
+              
               <p className="text-gray-600 text-sm capitalize">
                 {car.body_type}
               </p>
@@ -194,10 +192,10 @@ export default function Car({
             <h3 className="text-lg sm:text-xl font-semibold text-black">
               {renderTitle()}
             </h3>
-            <p className="text-gray-600 text-sm">
+            {/* TODO: Add mileage and fuel type when available in FetchedCar type */}
+            {/* <p className="text-gray-600 text-sm">
               {car.mileage?.toLocaleString()} miles
-            </p>
-            <p className="text-gray-600 text-sm capitalize">{car.fuel_type}</p>
+            </p> */}
             <p className="text-gray-600 text-sm capitalize">{car.body_type}</p>
             <Badge
               variant="secondary"
@@ -218,7 +216,6 @@ export default function Car({
           <div className="flex flex-col justify-between items-end text-right space-y-1">
             <p className="text-xl sm:text-2xl font-bold">{formattedPrice}</p>
             <p className="text-sm text-gray-600 capitalize">{car.sale_type}</p>
-            {car.trim && <p className="text-sm text-gray-600">{car.trim}</p>}
           </div>
         </CardContent>
       </Card>

@@ -1,4 +1,9 @@
-import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from "@tanstack/react-query";
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+  useInfiniteQuery,
+} from "@tanstack/react-query";
 import {
   fetchCars,
   fetchCarById,
@@ -17,7 +22,7 @@ import {
   postCarRating,
   postLead,
 } from "@/lib/carApi";
-import type { FetchedCar } from "@/app/types/Car";
+import { FetchedCarDetail, type FetchedCar } from "@/app/types/Car";
 import type { RatingAnalytics } from "@/app/types/RatingAnalytics";
 
 export function useCars() {
@@ -30,7 +35,7 @@ export function useCars() {
 export function useCarsInfinite() {
   return useInfiniteQuery<FetchedCar[]>({
     queryKey: ["cars-infinite"],
-    queryFn: ({ pageParam = 1 }) => fetchCars(pageParam, 20),
+    queryFn: ({ pageParam = 1 }) => fetchCars(pageParam as number, 20),
     getNextPageParam: (lastPage, allPages) => {
       // If last page has fewer items than limit, we've reached the end
       if (lastPage.length < 20) {
@@ -43,7 +48,7 @@ export function useCarsInfinite() {
 }
 
 export function useCar(id: string) {
-  return useQuery({
+  return useQuery<FetchedCarDetail>({
     queryKey: ["car", id],
     queryFn: () => fetchCarById(id),
     enabled: !!id, // only run if id exists
@@ -130,7 +135,7 @@ export function useUpdateCarViews() {
 
 export function useUpdateFavorite(
   onSuccess?: () => void,
-  onError?: () => void
+  onError?: () => void,
 ) {
   return useMutation({
     mutationFn: (id: number) => makeCarFavorite(id),
@@ -145,7 +150,7 @@ export function useCarFavorites() {
 
 export function useRemoveFavorite(
   onSuccess?: () => void,
-  onError?: () => void
+  onError?: () => void,
 ) {
   const queryClient = useQueryClient();
   return useMutation({
@@ -174,7 +179,7 @@ export function useMarketData() {
 
 export function usePlaceBid(
   onSuccess?: () => void,
-  onError?: (error: Error) => void
+  onError?: (error: Error) => void,
 ) {
   const queryClient = useQueryClient();
   return useMutation({
@@ -203,7 +208,7 @@ export function useRatingAnalytics(carId: string | number | undefined) {
 export function usePostCarRating(
   carId: string | number | undefined,
   onSuccess?: () => void,
-  onError?: (error: Error) => void
+  onError?: (error: Error) => void,
 ) {
   const queryClient = useQueryClient();
   return useMutation({
@@ -222,7 +227,7 @@ export function usePostCarRating(
 
 export function usePostLead(
   onSuccess?: () => void,
-  onError?: (error: Error) => void
+  onError?: (error: Error) => void,
 ) {
   return useMutation({
     mutationFn: ({ name, contact }: { name: string; contact: string }) =>

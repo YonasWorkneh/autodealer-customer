@@ -1,4 +1,4 @@
-import type { Car, FetchedCar } from "@/app/types/Car"; // move your interfaces to a types file for reusability
+import type { Car, FetchedCar, FetchedCarDetail } from "@/app/types/Car"; // move your interfaces to a types file for reusability
 import { Favorite } from "@/app/types/Favorite";
 import type { Make } from "@/app/types/Make";
 import type { Model } from "@/app/types/Model";
@@ -25,15 +25,15 @@ async function fetcher<T>(endpoint: string, options?: RequestInit): Promise<T> {
 
 export async function fetchCars(
   page: number = 1,
-  limit: number = 20
+  limit: number = 20,
 ): Promise<FetchedCar[]> {
   const url = `/inventory/cars/?page=${page}&limit=${limit}`;
   return fetcher<FetchedCar[]>(url);
 }
 
-export async function fetchCarById(id: string): Promise<FetchedCar> {
+export async function fetchCarById(id: string): Promise<FetchedCarDetail> {
   const credential = await getCredentials();
-  return fetcher<FetchedCar>(`/inventory/cars/${id}`);
+  return fetcher<FetchedCarDetail>(`/inventory/cars/${id}`);
 }
 
 export async function fetchMakes(): Promise<Make[]> {
@@ -62,12 +62,12 @@ export async function postCar(formData: FormData): Promise<Car> {
 export async function getMyAds(id: number | undefined) {
   if (!id) return [];
   const credential = await getCredentials();
-  const myAds = await fetcher<FetchedCar[]>("/inventory/cars/", {
+  const myAds = await fetcher<FetchedCar[]>("/inventory/user-cars/", {
     headers: {
       Authorization: `Bearer ${credential.access}`,
     },
   });
-  return myAds.filter((car) => car.broker === id);
+  return myAds;
 }
 
 export async function deleteCar(id: number) {
@@ -186,7 +186,7 @@ export async function placeBid(car: number, amount: number) {
       const errorData = await res.json().catch(() => ({}));
       throw new Error(
         errorData.message ||
-          `Failed to place bid: ${res.status} ${res.statusText}`
+          `Failed to place bid: ${res.status} ${res.statusText}`,
       );
     }
     return await res.json();
@@ -195,7 +195,9 @@ export async function placeBid(car: number, amount: number) {
   }
 }
 
-export async function fetchRatingAnalytics(carId: string | number): Promise<RatingAnalytics[]> {
+export async function fetchRatingAnalytics(
+  carId: string | number,
+): Promise<RatingAnalytics[]> {
   const credential = await getCredentials();
   try {
     const url = `/analytics/rating_analytics/?car_id=${carId}`;
@@ -209,7 +211,11 @@ export async function fetchRatingAnalytics(carId: string | number): Promise<Rati
   }
 }
 
-export async function postCarRating(carId: number, rating: number, comment: string) {
+export async function postCarRating(
+  carId: number,
+  rating: number,
+  comment: string,
+) {
   const credential = await getCredentials();
   try {
     const res = await fetch(`${BASE_URL}/ratings/car-ratings/`, {
@@ -228,7 +234,7 @@ export async function postCarRating(carId: number, rating: number, comment: stri
       const errorData = await res.json().catch(() => ({}));
       throw new Error(
         errorData.message ||
-          `Failed to post rating: ${res.status} ${res.statusText}`
+          `Failed to post rating: ${res.status} ${res.statusText}`,
       );
     }
     return await res.json();
@@ -256,7 +262,7 @@ export async function postLead(name: string, contact: string) {
       const errorData = await res.json().catch(() => ({}));
       const error = new Error(
         errorData.message ||
-          `Failed to submit inquiry: ${res.status} ${res.statusText}`
+          `Failed to submit inquiry: ${res.status} ${res.statusText}`,
       ) as Error & { response?: any; data?: any };
       error.response = errorData;
       error.data = errorData;

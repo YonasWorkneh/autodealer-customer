@@ -21,23 +21,23 @@ import Car from "@/components/Car";
 import { useCarsInfinite } from "@/hooks/cars";
 import Slider from "@/components/Slider";
 
- const carLogos = [
-    { image: "/logo/byd.webp", title: "BYD" },
-    { image: "/logo/hyundai.webp", title: "Hyundai" },
-    { image: "/logo/Jetour_Logo.svg", title: "Jetour" },
-    { image: "/logo/liffan.png", title: "Lifan" },
-    { image: "/logo/suzuki.png", title: "Suzuki" },
-    { image: "/logo/toyota.png", title: "Toyota" },
-    { image: "/logo/vk.svg.png", title: "VK" },
-    { image: "/logo/nissan.png", title: "Nissan" },
-    { image: "/logo/ford.webp", title: "Ford" },
-    { image: "/logo/audi.png", title: "Audi" },
-    { image: "/logo/mist.png", title: "Mitsubishi" },
-    { image: "/logo/bmw.png", title: "BMW" },
-    { image: "/logo/infinity.png", title: "Infinity" },
-    { image: "/logo/mercedes.webp", title: "Mercedes" },
-    { image: "/logo/lexus.png", title: "Lexus" },
-  ];
+const carLogos = [
+  { image: "/logo/byd.webp", title: "BYD" },
+  { image: "/logo/hyundai.webp", title: "Hyundai" },
+  { image: "/logo/Jetour_Logo.svg", title: "Jetour" },
+  { image: "/logo/liffan.png", title: "Lifan" },
+  { image: "/logo/suzuki.png", title: "Suzuki" },
+  { image: "/logo/toyota.png", title: "Toyota" },
+  { image: "/logo/vk.svg.png", title: "VK" },
+  { image: "/logo/nissan.png", title: "Nissan" },
+  { image: "/logo/ford.webp", title: "Ford" },
+  { image: "/logo/audi.png", title: "Audi" },
+  { image: "/logo/mist.png", title: "Mitsubishi" },
+  { image: "/logo/bmw.png", title: "BMW" },
+  { image: "/logo/infinity.png", title: "Infinity" },
+  { image: "/logo/mercedes.webp", title: "Mercedes" },
+  { image: "/logo/lexus.png", title: "Lexus" },
+];
 
 export default function CarMarketplace() {
   const [detailOpened, setDetailOpened] = useState(false);
@@ -67,7 +67,7 @@ export default function CarMarketplace() {
         fetchNextPage();
       }
     },
-    [hasNextPage, isFetchingNextPage, fetchNextPage]
+    [hasNextPage, isFetchingNextPage, fetchNextPage],
   );
 
   useEffect(() => {
@@ -113,19 +113,20 @@ export default function CarMarketplace() {
       if (filters.yearMax && c.year > filters.yearMax) return false;
       if (filters.priceMin && c.price < filters.priceMin) return false;
       if (filters.priceMax && c.price > filters.priceMax) return false;
-      if (filters.mileageMin && c.mileage < filters.mileageMin) return false;
-      if (filters.mileageMax && c.mileage > filters.mileageMax) return false;
+      // TODO: Add mileage filters when available in FetchedCar type
+      // if (filters.mileageMin && c.mileage < filters.mileageMin) return false;
+      // if (filters.mileageMax && c.mileage > filters.mileageMax) return false;
       return true;
     });
 
     // Apply sorting
     if (sortBy === "price-low") {
       filtered = [...filtered].sort(
-        (a, b) => parseFloat(a.price) - parseFloat(b.price)
+        (a, b) => parseFloat(a.price) - parseFloat(b.price),
       );
     } else if (sortBy === "price-high") {
       filtered = [...filtered].sort(
-        (a, b) => parseFloat(b.price) - parseFloat(a.price)
+        (a, b) => parseFloat(b.price) - parseFloat(a.price),
       );
     }
 
@@ -287,7 +288,8 @@ export default function CarMarketplace() {
                 <h2 className="text-3xl font-semibold text-foreground">
                   {activeQuery ? (
                     <span className="flex items-center gap-2">
-                      Results for "<span className="text-primary">{activeQuery}</span>"
+                      Results for "
+                      <span className="text-primary">{activeQuery}</span>"
                     </span>
                   ) : (
                     "All Vehicles"
@@ -364,7 +366,9 @@ export default function CarMarketplace() {
                   <div ref={observerTarget} className="h-10" />
                   {isFetchingNextPage && (
                     <div className="text-center py-8">
-                      <p className="text-muted-foreground">Loading more cars...</p>
+                      <p className="text-muted-foreground">
+                        Loading more cars...
+                      </p>
                     </div>
                   )}
                   {!hasNextPage && filteredCars.length > 0 && (
