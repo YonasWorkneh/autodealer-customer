@@ -21,7 +21,7 @@ export default function NotificationsPage() {
         <main className="min-h-screen bg-gray-50 pb-20">
             <Header color="black" />
 
-            <div className="px-4 sm:px-6 lg:px-8 py-10">
+            <div className="px-4 sm:px-6 lg:px-50 py-10">
                 <div className="flex justify-between items-center mb-8">
                     <div>
                         <h1 className="text-3xl font-bold text-gray-900">Notifications</h1>
