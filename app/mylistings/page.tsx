@@ -252,13 +252,13 @@ export default function MyListingsPage() {
                       className="p-0 bg-white shadow-sm border border-gray-200 rounded-xl overflow-hidden hover:shadow-md transition-shadow flex flex-col gap-0"
                     >
                       <div className="relative w-full aspect-[4/3] bg-gray-100 group">
-                        {ad.images.length === 0 ? (
+                        {ad.featured_image === null ? (
                           <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">
                             No Image
                           </div>
                         ) : (
                           <Image
-                            src={ad.images[0].image_url}
+                            src={ad.featured_image}
                             alt={ad.make + " " + ad.model}
                             fill
                             className="object-cover"
@@ -317,12 +317,12 @@ export default function MyListingsPage() {
                         </div>
 
                         <div className="pt-3 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500">
-                          <div className="flex items-center gap-1">
+                          {/* <div className="flex items-center gap-1">
                             <Calendar className="h-3.5 w-3.5" />
                             <span>
                                 {new Date(ad.updated_at).toLocaleDateString()}
                             </span>
-                          </div>
+                          </div> */}
                            <Badge variant="outline" className="text-xs font-normal border-gray-200 text-gray-600 capitalize">
                                 {ad.status}
                            </Badge>

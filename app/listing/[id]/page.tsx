@@ -86,8 +86,6 @@ export default function CarListingPage() {
   const dealerOrBrokerId = car?.dealer || car?.broker;
   const {
     data: dealerBrokerProfile,
-    isLoading: isLoadingProfile,
-    error: profileError,
   } = useProfileById(dealerOrBrokerId || null);
 
   // Pre-fill form with profile data when dialog opens
