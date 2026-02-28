@@ -21,8 +21,10 @@ import {
   fetchRatingAnalytics,
   postCarRating,
   postLead,
+  postCarInspection,
 } from "@/lib/carApi";
 import { FetchedCarDetail, type FetchedCar } from "@/app/types/Car";
+import type { Car } from "@/app/types/Car";
 import type { RatingAnalytics } from "@/app/types/RatingAnalytics";
 
 export function useCars() {
@@ -70,7 +72,10 @@ export function useModels(makeId?: number) {
   });
 }
 
-export function usePostCar(onError?: () => void, onSuccess?: () => void) {
+export function usePostCar(
+  onError?: () => void,
+  onSuccess?: (car: Car) => void,
+) {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -78,12 +83,17 @@ export function usePostCar(onError?: () => void, onSuccess?: () => void) {
     onError: () => {
       onError?.();
     },
-    onSuccess: () => {
-      // refresh list of cars after posting
-      onSuccess?.();
+    onSuccess: (data: Car) => {
       queryClient.invalidateQueries({ queryKey: ["cars"] });
       queryClient.invalidateQueries({ queryKey: ["my-ads"] });
+      onSuccess?.(data);
     },
+  });
+}
+
+export function usePostCarInspection() {
+  return useMutation({
+    mutationFn: postCarInspection,
   });
 }
 

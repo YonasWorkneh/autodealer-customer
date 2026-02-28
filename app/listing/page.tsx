@@ -446,7 +446,7 @@ export default function CarMarketplace() {
       {detailOpened && selectedCar && (
         <CarDetailModal
           isOpen={detailOpened}
-          car={selectedCar}
+          carId={String(selectedCar.id)}
           onClose={() => {
             setDetailOpened(false);
             setSelectedCar(null);

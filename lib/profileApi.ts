@@ -13,11 +13,13 @@ export const getProfile = async () => {
         Authorization: `Bearer ${access}`,
       },
     });
+    console.log("profile fetchres", res);
     if (!res.ok) throw new Error("Something went wrong");
     const profile: UserProfile = await res.json();
     return profile;
   } catch (err: any) {
     // console.error(err.message);
+    console.log("profile fetch error", err);
     throw err;
   }
 };

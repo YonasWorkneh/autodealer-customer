@@ -1,24 +1,24 @@
 "use client";
 
-import { X, Heart, Gauge, Fuel, Palette, Car, Bluetooth } from "lucide-react";
+import { Heart, Gauge, Fuel, Palette, Car, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import Image from "next/image";
 import { DialogTitle } from "@radix-ui/react-dialog";
 import Link from "next/link";
-import { FetchedCar } from "@/app/types/Car";
-import { useCarFavorites, useUpdateFavorite } from "@/hooks/cars";
+import { useCar, useCarFavorites, useUpdateFavorite } from "@/hooks/cars";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { formatPrice } from "@/lib/utils";
 
-interface CarListingModalProps {
-  car: FetchedCar | null;
+interface CarDetailModalProps {
+  carId: string | null;
   isOpen: boolean;
   onClose: () => void;
 }
 
-export function CarDetailModal({ car, isOpen, onClose }: CarListingModalProps) {
+export function CarDetailModal({ carId, isOpen, onClose }: CarDetailModalProps) {
+  const { data: car, isLoading } = useCar(carId ?? "");
   const { data: favorites } = useCarFavorites();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -40,31 +40,46 @@ export function CarDetailModal({ car, isOpen, onClose }: CarListingModalProps) {
 
   const { mutate: toggleFavorite } = useUpdateFavorite(onSuccess, onError);
 
-  if (!car) return null;
-
-  const favorited = favorites?.findIndex((favorite) => favorite.car === car.id);
+  const favorited = car
+    ? favorites?.findIndex((favorite) => favorite.car === car.id)
+    : -1;
 
   const formatMileage = (mileage: number) => {
     return new Intl.NumberFormat("en-US").format(mileage);
   };
 
-  // Get main image
-  const mainImage = car.images?.[0]?.image_url || "/placeholder.svg";
+  // Get main image from detail images array (featured first, else first)
+  const mainImage =
+    car?.images?.find((i) => i.is_featured)?.image_url ??
+    car?.images?.[0]?.image_url ??
+    "/placeholder.svg";
+
+  if (!carId) return null;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent
         className="max-w-2xl p-0 gap-0"
-        title={car.make + " " + car.model}
+        title={car ? `${car.make} ${car.model}` : "Car details"}
       >
-        <DialogTitle></DialogTitle>
-        {/* Header */}
-        <div className="relative p-6 pb-4">
-          <div className="flex gap-4 border rounded-md shadow-[0px_8px_16px_rgba(0,0,0,.08)] p-4 mt-4 bg-white">
-            <div className="relative">
-              <Image
-                src={mainImage}
-                alt={`${car.year} ${car.make} ${car.model}`}
+        <DialogTitle />
+        {isLoading ? (
+          <div className="flex items-center justify-center py-16">
+            <Loader2 className="size-10 animate-spin text-primary" />
+          </div>
+        ) : !car ? (
+          <div className="py-16 text-center text-muted-foreground">
+            Could not load car details.
+          </div>
+        ) : (
+          <>
+            {/* Header */}
+            <div className="relative p-6 pb-4">
+              <div className="flex gap-4 border rounded-md shadow-[0px_8px_16px_rgba(0,0,0,.08)] p-4 mt-4 bg-white">
+                <div className="relative">
+                  <Image
+                    src={mainImage}
+                    alt={`${car.year} ${car.make} ${car.model}`}
                 width={100}
                 height={100}
                 className="w-36 h-auto object-cover rounded-md bg-gray-100"
@@ -72,7 +87,7 @@ export function CarDetailModal({ car, isOpen, onClose }: CarListingModalProps) {
             </div>
             <div className="flex-1">
               <h2 className="text-lg font-semibold text-gray-900">
-                {car.year} {car.make} {car.model} {car.trim || ""}
+                {car.year} {car.make} {car.model}
               </h2>
               <div className="flex items-baseline gap-2 mt-1">
                 <span className="text-2xl font-bold text-gray-900">
@@ -229,20 +244,6 @@ export function CarDetailModal({ car, isOpen, onClose }: CarListingModalProps) {
                   </div>
                 </div>
               </div>
-
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
-                  <Bluetooth className="size-6 text-gray-600" />
-                </div>
-                <div>
-                  <div className="text-sm font-medium text-gray-900">
-                    Bluetooth
-                  </div>
-                  <div className="text-sm text-gray-600">
-                    {car.bluetooth ? "Available" : "Not Available"}
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
         </div>
@@ -302,6 +303,8 @@ export function CarDetailModal({ car, isOpen, onClose }: CarListingModalProps) {
             </div>
           </div>
         </div>
+          </>
+        )}
       </DialogContent>
     </Dialog>
   );

@@ -23,7 +23,9 @@ import {
   usePostCar,
   useCar,
   useUpdateCar,
+  usePostCarInspection,
 } from "@/hooks/cars";
+import type { CarInspectionPayload } from "@/lib/carApi";
 import Header from "@/components/Header";
 import { indexedDBManager, convertFormDataToCarForm } from "@/lib/indexedDB";
 import type { Feature } from "../types/Car";
@@ -58,7 +60,6 @@ const formSchema = z.object({
   origin: z.string().min(1, "Origin is required"),
 });
 
-
 type FormData = z.infer<typeof formSchema>;
 
 export default function PlaceAddForm() {
@@ -72,6 +73,8 @@ export default function PlaceAddForm() {
   const [featuredImageIndex, setFeaturedImageIndex] = useState<number>(0);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [showInspectionStep, setShowInspectionStep] = useState(false);
+  const [createdCarId, setCreatedCarId] = useState<number | null>(null);
   const {
     control,
     handleSubmit,
@@ -108,7 +111,7 @@ export default function PlaceAddForm() {
   const { data: models, isLoading: isModelsLoading } = useModels(watchedMake);
   const { data: carData, isLoading: isCarLoading } = useCar(c_id ? c_id : "");
 
-  const onSuccess = () => {
+  const resetFormToInitial = () => {
     reset({
       make: 0,
       model: 0,
@@ -130,10 +133,22 @@ export default function PlaceAddForm() {
     setImages([]);
     setFeaturedImageIndex(0);
     setTechnicalFeatures((prev) =>
-      prev.map((tec) => ({ ...tec, checked: false }))
+      prev.map((tec) => ({ ...tec, checked: false })),
     );
     setExtras((prev) => prev.map((extra) => ({ ...extra, checked: false })));
     setStep(1);
+    setSubmitSuccess(true);
+    setTimeout(() => setSubmitSuccess(false), 5000);
+  };
+
+  const onSuccessUpdate = () => {
+    resetFormToInitial();
+  };
+
+  const onSuccessPost = (car: { id: number }) => {
+    setSubmitError(null);
+    setCreatedCarId(car.id);
+    setShowInspectionStep(true);
     setSubmitSuccess(true);
     setTimeout(() => setSubmitSuccess(false), 5000);
   };
@@ -160,7 +175,7 @@ export default function PlaceAddForm() {
     setImages([]);
     setFeaturedImageIndex(0);
     setTechnicalFeatures((prev) =>
-      prev.map((tec) => ({ ...tec, checked: false }))
+      prev.map((tec) => ({ ...tec, checked: false })),
     );
     setExtras((prev) => prev.map((extra) => ({ ...extra, checked: false })));
     setStep(1);
@@ -172,18 +187,20 @@ export default function PlaceAddForm() {
     mutate: postCar,
     isPending: isPostPending,
     isSuccess: isPostSuccess,
-  } = usePostCar(onError, onSuccess);
+  } = usePostCar(onError, onSuccessPost);
   const {
     mutate: updateCar,
     isPending: isUpdatePending,
     isSuccess: isUpdateSuccess,
-  } = useUpdateCar(onError, onSuccess);
+  } = useUpdateCar(onError, onSuccessUpdate);
+  const { mutate: postInspection, isPending: isInspectionPending } =
+    usePostCarInspection();
 
   // Generate years from 1921 to current year
   const currentYear = new Date().getFullYear();
   const years = Array.from(
     { length: currentYear - 1920 },
-    (_, i) => currentYear - i
+    (_, i) => currentYear - i,
   );
 
   const fuelTypes = ["Diesel", "Electric", "Hybrid", "Petrol"];
@@ -540,7 +557,7 @@ export default function PlaceAddForm() {
           prev.map((feature) => ({
             ...feature,
             checked: (carData as any)[feature.field] || false,
-          }))
+          })),
         );
 
         // Set extras
@@ -548,7 +565,7 @@ export default function PlaceAddForm() {
           prev.map((extra) => ({
             ...extra,
             checked: (carData as any)[extra.field] || false,
-          }))
+          })),
         );
       }, 1000);
     }
@@ -617,14 +634,14 @@ export default function PlaceAddForm() {
   const handleTechnicalFeatureChange = (id: string, checked: boolean) => {
     setTechnicalFeatures((prev) =>
       prev.map((feature) =>
-        feature.id === id ? { ...feature, checked } : feature
-      )
+        feature.id === id ? { ...feature, checked } : feature,
+      ),
     );
   };
 
   const handleExtraChange = (id: string, checked: boolean) => {
     setExtras((prev) =>
-      prev.map((extra) => (extra.id === id ? { ...extra, checked } : extra))
+      prev.map((extra) => (extra.id === id ? { ...extra, checked } : extra)),
     );
   };
 
@@ -655,7 +672,7 @@ export default function PlaceAddForm() {
       carForm.append("price", data.price);
       carForm.append(
         "sales_type",
-        data.salesType === "Fixed Price" ? "fixed_price" : "auction"
+        data.salesType === "Fixed Price" ? "fixed_price" : "auction",
       );
       carForm.append("description", data.description);
       carForm.append("body_type", data.bodyType);
@@ -668,7 +685,7 @@ export default function PlaceAddForm() {
         console.log(image.name, index === featuredImageIndex);
         carForm.append(
           `uploaded_images[${index}].is_featured`,
-          String(index === featuredImageIndex ? "True" : "False")
+          String(index === featuredImageIndex ? "True" : "False"),
         );
         // caption = file name
         carForm.append(`uploaded_images[${index}].caption`, image.name);
@@ -677,12 +694,12 @@ export default function PlaceAddForm() {
       const selectedTechnical = technicalFeatures.filter((tec) => tec.checked);
       const selectedExtras = extras.filter((extra) => extra.checked);
       selectedTechnical.forEach((technical) =>
-        carForm.append(technical.field, String(technical.checked))
+        carForm.append(technical.field, String(technical.checked)),
       );
       selectedExtras.forEach((extra) =>
-        carForm.append(extra.field, String(extra.checked))
+        carForm.append(extra.field, String(extra.checked)),
       );
-
+      console.log("profile", profile);
       if (
         profile?.dealer_profile === null &&
         profile?.broker_profile === null
@@ -691,7 +708,7 @@ export default function PlaceAddForm() {
         const carFormData = convertFormDataToCarForm(
           carForm,
           data.images,
-          "payment-pending"
+          "payment-pending",
         );
         const savedId = await indexedDBManager.saveCarForm(carFormData);
         router.push(`/pricing?p_id=${savedId}`);
@@ -717,7 +734,7 @@ export default function PlaceAddForm() {
     } catch (error) {
       console.error("Error saving form data:", error);
       setSubmitError(
-        error instanceof Error ? error.message : "Failed to save form data"
+        error instanceof Error ? error.message : "Failed to save form data",
       );
     }
   };
@@ -730,15 +747,153 @@ export default function PlaceAddForm() {
   // so they see offers before accessing the place-add form.
   useEffect(() => {
     if (!profile) return;
-    if (
-      profile.dealer_profile === null &&
-      profile.broker_profile === null
-    ) {
+    if (profile.dealer_profile === null && profile.broker_profile === null) {
       router.push("/pricing");
     }
   }, [profile, router]);
 
+  const [inspectionInspectedBy, setInspectionInspectedBy] = useState("");
+  const [inspectionDate, setInspectionDate] = useState(() =>
+    new Date().toISOString().slice(0, 10),
+  );
+  const [inspectionRemarks, setInspectionRemarks] = useState("");
+  const [inspectionCondition, setInspectionCondition] = useState<
+    "excellent" | "good" | "fair" | "poor"
+  >("excellent");
+
+  const handleSkipInspection = () => {
+    setSubmitError(null);
+    setShowInspectionStep(false);
+    setCreatedCarId(null);
+    resetFormToInitial();
+    router.push("/mylistings");
+  };
+
+  const handleSubmitInspection = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!createdCarId) return;
+    const payload: CarInspectionPayload = {
+      car_id: createdCarId,
+      inspected_by: inspectionInspectedBy,
+      inspection_date: inspectionDate,
+      remarks: inspectionRemarks,
+      condition_status: inspectionCondition,
+    };
+    postInspection(payload, {
+      onSuccess: () => {
+        setShowInspectionStep(false);
+        setCreatedCarId(null);
+        resetFormToInitial();
+        router.push("/mylistings");
+      },
+      onError: () => {
+        setSubmitError(
+          "Failed to submit inspection. You can skip and add it later.",
+        );
+      },
+    });
+  };
+
   if (!user.email) return null;
+
+  if (showInspectionStep && createdCarId) {
+    return (
+      <div>
+        <Header color="black" />
+        <div className="grid my-auto place-items-center pt-5 pb-12">
+          <div className="w-full max-w-2xl bg-transparent rounded-lg p-8">
+            <div className="mb-6 p-4 bg-green-100 border border-green-400 text-green-700 rounded-md">
+              <p className="text-sm font-medium">
+                Your car has been posted successfully. Optionally add inspection
+                details below.
+              </p>
+            </div>
+            <h2 className="text-2xl font-semibold text-foreground mb-2">
+              Add inspection details (optional)
+            </h2>
+            <p className="text-muted-foreground text-sm mb-6">
+              Submit inspection info to help buyers, or skip to go to My Ads.
+            </p>
+            <form onSubmit={handleSubmitInspection} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="inspected_by">Inspected by</Label>
+                <Input
+                  id="inspected_by"
+                  value={inspectionInspectedBy}
+                  onChange={(e) => setInspectionInspectedBy(e.target.value)}
+                  placeholder="e.g. Top Garage Motors"
+                  className="h-12 border-border rounded-md"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="inspection_date">Inspection date</Label>
+                <Input
+                  id="inspection_date"
+                  type="date"
+                  value={inspectionDate}
+                  onChange={(e) => setInspectionDate(e.target.value)}
+                  className="h-12 border-border rounded-md"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="remarks">Remarks</Label>
+                <Textarea
+                  id="remarks"
+                  value={inspectionRemarks}
+                  onChange={(e) => setInspectionRemarks(e.target.value)}
+                  placeholder="e.g. Engine and brakes are in excellent condition."
+                  className="min-h-[100px] border-border rounded-md"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="condition_status">Condition status</Label>
+                <Select
+                  value={inspectionCondition}
+                  onValueChange={(v: "excellent" | "good" | "fair" | "poor") =>
+                    setInspectionCondition(v)
+                  }
+                >
+                  <SelectTrigger className="h-12 border-border rounded-md">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="excellent">Excellent</SelectItem>
+                    <SelectItem value="good">Good</SelectItem>
+                    <SelectItem value="fair">Fair</SelectItem>
+                    <SelectItem value="poor">Poor</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              {submitError && (
+                <p className="text-red-500 text-sm">{submitError}</p>
+              )}
+              <div className="flex flex-col sm:flex-row gap-3 pt-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleSkipInspection}
+                  className="flex-1 cursor-pointer"
+                >
+                  Skip and go to My Ads
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={isInspectionPending}
+                  className="flex-1 cursor-pointer bg-primary text-primary-foreground hover:bg-primary-hover"
+                >
+                  {isInspectionPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    "Submit inspection"
+                  )}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -864,7 +1019,6 @@ export default function PlaceAddForm() {
                       )}
                     </div>
 
-
                     {/* Model Selection */}
                     <div className="space-y-2">
                       <Label htmlFor="model" className="text-sm text-gray-500">
@@ -894,9 +1048,9 @@ export default function PlaceAddForm() {
                                   Loading...
                                 </SelectItem>
                               ) : (
-                                models
+                                (models
                                   ?.filter(
-                                    (model) => model.make_id === watchedMake
+                                    (model) => model.make_id === watchedMake,
                                   )
                                   .map((model) => (
                                     <SelectItem
@@ -905,7 +1059,7 @@ export default function PlaceAddForm() {
                                     >
                                       {model.name}
                                     </SelectItem>
-                                  )) ?? null
+                                  )) ?? null)
                               )}
                             </SelectContent>
                           </Select>
@@ -930,28 +1084,31 @@ export default function PlaceAddForm() {
                           {...control.register("vin")}
                           className="w-full h-12 border-black/10 rounded-md"
                         />
-                         {errors.vin && (
-                        <p className="text-red-500 text-sm">
-                          {errors.vin.message}
-                        </p>
-                      )}
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="origin" className="text-sm text-gray-500">
-                            Origin
+                        {errors.vin && (
+                          <p className="text-red-500 text-sm">
+                            {errors.vin.message}
+                          </p>
+                        )}
+                      </div>
+                      <div className="space-y-2">
+                        <Label
+                          htmlFor="origin"
+                          className="text-sm text-gray-500"
+                        >
+                          Origin
                         </Label>
                         <Input
-                            id="origin"
-                            placeholder="Enter Origin"
-                            {...control.register("origin")}
-                            className="w-full h-12 border-black/10 rounded-md"
+                          id="origin"
+                          placeholder="Enter Origin"
+                          {...control.register("origin")}
+                          className="w-full h-12 border-black/10 rounded-md"
                         />
-                         {errors.origin && (
-                        <p className="text-red-500 text-sm">
-                          {errors.origin.message}
-                        </p>
-                      )}
-                    </div>
+                        {errors.origin && (
+                          <p className="text-red-500 text-sm">
+                            {errors.origin.message}
+                          </p>
+                        )}
+                      </div>
                     </div>
 
                     {/* Year and Mileage Row */}
@@ -1475,7 +1632,7 @@ export default function PlaceAddForm() {
                                   onCheckedChange={(checked) =>
                                     handleTechnicalFeatureChange(
                                       feature.id,
-                                      checked as boolean
+                                      checked as boolean,
                                     )
                                   }
                                   className="w-5 h-5 transition-all duration-200 cursor-pointer"
@@ -1525,7 +1682,7 @@ export default function PlaceAddForm() {
                                   onCheckedChange={(checked) =>
                                     handleExtraChange(
                                       extra.id,
-                                      checked as boolean
+                                      checked as boolean,
                                     )
                                   }
                                   className="w-5 h-5 transition-all duration-200 cursor-pointer"

@@ -21,6 +21,7 @@ import {
   Facebook,
   MoreVertical,
   ArrowLeft,
+  CheckCircle,
 } from "lucide-react";
 import Image from "next/image";
 import Header from "@/components/Header";
@@ -84,9 +85,9 @@ export default function CarListingPage() {
 
   // Get dealer or broker ID (whichever is not null)
   const dealerOrBrokerId = car?.dealer || car?.broker;
-  const {
-    data: dealerBrokerProfile,
-  } = useProfileById(dealerOrBrokerId || null);
+  const { data: dealerBrokerProfile } = useProfileById(
+    dealerOrBrokerId || null,
+  );
 
   // Pre-fill form with profile data when dialog opens
   useEffect(() => {
@@ -308,32 +309,8 @@ export default function CarListingPage() {
     );
   };
 
-  // Get features from car data
-  const getCarFeatures = () => {
-    if (!car) return [];
-    const features = [];
-
-    if (car.all_wheel_steering) features.push("All Wheel Steering");
-    if (car.anti_lock_brakes) features.push("Anti-Lock Brakes/ABS");
-    if (car.cruise_control) features.push("Cruise Control");
-    if (car.dual_exhaust) features.push("Dual Exhaust");
-    if (car.front_airbags) features.push("Front Airbags");
-    if (car.power_steering) features.push("Power Steering");
-    if (car.side_airbags) features.push("Side Airbags");
-    if (car.tiptronic_gears) features.push("Tiptronic Gears");
-    if (car.bluetooth) features.push("Bluetooth");
-    if (car.leather_seats) features.push("Leather Seats");
-    if (car.navigation_system) features.push("Navigation System");
-    if (car.sunroof) features.push("Sunroof");
-    if (car.power_windows) features.push("Power Windows");
-    if (car.power_locks) features.push("Power Locks");
-    if (car.climate_control) features.push("Climate Control");
-    if (car.keyless_entry) features.push("Keyless Entry");
-
-    return features;
-  };
-
-  const features = getCarFeatures();
+  // Features from API: array of strings to display
+  const features = car?.features ?? [];
   const visibleFeatures = showAllFeatures ? features : features.slice(0, 8);
   const message = car?.description || "No description available for this car.";
 
@@ -636,7 +613,7 @@ export default function CarListingPage() {
             </div>
 
             {/* Car Overview */}
-            <Card>
+            <Card className="bg-white/20 shadow-none">
               <CardContent className="p-4 sm:p-6">
                 <h2 className="text-lg sm:text-xl font-semibold mb-4">
                   Car Overview
@@ -697,7 +674,7 @@ export default function CarListingPage() {
             </Card>
 
             {/* Description */}
-            <Card>
+            <Card className="bg-white/20 shadow-none">
               <CardContent className="p-4 sm:p-6">
                 <h2 className="text-lg sm:text-xl font-semibold mb-4">
                   {car.year} {car.make} {car.model}
@@ -733,7 +710,7 @@ export default function CarListingPage() {
 
             {/* Features */}
             {features.length > 0 && (
-              <Card>
+              <Card className="bg-white/20 shadow-none">
                 <CardContent className="p-4 sm:p-6">
                   <div className="flex items-center justify-between mb-4">
                     <h2 className="text-lg sm:text-xl font-semibold">
@@ -757,7 +734,7 @@ export default function CarListingPage() {
                           key={index}
                           className="flex items-center gap-2 text-sm"
                         >
-                          <div className="w-2 h-2 bg-green-500 rounded-full flex-shrink-0"></div>
+                          <CheckCircle className="size-5 text-green-500 shrink-0" />
                           <span>{feature}</span>
                         </div>
                       ))}
@@ -771,7 +748,7 @@ export default function CarListingPage() {
           {/* Sidebar */}
           <div className="space-y-6">
             {/* Dealer/Broker Info */}
-            <Card>
+            <Card className="bg-white/20 shadow-none">
               <CardContent className="p-4 sm:p-6">
                 <div className="flex justify-between items-center w-full">
                   <div className="flex items-center gap-3 mb-4">
@@ -848,7 +825,7 @@ export default function CarListingPage() {
             </Card>
 
             {/* Inspection Badge */}
-            <Card className="bg-primary text-primary-foreground">
+            <Card className="bg-primary text-primary-foreground shadow-none">
               <CardContent className="p-4">
                 <div className="text-center">
                   <h3 className="font-semibold mb-1 text-sm sm:text-base">
