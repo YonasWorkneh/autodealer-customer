@@ -1,14 +1,13 @@
 import { NotificationResponse } from "@/app/types/notification";
 import { getCredentials } from "./credential";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+import { API_BASE_URL } from "./config";
 
 export const getNotifications = async () => {
   try {
     const credential = await getCredentials();
     const { access } = credential;
 
-    const res = await fetch(`${API_URL}/notifications/`, {
+    const res = await fetch(`${API_BASE_URL}/notifications/`, {
       headers: {
         Authorization: `Bearer ${access}`,
       },
@@ -28,7 +27,7 @@ export const markAsRead = async (id: number) => {
     const credential = await getCredentials();
     const { access } = credential;
 
-    const res = await fetch(`${API_URL}/notifications/${id}/read/`, {
+    const res = await fetch(`${API_BASE_URL}/notifications/${id}/read/`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${access}`,

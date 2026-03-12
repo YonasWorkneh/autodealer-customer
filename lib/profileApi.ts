@@ -1,14 +1,13 @@
 import { UserProfile } from "@/app/types/Profile";
 import { getCredentials } from "./credential";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+import { API_BASE_URL } from "./config";
 
 export const getProfile = async () => {
   try {
     const credential = await getCredentials();
     const { access, refresh } = credential;
 
-    const res = await fetch(`${API_URL}/users/profiles/me`, {
+    const res = await fetch(`${API_BASE_URL}/users/profiles/me`, {
       headers: {
         Authorization: `Bearer ${access}`,
       },
@@ -36,7 +35,7 @@ export const upgradeProfile = async (obj: any) => {
     const credential = await getCredentials();
     const { access } = credential;
 
-    const res = await fetch(`${API_URL}/buyers/upgrades/${endpoint}/`, {
+    const res = await fetch(`${API_BASE_URL}/buyers/upgrades/${endpoint}/`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -59,7 +58,7 @@ export const updateProfile = async (data: any) => {
   const credential = await getCredentials();
   const { profile, id } = data;
   try {
-    const res = await fetch(`${API_URL}/users/profiles/${id}`, {
+    const res = await fetch(`${API_BASE_URL}/users/profiles/${id}`, {
       headers: {
         Authorization: `Bearer ${credential.access}`,
       },
@@ -80,7 +79,7 @@ export const getProfileById = async (id: number) => {
     const credential = await getCredentials();
     const { access } = credential;
 
-    const res = await fetch(`${API_URL}/users/profiles/${id}`, {
+    const res = await fetch(`${API_BASE_URL}/users/profiles/${id}`, {
       headers: {
         Authorization: `Bearer ${access}`,
       },

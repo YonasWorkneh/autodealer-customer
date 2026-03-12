@@ -1,5 +1,6 @@
 "use server";
 import { cookies } from "next/headers";
+import { API_BASE_URL, AUTH_BASE_URL } from "../config";
 
 interface SignInParams {
   email: string;
@@ -10,7 +11,7 @@ interface SignInParams {
 
 export const signin = async (data: SignInParams) => {
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login/`, {
+    const res = await fetch(`${API_BASE_URL}/auth/login/`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -62,14 +63,11 @@ export const getUser = async () => {
   const refresh = cookiess.get("refresh")?.value;
   try {
     if (!refresh) throw new Error("User is not logged in.");
-    const response = await fetch(
-      `${process.env.BASE_API_URL}/auth/token/refresh/`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ refresh }),
-      }
-    );
+    const response = await fetch(`${AUTH_BASE_URL}/auth/token/refresh/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ refresh }),
+    });
     if (!response.ok) throw new Error("Error fetching refresh token");
     const ref = await response.json();
     const access = ref.access;
@@ -93,7 +91,7 @@ export const getUser = async () => {
       path: "/", // send on all requests
       maxAge: 60 * 60 * 24 * 7, // 7d
     });
-    const res = await fetch(`${process.env.BASE_API_URL}/auth/user/`, {
+    const res = await fetch(`${AUTH_BASE_URL}/auth/user/`, {
       headers: {
         Authorization: `Bearer ${access}`,
       },
@@ -109,7 +107,7 @@ export const getUser = async () => {
 
 export const requestPasswordReset = async (email: string) => {
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/auth/password/reset`,
+    `${API_BASE_URL}/auth/password/reset`,
     {
       method: "POST",
       headers: {
@@ -136,20 +134,17 @@ export const getUserRole = async () => {
    const refresh = cookiess.get("refresh")?.value;
    try {
      if (!refresh) throw new Error("User is not logged in.");
-     const response = await fetch(
-       `${process.env.BASE_API_URL}/auth/token/refresh/`,
-       {
-         method: "POST",
-         headers: { "Content-Type": "application/json" },
-         body: JSON.stringify({ refresh }),
-       }
-     );
+    const response = await fetch(`${AUTH_BASE_URL}/auth/token/refresh/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ refresh }),
+    });
      if (!response.ok) throw new Error("Error fetching refresh token");
      const ref = await response.json();
      const access = ref.access;
      const newRefresh = ref.refresh;
      if (!ref.access) throw new Error(`${JSON.stringify(ref)}`);
-     const res = await fetch(`${process.env.BASE_API_URL}/users/profiles/me/`, {
+     const res = await fetch(`${AUTH_BASE_URL}/users/profiles/me/`, {
        headers: {
          Authorization: `Bearer ${access}`,
        },

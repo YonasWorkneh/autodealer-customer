@@ -1,6 +1,5 @@
 import { getCredentials } from "../credential";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+import { API_BASE_URL } from "../config";
 
 export interface ChangePasswordParams {
   new_password?: string;
@@ -12,7 +11,7 @@ export const changePassword = async (data: ChangePasswordParams) => {
   const { access } = credential;
 
   try {
-    const res = await fetch(`${API_URL}/auth/password/change/`, {
+    const res = await fetch(`${API_BASE_URL}/auth/password/change/`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

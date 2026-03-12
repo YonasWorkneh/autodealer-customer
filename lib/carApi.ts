@@ -5,11 +5,10 @@ import type { Model } from "@/app/types/Model";
 import { getCredentials } from "./credential";
 import type { MarketData } from "@/app/types/Market";
 import type { RatingAnalytics } from "@/app/types/RatingAnalytics";
-
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL as string;
+import { API_BASE_URL } from "./config";
 
 async function fetcher<T>(endpoint: string, options?: RequestInit): Promise<T> {
-  const res = await fetch(`${BASE_URL}${endpoint}`, {
+  const res = await fetch(`${API_BASE_URL}${endpoint}`, {
     ...options,
     headers: {
       ...(options?.headers || {}),
@@ -72,7 +71,7 @@ export async function getMyAds(id: number | undefined) {
 
 export async function deleteCar(id: number) {
   const credential = await getCredentials();
-  const res = await fetch(`${BASE_URL}/inventory/cars/${id}/`, {
+  const res = await fetch(`${API_BASE_URL}/inventory/cars/${id}/`, {
     method: "DELETE",
     headers: {
       Authorization: `Bearer ${credential.access}`,
@@ -89,7 +88,7 @@ export async function deleteCar(id: number) {
 
 export async function updateCarViews(car_id: number, ip_address: string) {
   const crednetial = await getCredentials();
-  const res = await fetch(`${BASE_URL}/inventory/car-views/`, {
+  const res = await fetch(`${API_BASE_URL}/inventory/car-views/`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${crednetial.access}`,
@@ -103,7 +102,7 @@ export async function updateCarViews(car_id: number, ip_address: string) {
 export async function makeCarFavorite(id: number) {
   const credential = await getCredentials();
   try {
-    const res = await fetch(`${BASE_URL}/inventory/car-favorites/`, {
+    const res = await fetch(`${API_BASE_URL}/inventory/car-favorites/`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${credential.access}`,
@@ -120,7 +119,7 @@ export async function makeCarFavorite(id: number) {
 export async function carFavorites() {
   const credential = await getCredentials();
   try {
-    const res = await fetch(`${BASE_URL}/inventory/car-favorites/`, {
+    const res = await fetch(`${API_BASE_URL}/inventory/car-favorites/`, {
       headers: {
         Authorization: `Bearer ${credential.access}`,
       },
@@ -136,7 +135,7 @@ export async function carFavorites() {
 export async function removeCarFavorite(id: number) {
   const credential = await getCredentials();
   try {
-    const res = await fetch(`${BASE_URL}/inventory/car-favorites/${id}/`, {
+    const res = await fetch(`${API_BASE_URL}/inventory/car-favorites/${id}/`, {
       method: "DELETE",
       headers: {
         Authorization: `Bearer ${credential.access}`,
@@ -174,7 +173,7 @@ export async function getMarketData() {
 export async function placeBid(car: number, amount: number) {
   const credential = await getCredentials();
   try {
-    const res = await fetch(`${BASE_URL}/bids/`, {
+    const res = await fetch(`${API_BASE_URL}/bids/`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${credential.access}`,
@@ -218,7 +217,7 @@ export async function postCarRating(
 ) {
   const credential = await getCredentials();
   try {
-    const res = await fetch(`${BASE_URL}/ratings/car-ratings/`, {
+    const res = await fetch(`${API_BASE_URL}/ratings/car-ratings/`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${credential.access}`,
@@ -253,7 +252,7 @@ export type CarInspectionPayload = {
 
 export async function postCarInspection(payload: CarInspectionPayload) {
   const credential = await getCredentials();
-  const res = await fetch(`${BASE_URL}/inventory/car-inspections/`, {
+  const res = await fetch(`${API_BASE_URL}/inventory/car-inspections/`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${credential.access}`,
@@ -275,7 +274,7 @@ export async function postCarInspection(payload: CarInspectionPayload) {
 export async function postLead(name: string, contact: string) {
   const credential = await getCredentials();
   try {
-    const res = await fetch(`${BASE_URL}/sales/leads/`, {
+    const res = await fetch(`${API_BASE_URL}/sales/leads/`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${credential.access}`,
