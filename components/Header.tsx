@@ -59,7 +59,7 @@ export default function Header({ color }: HeaderProps) {
           className={`${color === "black" ? "text-black" : "text-white"
             } text-xl font-semibold`}
         >
-          ET&mdash;CAR
+          hulucars
         </span>
       </Link>
 

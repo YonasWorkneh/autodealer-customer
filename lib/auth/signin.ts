@@ -10,6 +10,7 @@ interface SignInParams {
 // const refresh =
 
 export const signin = async (data: SignInParams) => {
+  console.log("api base url", API_BASE_URL);
   try {
     const res = await fetch(`${API_BASE_URL}/auth/login/`, {
       method: "POST",

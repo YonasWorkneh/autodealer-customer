@@ -831,7 +831,7 @@ export default function CarListingPage() {
                   <h3 className="font-semibold mb-1 text-sm sm:text-base">
                     CARS INSPECTED
                   </h3>
-                  <p className="text-xs sm:text-sm mb-3">by AUTO—Dealer</p>
+                  <p className="text-xs sm:text-sm mb-3">by hulucars</p>
                   <Button
                     size="sm"
                     className="bg-background text-foreground hover:bg-muted cursor-pointer"

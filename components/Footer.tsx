@@ -20,7 +20,7 @@ export default function Footer() {
               height={40}
             />
             <span className="text-xl font-bold tracking-tight">
-              ET&mdash;CAR
+              hulucars
             </span>
           </Link>
           <p className="mt-4 text-primary-foreground/80 text-sm leading-relaxed">
@@ -112,7 +112,7 @@ export default function Footer() {
             123 Main Street, Addis Ababa, Ethiopia
           </p>
           <p className="text-primary-foreground text-sm mt-1">
-            Email: info@autodealer.com
+            Email: info@hulucars.com
           </p>
           <p className="text-primary-foreground/80 text-sm mt-1">
             Phone: +251 900 123 456
@@ -148,7 +148,7 @@ export default function Footer() {
       {/* Bottom Bar */}
       <div className="mt-6 flex flex-col md:flex-row justify-center items-center text-primary-foreground/70 text-sm">
         <p>
-          © {new Date().getFullYear()} ET-Car. All rights reserved.
+          © {new Date().getFullYear()} hulucars. All rights reserved.
         </p>
       </div>
     </footer>
