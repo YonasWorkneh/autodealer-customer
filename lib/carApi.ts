@@ -6,6 +6,7 @@ import { getCredentials } from "./credential";
 import type { MarketData } from "@/app/types/Market";
 import type { RatingAnalytics } from "@/app/types/RatingAnalytics";
 import { API_BASE_URL } from "./config";
+import { getBackendErrorMessage } from "./apiError";
 
 async function fetcher<T>(endpoint: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`${API_BASE_URL}${endpoint}`, {
@@ -16,7 +17,8 @@ async function fetcher<T>(endpoint: string, options?: RequestInit): Promise<T> {
   });
 
   if (!res.ok) {
-    throw new Error(`API error: ${res.status} ${res.statusText}`);
+    const errData = await res.json().catch(() => ({})) as Record<string, unknown>;
+    throw new Error(getBackendErrorMessage(errData, `API error: ${res.status} ${res.statusText}`));
   }
 
   return res.json() as Promise<T>;
@@ -79,7 +81,8 @@ export async function deleteCar(id: number) {
   });
 
   if (!res.ok) {
-    throw new Error(`Delete failed: ${res.status} ${res.statusText}`);
+    const errData = await res.json().catch(() => ({})) as Record<string, unknown>;
+    throw new Error(getBackendErrorMessage(errData, `Delete failed: ${res.status} ${res.statusText}`));
   }
 
   // Return something serializable (plain object)
@@ -96,7 +99,11 @@ export async function updateCarViews(car_id: number, ip_address: string) {
     },
     body: JSON.stringify({ ip_address, car_id }),
   });
-  const data = await res.json();
+  if (!res.ok) {
+    const errData = await res.json().catch(() => ({})) as Record<string, unknown>;
+    throw new Error(getBackendErrorMessage(errData, "Failed to update view count."));
+  }
+  await res.json();
 }
 
 export async function makeCarFavorite(id: number) {
@@ -110,7 +117,10 @@ export async function makeCarFavorite(id: number) {
       },
       body: JSON.stringify({ car: id }),
     });
-    if (!res.ok) throw new Error(`Something went wrong`);
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({})) as Record<string, unknown>;
+      throw new Error(getBackendErrorMessage(errData, "Could not add to favorites."));
+    }
   } catch (err) {
     throw err;
   }
@@ -124,7 +134,10 @@ export async function carFavorites() {
         Authorization: `Bearer ${credential.access}`,
       },
     });
-    if (!res.ok) throw new Error("Error fetching favorite cars.");
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({})) as Record<string, unknown>;
+      throw new Error(getBackendErrorMessage(errData, "Error fetching favorite cars."));
+    }
     const data: Favorite[] = await res.json();
     return data;
   } catch (err) {
@@ -141,7 +154,10 @@ export async function removeCarFavorite(id: number) {
         Authorization: `Bearer ${credential.access}`,
       },
     });
-    if (!res.ok) throw new Error("Error removing favorite car.");
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({})) as Record<string, unknown>;
+      throw new Error(getBackendErrorMessage(errData, "Error removing favorite car."));
+    }
     return { success: true, id };
   } catch (err) {
     throw err;
@@ -182,11 +198,8 @@ export async function placeBid(car: number, amount: number) {
       body: JSON.stringify({ car, amount }),
     });
     if (!res.ok) {
-      const errorData = await res.json().catch(() => ({}));
-      throw new Error(
-        errorData.message ||
-          `Failed to place bid: ${res.status} ${res.statusText}`,
-      );
+      const errorData = await res.json().catch(() => ({})) as Record<string, unknown>;
+      throw new Error(getBackendErrorMessage(errorData, `Failed to place bid: ${res.status} ${res.statusText}`));
     }
     return await res.json();
   } catch (err) {
@@ -230,11 +243,8 @@ export async function postCarRating(
       }),
     });
     if (!res.ok) {
-      const errorData = await res.json().catch(() => ({}));
-      throw new Error(
-        errorData.message ||
-          `Failed to post rating: ${res.status} ${res.statusText}`,
-      );
+      const errorData = await res.json().catch(() => ({})) as Record<string, unknown>;
+      throw new Error(getBackendErrorMessage(errorData, `Failed to post rating: ${res.status} ${res.statusText}`));
     }
     return await res.json();
   } catch (err) {
@@ -261,12 +271,8 @@ export async function postCarInspection(payload: CarInspectionPayload) {
     body: JSON.stringify(payload),
   });
   if (!res.ok) {
-    const errorData = await res.json().catch(() => ({}));
-    throw new Error(
-      errorData.message ||
-        errorData.detail ||
-        `Failed to submit inspection: ${res.status} ${res.statusText}`,
-    );
+    const errorData = await res.json().catch(() => ({})) as Record<string, unknown>;
+    throw new Error(getBackendErrorMessage(errorData, `Failed to submit inspection: ${res.status} ${res.statusText}`));
   }
   return res.json();
 }
@@ -287,11 +293,9 @@ export async function postLead(name: string, contact: string) {
       }),
     });
     if (!res.ok) {
-      const errorData = await res.json().catch(() => ({}));
-      const error = new Error(
-        errorData.message ||
-          `Failed to submit inquiry: ${res.status} ${res.statusText}`,
-      ) as Error & { response?: any; data?: any };
+      const errorData = await res.json().catch(() => ({})) as Record<string, unknown>;
+      const message = getBackendErrorMessage(errorData, `Failed to submit inquiry: ${res.status} ${res.statusText}`);
+      const error = new Error(message) as Error & { response?: unknown; data?: unknown };
       error.response = errorData;
       error.data = errorData;
       throw error;

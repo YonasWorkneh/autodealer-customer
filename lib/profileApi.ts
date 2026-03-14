@@ -1,6 +1,7 @@
 import { UserProfile } from "@/app/types/Profile";
 import { getCredentials } from "./credential";
 import { API_BASE_URL } from "./config";
+import { getBackendErrorMessage } from "./apiError";
 
 export const getProfile = async () => {
   try {
@@ -13,7 +14,10 @@ export const getProfile = async () => {
       },
     });
     console.log("profile fetchres", res);
-    if (!res.ok) throw new Error("Something went wrong");
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({})) as Record<string, unknown>;
+      throw new Error(getBackendErrorMessage(errData, "Failed to load profile."));
+    }
     const profile: UserProfile = await res.json();
     return profile;
   } catch (err: any) {
@@ -43,7 +47,10 @@ export const upgradeProfile = async (obj: any) => {
       },
       body: JSON.stringify(data),
     });
-    if (!res.ok) throw new Error("Something went wrong");
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({})) as Record<string, unknown>;
+      throw new Error(getBackendErrorMessage(errData, "Upgrade failed. Please try again."));
+    }
     // console.log(res);
     const upgraded = await res.json();
     // console.log("upgraded", upgraded);
@@ -65,7 +72,10 @@ export const updateProfile = async (data: any) => {
       method: "PATCH",
       body: profile,
     });
-    if (!res.ok) throw new Error(`Error updating profile`);
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({})) as Record<string, unknown>;
+      throw new Error(getBackendErrorMessage(errData, "Error updating profile."));
+    }
     const updatedProfile = await res.json();
     return updatedProfile;
   } catch (err) {
@@ -84,7 +94,10 @@ export const getProfileById = async (id: number) => {
         Authorization: `Bearer ${access}`,
       },
     });
-    if (!res.ok) throw new Error("Something went wrong");
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({})) as Record<string, unknown>;
+      throw new Error(getBackendErrorMessage(errData, "Failed to load profile."));
+    }
     const profile: UserProfile = await res.json();
     return profile;
   } catch (err: any) {

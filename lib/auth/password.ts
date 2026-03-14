@@ -1,5 +1,6 @@
 import { getCredentials } from "../credential";
 import { API_BASE_URL } from "../config";
+import { getBackendErrorMessage } from "../apiError";
 
 export interface ChangePasswordParams {
   new_password?: string;
@@ -24,14 +25,8 @@ export const changePassword = async (data: ChangePasswordParams) => {
     });
 
     if (!res.ok) {
-      const errData = await res.json().catch(() => ({}));
-      const message =
-        errData?.old_password?.[0] ||
-        errData?.new_password?.[0] ||
-        errData?.non_field_errors?.[0] ||
-        errData?.detail ||
-        "Failed to change password. Please check your credentials.";
-      throw new Error(message);
+      const errData = await res.json().catch(() => ({})) as Record<string, unknown>;
+      throw new Error(getBackendErrorMessage(errData, "Failed to change password. Please check your credentials."));
     }
 
     return await res.json();

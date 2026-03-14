@@ -1,6 +1,7 @@
 import { NotificationResponse } from "@/app/types/notification";
 import { getCredentials } from "./credential";
 import { API_BASE_URL } from "./config";
+import { getBackendErrorMessage } from "./apiError";
 
 export const getNotifications = async () => {
   try {
@@ -13,7 +14,10 @@ export const getNotifications = async () => {
       },
     });
 
-    if (!res.ok) throw new Error("Something went wrong");
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({})) as Record<string, unknown>;
+      throw new Error(getBackendErrorMessage(errData, "Failed to load notifications."));
+    }
     const notifications: NotificationResponse = await res.json();
     return notifications;
   } catch (err: any) {
@@ -33,7 +37,10 @@ export const markAsRead = async (id: number) => {
         Authorization: `Bearer ${access}`,
       },
     });
-    if (!res.ok) throw new Error("Something went wrong");
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({})) as Record<string, unknown>;
+      throw new Error(getBackendErrorMessage(errData, "Failed to mark notification as read."));
+    }
     return await res.json();
   } catch (err: any) {
     throw err;

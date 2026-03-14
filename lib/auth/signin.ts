@@ -1,6 +1,7 @@
 "use server";
 import { cookies } from "next/headers";
 import { API_BASE_URL, AUTH_BASE_URL } from "../config";
+import { getBackendErrorMessage } from "../apiError";
 
 interface SignInParams {
   email: string;
@@ -19,7 +20,10 @@ export const signin = async (data: SignInParams) => {
       },
       body: JSON.stringify(data),
     });
-    if (!res.ok) throw new Error("Something went wrong");
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({})) as Record<string, unknown>;
+      throw new Error(getBackendErrorMessage(errData, "Invalid email or password."));
+    }
     const user = await res.json();
     if (!user.access)
       throw new Error("Error trying to log you in. Please try again.");
@@ -69,7 +73,10 @@ export const getUser = async () => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ refresh }),
     });
-    if (!response.ok) throw new Error("Error fetching refresh token");
+    if (!response.ok) {
+      const errData = await response.json().catch(() => ({})) as Record<string, unknown>;
+      throw new Error(getBackendErrorMessage(errData, "Error fetching refresh token."));
+    }
     const ref = await response.json();
     const access = ref.access;
     const newRefresh = ref.refresh;
@@ -97,7 +104,10 @@ export const getUser = async () => {
         Authorization: `Bearer ${access}`,
       },
     });
-    if (!res.ok) throw new Error("Something went wrong");
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({})) as Record<string, unknown>;
+      throw new Error(getBackendErrorMessage(errData, "Failed to load user."));
+    }
     const user = await res.json();
     if (!user.email) throw new Error(`refresh ${refresh}`);
     return user;
@@ -119,12 +129,8 @@ export const requestPasswordReset = async (email: string) => {
   );
 
   if (!res.ok) {
-    const errData = await res.json().catch(() => ({}));
-    const message =
-      (errData?.email && Array.isArray(errData.email) && errData.email[0]) ||
-      errData?.detail ||
-      "Something went wrong. Try again.";
-    throw new Error(message);
+    const errData = await res.json().catch(() => ({})) as Record<string, unknown>;
+    throw new Error(getBackendErrorMessage(errData, "Something went wrong. Try again."));
   }
 
   return { success: true };
@@ -140,7 +146,10 @@ export const getUserRole = async () => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ refresh }),
     });
-     if (!response.ok) throw new Error("Error fetching refresh token");
+     if (!response.ok) {
+       const errData = await response.json().catch(() => ({})) as Record<string, unknown>;
+       throw new Error(getBackendErrorMessage(errData, "Error fetching refresh token."));
+     }
      const ref = await response.json();
      const access = ref.access;
      const newRefresh = ref.refresh;
@@ -150,7 +159,10 @@ export const getUserRole = async () => {
          Authorization: `Bearer ${access}`,
        },
      });
-     if (!res.ok) throw new Error("Something went wrong");
+     if (!res.ok) {
+       const errData = await res.json().catch(() => ({})) as Record<string, unknown>;
+       throw new Error(getBackendErrorMessage(errData, "Failed to load profile."));
+     }
      const user = await res.json();
      if (!user.email) throw new Error(`refresh ${refresh}`);
      return user;

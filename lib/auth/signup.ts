@@ -1,5 +1,6 @@
 "use server";
 import { API_BASE_URL } from "../config";
+import { getBackendErrorMessage } from "../apiError";
 interface SignUpParams {
   first_name: string;
   last_name: string;
@@ -17,7 +18,10 @@ export const signup = async (data: SignUpParams) => {
       body: JSON.stringify(data),
     });
     console.log("signup res", res);
-    if (!res.ok) throw new Error("Something went wrong");
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({})) as Record<string, unknown>;
+      throw new Error(getBackendErrorMessage(errData, "Registration failed. Please try again."));
+    }
     const user = await res.json();
 
     return user;
