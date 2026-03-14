@@ -262,7 +262,7 @@ export type CarInspectionPayload = {
 
 export async function postCarInspection(payload: CarInspectionPayload) {
   const credential = await getCredentials();
-  const res = await fetch(`${API_BASE_URL}/inventory/car-inspections/`, {
+  const res = await fetch(`${API_BASE_URL}/inventory/inspections/`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${credential.access}`,
