@@ -16,7 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import Image from "next/image";
-import { Plus, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
+import { Plus, ChevronDown, ChevronUp, Loader2, ClipboardCheck } from "lucide-react";
 import {
   useMakes,
   useModels,
@@ -33,6 +33,13 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useUserStore } from "@/store/user";
 import { useProfile } from "@/hooks/profile";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { useToast } from "@/hooks/use-toast";
 
 // Validation schema
 const formSchema = z.object({
@@ -75,6 +82,9 @@ export default function PlaceAddForm() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [showInspectionStep, setShowInspectionStep] = useState(false);
   const [createdCarId, setCreatedCarId] = useState<number | null>(null);
+  const [showInspectionModal, setShowInspectionModal] = useState(false);
+  const [inspectionModalError, setInspectionModalError] = useState<string | null>(null);
+  const { toast } = useToast();
   const {
     control,
     handleSubmit,
@@ -794,6 +804,32 @@ export default function PlaceAddForm() {
     });
   };
 
+  const handleSubmitInspectionModal = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!c_id) return;
+    setInspectionModalError(null);
+    const payload: CarInspectionPayload = {
+      car_id: parseInt(c_id, 10),
+      inspected_by: inspectionInspectedBy,
+      inspection_date: inspectionDate,
+      remarks: inspectionRemarks,
+      condition_status: inspectionCondition,
+    };
+    postInspection(payload, {
+      onSuccess: () => {
+        setShowInspectionModal(false);
+        toast({
+          title: "Success",
+          description: "Inspection details have been saved.",
+          variant: "success",
+        });
+      },
+      onError: () => {
+        setInspectionModalError("Failed to submit inspection. Please try again.");
+      },
+    });
+  };
+
   if (!user.email) return null;
 
   if (showInspectionStep && createdCarId) {
@@ -904,7 +940,110 @@ export default function PlaceAddForm() {
             <h1 className="text-3xl font-semibold text-black/70 uppercase text-center">
               {c_id ? "Edit Car Details" : "Car Details Form"}
             </h1>
+            {c_id && !isCarLoading && (
+              <Button
+                type="button"
+                variant="outline"
+                className="mt-4 gap-2 cursor-pointer"
+                onClick={() => {
+                  setInspectionModalError(null);
+                  setShowInspectionModal(true);
+                }}
+              >
+                <ClipboardCheck className="h-4 w-4" />
+                Add inspection details
+              </Button>
+            )}
           </div>
+
+          {/* Inspection modal (edit mode only) */}
+          {c_id && (
+            <Dialog open={showInspectionModal} onOpenChange={setShowInspectionModal}>
+              <DialogContent className="max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Add inspection details</DialogTitle>
+                </DialogHeader>
+                <p className="text-muted-foreground text-sm mb-4">
+                  Optionally add inspection info for this listing.
+                </p>
+                <form onSubmit={handleSubmitInspectionModal} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="modal_inspected_by">Inspected by</Label>
+                    <Input
+                      id="modal_inspected_by"
+                      value={inspectionInspectedBy}
+                      onChange={(e) => setInspectionInspectedBy(e.target.value)}
+                      placeholder="e.g. Top Garage Motors"
+                      className="h-12 border-border rounded-md"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="modal_inspection_date">Inspection date</Label>
+                    <Input
+                      id="modal_inspection_date"
+                      type="date"
+                      value={inspectionDate}
+                      onChange={(e) => setInspectionDate(e.target.value)}
+                      className="h-12 border-border rounded-md"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="modal_remarks">Remarks</Label>
+                    <Textarea
+                      id="modal_remarks"
+                      value={inspectionRemarks}
+                      onChange={(e) => setInspectionRemarks(e.target.value)}
+                      placeholder="e.g. Engine and brakes are in excellent condition."
+                      className="min-h-[100px] border-border rounded-md"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="modal_condition_status">Condition status</Label>
+                    <Select
+                      value={inspectionCondition}
+                      onValueChange={(v: "excellent" | "good" | "fair" | "poor") =>
+                        setInspectionCondition(v)
+                      }
+                    >
+                      <SelectTrigger className="h-12 border-border rounded-md">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="excellent">Excellent</SelectItem>
+                        <SelectItem value="good">Good</SelectItem>
+                        <SelectItem value="fair">Fair</SelectItem>
+                        <SelectItem value="poor">Poor</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {inspectionModalError && (
+                    <p className="text-red-500 text-sm">{inspectionModalError}</p>
+                  )}
+                  <div className="flex gap-3 pt-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="flex-1 cursor-pointer"
+                      onClick={() => setShowInspectionModal(false)}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      type="submit"
+                      disabled={isInspectionPending}
+                      className="flex-1 cursor-pointer bg-primary text-primary-foreground hover:bg-primary-hover"
+                    >
+                      {isInspectionPending ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        "Submit inspection"
+                      )}
+                    </Button>
+                  </div>
+                </form>
+              </DialogContent>
+            </Dialog>
+          )}
 
           {/* Loading State for Edit Mode */}
           {c_id && isCarLoading ? (

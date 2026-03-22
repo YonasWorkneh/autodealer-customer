@@ -9,19 +9,15 @@ export default function Footer() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-8 border-b border-primary-foreground/15 pb-8">
         {/* Logo & Description */}
         <div>
-          <Link
-            href="/"
-            className="flex items-center space-x-3 transition-opacity hover:opacity-90"
-          >
+          <Link href={"/"} className="flex items-center justify-center cursor-pointer bg-white size-28 rounded-full">
             <Image
-              src="/wheel copy.png"
-              alt="Car Dealer Logo"
-              width={40}
+              src="/logo/logo.svg"
+              alt="hulucars"
+              width={140}
               height={40}
+              className="h-[60px] w-auto"
+              priority
             />
-            <span className="text-xl font-bold tracking-tight">
-              hulucars
-            </span>
           </Link>
           <p className="mt-4 text-primary-foreground/80 text-sm leading-relaxed">
             Premium cars. Exceptional service. Your trusted dealership for the
@@ -147,9 +143,7 @@ export default function Footer() {
 
       {/* Bottom Bar */}
       <div className="mt-6 flex flex-col md:flex-row justify-center items-center text-primary-foreground/70 text-sm">
-        <p>
-          © {new Date().getFullYear()} hulucars. All rights reserved.
-        </p>
+        <p>© {new Date().getFullYear()} hulucars. All rights reserved.</p>
       </div>
     </footer>
   );

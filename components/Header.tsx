@@ -45,22 +45,15 @@ export default function Header({ color }: HeaderProps) {
         }`}
     >
       {/* Logo */}
-      <Link href={"/"} className="flex items-center space-x-2 cursor-pointer">
-        <div className="w-8 h-8 rounded-full flex items-center justify-center">
-          <Image
-            src={color === "black" ? "/wheel.png" : "/wheel copy.png"}
-            alt="wheel"
-            width={100}
-            height={100}
-            className="w-full h-full"
-          />
-        </div>
-        <span
-          className={`${color === "black" ? "text-black" : "text-white"
-            } text-xl font-semibold`}
-        >
-          hulucars
-        </span>
+      <Link href={"/"} className="flex items-center gap-2 cursor-pointer">
+        <Image
+          src="/logo/logo.svg"
+          alt="hulucars"
+          width={140}
+          height={40}
+          className="h-28 w-auto"
+          priority
+        />
       </Link>
 
       {/* Desktop Menu */}

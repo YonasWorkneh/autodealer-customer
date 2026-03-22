@@ -60,16 +60,14 @@ export default function SignIn() {
           href={"/"}
           className="flex items-center justify-center gap-2 mb-3 border-b pb-4"
         >
-          <div className="w-8 h-8 rounded-full flex items-center justify-center">
-            <Image
-              src="/wheel.png"
-              alt="wheel"
-              width={100}
-              height={100}
-              className="w-full h-full"
-            />
-          </div>
-          <h1>hulucars</h1>
+          <Image
+            src="/logo/logo.svg"
+            alt="hulucars"
+            width={180}
+            height={48}
+            className="h-10 w-auto object-contain mx-auto"
+            priority
+          />
         </Link>
         <CardTitle className="text-lg md:text-xl">Sign Up</CardTitle>
         <CardDescription className="text-xs md:text-sm">
