@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -28,7 +28,9 @@ import {
 import type { CarInspectionPayload } from "@/lib/carApi";
 import Header from "@/components/Header";
 import { indexedDBManager, convertFormDataToCarForm } from "@/lib/indexedDB";
-import type { Feature } from "../types/Car";
+import type { Feature, FetchedCarDetail } from "../types/Car";
+import type { Make } from "../types/Make";
+import type { Model } from "../types/Model";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useUserStore } from "@/store/user";
@@ -68,6 +70,45 @@ const formSchema = z.object({
 });
 
 type FormData = z.infer<typeof formSchema>;
+
+function parsePositiveId(value: unknown): number | null {
+  if (typeof value === "number" && Number.isFinite(value) && value > 0) {
+    return value;
+  }
+  if (typeof value === "string") {
+    const t = value.trim();
+    if (/^\d+$/.test(t)) {
+      const n = parseInt(t, 10);
+      return n > 0 ? n : null;
+    }
+  }
+  return null;
+}
+
+function resolveMakeId(carData: FetchedCarDetail, makes: Make[]): number | null {
+  const byId = parsePositiveId(carData.make_ref);
+  if (byId != null && makes.some((m) => m.id === byId)) {
+    return byId;
+  }
+  const name = String(carData.make ?? carData.make_ref ?? "").trim();
+  if (!name) return null;
+  const lower = name.toLowerCase();
+  const found = makes.find((m) => m.name.trim().toLowerCase() === lower);
+  return found?.id ?? null;
+}
+
+function resolveModelId(carData: FetchedCarDetail, models: Model[] | undefined): number {
+  if (!models?.length) return 0;
+  const byId = parsePositiveId(carData.model_ref);
+  if (byId != null && models.some((m) => m.id === byId)) {
+    return byId;
+  }
+  const name = String(carData.model ?? carData.model_ref ?? "").trim();
+  if (!name) return 0;
+  const lower = name.toLowerCase();
+  const found = models.find((m) => m.name.trim().toLowerCase() === lower);
+  return found?.id ?? 0;
+}
 
 export default function PlaceAddForm() {
   const router = useRouter();
@@ -118,8 +159,23 @@ export default function PlaceAddForm() {
 
   const watchedMake = watch("make");
   const { data: makes, isLoading: isMakesLoading } = useMakes();
-  const { data: models, isLoading: isModelsLoading } = useModels(watchedMake);
   const { data: carData, isLoading: isCarLoading } = useCar(c_id ? c_id : "");
+
+  const resolvedEditMakeId =
+    c_id && carData && makes?.length
+      ? resolveMakeId(carData, makes)
+      : null;
+
+  const effectiveMakeIdForModels =
+    watchedMake > 0
+      ? watchedMake
+      : resolvedEditMakeId != null && resolvedEditMakeId > 0
+        ? resolvedEditMakeId
+        : undefined;
+
+  const { data: models, isLoading: isModelsLoading } = useModels(
+    effectiveMakeIdForModels,
+  );
 
   const resetFormToInitial = () => {
     reset({
@@ -538,48 +594,99 @@ export default function PlaceAddForm() {
     },
   ]);
 
-  // Pre-fill form with car data when c_id is present
+  /** Avoids wiping the form when React Query briefly drops `models` during refetch / key transitions */
+  const editPrefillAppliedSig = useRef<string | null>(null);
+
+  // Pre-fill form when editing: map make/model by id or by matching API name strings to select options
   useEffect(() => {
-    if (carData && c_id) {
-      setTimeout(() => {
-        reset({
-          make: carData.make_ref,
-          model: carData.model_ref,
-          year: carData.year.toString(),
-          mileage: carData.mileage.toString(),
-          engine: carData.engine,
-          gearbox: carData.drivetrain === "fwd" ? "Manual" : carData.drivetrain,
-          bodyColor: carData.exterior_color,
-          interiorColor: carData.interior_color,
-          fuelType: carData.fuel_type?.toLowerCase() || carData.fuel_type,
-          price: carData.price.toString(),
-          salesType:
-            carData.sale_type === "fixed_price" ? "Fixed Price" : "Auction",
-          description: carData.description,
-          bodyType: carData.body_type,
-          vin: carData.vin,
-          origin: carData.origin,
-          images: [],
-        });
-
-        // Set technical features
-        setTechnicalFeatures((prev) =>
-          prev.map((feature) => ({
-            ...feature,
-            checked: (carData as any)[feature.field] || false,
-          })),
-        );
-
-        // Set extras
-        setExtras((prev) =>
-          prev.map((extra) => ({
-            ...extra,
-            checked: (carData as any)[extra.field] || false,
-          })),
-        );
-      }, 1000);
+    if (!c_id) {
+      editPrefillAppliedSig.current = null;
+      return;
     }
-  }, [carData, c_id, reset]);
+    if (!carData || !makes?.length) return;
+
+    const makeId = resolveMakeId(carData, makes);
+    if (makeId == null) return;
+
+    const modelFromNumeric = parsePositiveId(carData.model_ref);
+    const modelOptions: Model[] | undefined = models;
+
+    // Only treat as "need name / list lookup" when list is present; `undefined` list means still loading or refetch gap — do not fall through to modelId 0
+    const needsModelsForName =
+      modelFromNumeric == null ||
+      (Array.isArray(modelOptions) &&
+        modelOptions.length > 0 &&
+        !modelOptions.some((m) => m.id === modelFromNumeric));
+
+    if (
+      modelFromNumeric != null &&
+      !Array.isArray(modelOptions) &&
+      isModelsLoading
+    ) {
+      return;
+    }
+
+    if (needsModelsForName) {
+      if (effectiveMakeIdForModels !== makeId) return;
+      if (!modelOptions?.length) return;
+    }
+
+    const modelId = needsModelsForName
+      ? resolveModelId(carData, modelOptions)
+      : modelFromNumeric ?? 0;
+
+    if (modelId <= 0 && (carData.model || carData.model_ref)) {
+      return;
+    }
+
+    const prefillSig = `${c_id}|${carData.updated_at}|${makeId}|${modelId}`;
+    if (editPrefillAppliedSig.current === prefillSig) {
+      return;
+    }
+    editPrefillAppliedSig.current = prefillSig;
+
+    reset({
+      make: makeId,
+      model: modelId,
+      year: carData.year.toString(),
+      mileage: carData.mileage.toString(),
+      engine: carData.engine,
+      gearbox: carData.drivetrain === "fwd" ? "Manual" : carData.drivetrain,
+      bodyColor: carData.exterior_color,
+      interiorColor: carData.interior_color,
+      fuelType: carData.fuel_type?.toLowerCase() || carData.fuel_type,
+      price: carData.price.toString(),
+      salesType:
+        carData.sale_type === "fixed_price" ? "Fixed Price" : "Auction",
+      description: carData.description,
+      bodyType: carData.body_type,
+      vin: carData.vin ?? "",
+      origin: carData.origin ?? "",
+      images: [],
+    });
+
+    setTechnicalFeatures((prev) =>
+      prev.map((feature) => ({
+        ...feature,
+        checked: (carData as any)[feature.field] || false,
+      })),
+    );
+
+    setExtras((prev) =>
+      prev.map((extra) => ({
+        ...extra,
+        checked: (carData as any)[extra.field] || false,
+      })),
+    );
+  }, [
+    carData,
+    c_id,
+    makes,
+    models,
+    effectiveMakeIdForModels,
+    isModelsLoading,
+    reset,
+  ]);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {

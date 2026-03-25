@@ -168,8 +168,9 @@ export type FetchedCarDetail = {
   };
   seller_average_rating: number | null;
 
-  make_ref: number;
-  model_ref: number;
+  /** API may return numeric ids or string names depending on endpoint */
+  make_ref: number | string;
+  model_ref: number | string;
   dealer_average_rating: number | null;
   broker_average_rating: number | null;
 
@@ -198,6 +199,8 @@ export type FetchedCarDetail = {
   condition: "new" | "used" | string;
   trim: string | null;
   description: string;
+  vin?: string;
+  origin?: string;
 
   status: "available" | "sold" | "reserved" | string;
   sale_type: "fixed_price" | "auction" | string;
