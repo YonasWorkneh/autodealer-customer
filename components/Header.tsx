@@ -90,6 +90,13 @@ export default function Header({ color }: HeaderProps) {
         >
           My Ads
         </Link>
+        <Link
+          href={"/analytics"}
+          className={linkClasses(pathname.startsWith("/analytics"))}
+          data-active={pathname.startsWith("/analytics")}
+        >
+          Analytics
+        </Link>
 
 
         {user.email && (
@@ -220,6 +227,13 @@ export default function Header({ color }: HeaderProps) {
                 className="text-gray-800 hover:text-gray-500"
               >
                 Favourites
+              </Link>
+              <Link
+                href={"/analytics"}
+                onClick={() => setIsOpen(false)}
+                className="text-gray-800 hover:text-gray-500"
+              >
+                Analytics
               </Link>
               <Link
                 href={user.email ? "profile" : "/signin"}
