@@ -57,6 +57,14 @@ export default function Footer() {
             </li>
             <li>
               <Link
+                href="/privacy"
+                className="text-primary-foreground/80 hover:text-primary-foreground transition-colors duration-200"
+              >
+                Privacy Policy
+              </Link>
+            </li>
+            <li>
+              <Link
                 href="/place-add"
                 className="text-primary-foreground/80 hover:text-primary-foreground transition-colors duration-200"
               >
