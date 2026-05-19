@@ -33,24 +33,21 @@ export default function SignIn() {
   const router = useRouter();
   const { toast } = useToast();
   const onSubmit = async (data: any) => {
-    try {
-      setLoading(true);
-      setErr("");
-      const user = await signin(data);
-      console.log(user);
-      if (!user.access) throw new Error("Error trying to log you in");
-      setUser(user.user);
-      router.push("/");
-    } catch (err: any) {
+    setLoading(true);
+    setErr("");
+    const result = await signin(data);
+    if ("error" in result) {
+      setErr(result.error);
       toast({
         variant: "destructive",
         title: "❌ Login Failed",
-        description: "Failed to login. Please try again.",
+        description: result.error,
       });
-      setErr(err.message);
-    } finally {
       setLoading(false);
+      return;
     }
+    setUser(result.user);
+    router.push("/");
   };
 
   return (
