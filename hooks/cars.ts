@@ -7,6 +7,7 @@ import {
 import {
   fetchCars,
   fetchCarById,
+  fetchAuctionCarsDetailed,
   fetchMakes,
   fetchModels,
   postCar,
@@ -53,7 +54,14 @@ export function useCar(id: string) {
   return useQuery<FetchedCarDetail>({
     queryKey: ["car", id],
     queryFn: () => fetchCarById(id),
-    enabled: !!id, // only run if id exists
+    enabled: !!id,
+  });
+}
+
+export function useAuctionCarsDetailed() {
+  return useQuery<FetchedCarDetail[]>({
+    queryKey: ["auction-cars-detailed"],
+    queryFn: fetchAuctionCarsDetailed,
   });
 }
 

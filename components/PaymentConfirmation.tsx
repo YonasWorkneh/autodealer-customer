@@ -14,6 +14,7 @@ import {
 import { Upload } from "lucide-react";
 import Image from "next/image";
 import { Input } from "./ui/input";
+import { useToast } from "@/hooks/use-toast";
 
 interface Package {
   id: number;
@@ -72,6 +73,8 @@ export default function PaymentConfirmation({
     }
   };
 
+  const { toast } = useToast();
+
   const handleSubmit = async () => {
     if (!paymentMethod || !paymentProof) {
       return;
@@ -86,8 +89,19 @@ export default function PaymentConfirmation({
         profile: profileInputs, // ✅ include profile input states
       };
       await onSubmit(paymentData);
+      toast({
+        title: "✅ Request submitted",
+        description:
+          "Your payment request has been submitted. It may take 2-5 days for approval.",
+        variant: "success",
+      });
     } catch (error) {
       console.error("Payment submission failed:", error);
+      toast({
+        title: "❌ Payment submission failed",
+        description: "Please try again or contact support if the issue continues.",
+        variant: "destructive",
+      });
     } finally {
       setIsSubmitting(false);
     }

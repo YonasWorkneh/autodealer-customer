@@ -249,7 +249,7 @@ export default function MyListingsPage() {
                   {filteredAds.map((ad) => (
                     <Card
                       key={ad.id}
-                      className="p-0 bg-white shadow-sm border border-gray-200 rounded-xl overflow-hidden hover:shadow-md transition-shadow flex flex-col gap-0"
+                      className="p-0 bg-white border border-gray-200 rounded-xl overflow-hidden flex flex-col gap-0"
                     >
                       <div className="relative w-full aspect-[4/3] bg-gray-100 group">
                         {ad.featured_image === null ? (
@@ -261,25 +261,25 @@ export default function MyListingsPage() {
                             src={ad.featured_image}
                             alt={ad.make + " " + ad.model}
                             fill
-                            className="object-cover"
+                            className="object-contain"
                           />
                         )}
                         {/* Overlay Gradient for better visibility of top controls */}
-                        <div className="absolute top-0 left-0 right-0 h-16 bg-gradient-to-b from-black/50 to-transparent opacity-60"></div>
+                        {/* <div className="absolute top-0 left-0 right-0 h-16 bg-gradient-to-b from-black/50 to-transparent opacity-60"></div> */}
 
                         {/* Checkbox */}
                         <div className="absolute top-3 left-3 z-10">
                           <Checkbox
                             checked={selectedAds.includes(ad.id)}
                             onCheckedChange={() => handleSelectAd(ad.id)}
-                            className="bg-white/90 border-transparent data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                            className="bg-white/90 border-transparent data-[state=checked]:bg-primary data-[state=checked]:border-primary border border-purple-20"
                           />
                         </div>
 
                         {/* Actions Menu */}
-                        <div className="absolute top-2 right-2 z-10">
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
+                        <div className="absolute top-2 right-2 z-10 ">
+                            <DropdownMenu> 
+                              <DropdownMenuTrigger asChild className="border border-purple/20">
                                 <button className="p-2 bg-white/90 hover:bg-white rounded-full shadow-sm transition-colors">
                                   <MoreVertical className="h-4 w-4 text-gray-700" />
                                 </button>
@@ -314,6 +314,11 @@ export default function MyListingsPage() {
                             <p className="text-xl font-bold text-gray-900 mb-3">
                                 {formatPrice(ad.price)}
                             </p>
+                            <Link href={`/mylistings/${ad.id}`}>
+                              <Button variant="outline" size="sm" className="cursor-pointer text-[#522084] my-2">
+                                View details
+                              </Button>
+                            </Link>
                         </div>
 
                         <div className="pt-3 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500">

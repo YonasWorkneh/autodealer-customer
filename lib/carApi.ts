@@ -37,6 +37,14 @@ export async function fetchCarById(id: string): Promise<FetchedCarDetail> {
   return fetcher<FetchedCarDetail>(`/inventory/cars/${id}`);
 }
 
+export async function fetchAuctionCarsDetailed(): Promise<FetchedCarDetail[]> {
+  const cars = await fetchCars(1, 1000);
+  const auctionIds = cars
+    .filter((c) => c.sale_type === "auction")
+    .map((c) => c.id);
+  return Promise.all(auctionIds.map((id) => fetchCarById(String(id))));
+}
+
 export async function fetchMakes(): Promise<Make[]> {
   return fetcher<Make[]>("/inventory/makes/");
 }

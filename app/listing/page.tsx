@@ -310,7 +310,7 @@ export default function CarMarketplace() {
                     setActiveQuery("");
                     setQuery("");
                   }}
-                  className="gap-2 self-start sm:self-auto"
+                  className="gap-2 self-start sm:self-auto cursor-pointer"
                 >
                   <X className="h-4 w-4" />
                   Clear Search

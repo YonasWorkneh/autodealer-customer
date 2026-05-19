@@ -115,7 +115,11 @@ export default function PlaceAddForm() {
   const searchParams = useSearchParams();
   const c_id = searchParams.get("c_id");
   const { user } = useUserStore();
-  const { data: profile } = useProfile();
+  const { data: profile, isLoading: isProfileLoading } = useProfile();
+  const hasSalesAccess =
+    Boolean(profile?.dealer_profile) || Boolean(profile?.broker_profile);
+  const isCheckingPermissions =
+    Boolean(user.email) && (isProfileLoading || profile === undefined);
   const [step, setStep] = useState(1);
   const [images, setImages] = useState<File[]>([]);
   const [featuredImageIndex, setFeaturedImageIndex] = useState<number>(0);
@@ -857,17 +861,19 @@ export default function PlaceAddForm() {
   };
 
   useEffect(() => {
-    if (!user.email) router.push("/signin");
+    if (!user.email) {
+      router.push("/signin");
+    }
   }, [user.email, router]);
 
-  // If the user is not yet a dealer or broker, redirect them to pricing
-  // so they see offers before accessing the place-add form.
   useEffect(() => {
-    if (!profile) return;
-    if (profile.dealer_profile === null && profile.broker_profile === null) {
+    if (!user.email) return;
+    if (isProfileLoading || profile === undefined) return;
+
+    if (!hasSalesAccess) {
       router.push("/pricing");
     }
-  }, [profile, router]);
+  }, [user.email, isProfileLoading, profile, hasSalesAccess, router]);
 
   const [inspectionInspectedBy, setInspectionInspectedBy] = useState("");
   const [inspectionDate, setInspectionDate] = useState(() =>
@@ -938,6 +944,24 @@ export default function PlaceAddForm() {
   };
 
   if (!user.email) return null;
+
+  if (isCheckingPermissions) {
+    return (
+      <div className="min-h-screen grid place-items-center bg-background px-6">
+        <div className="max-w-xl p-10 text-center">
+          <Loader2 className="mx-auto mb-6 h-10 w-10 animate-spin text-primary" />
+          <h2 className="text-2xl font-semibold text-slate-900 mb-3">
+            Checking permissions
+          </h2>
+          <p className="text-slate-600">
+            Please wait while we confirm your access to list a vehicle.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!hasSalesAccess) return null;
 
   if (showInspectionStep && createdCarId) {
     return (

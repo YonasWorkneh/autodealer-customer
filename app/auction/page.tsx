@@ -1,7 +1,6 @@
 "use client";
 
 import Header from "@/components/Header";
-import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -13,12 +12,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search, Filter } from "lucide-react";
+import { Search, Filter, X } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useCars } from "@/hooks/cars";
+import { useAuctionCarsDetailed } from "@/hooks/cars";
 import { useMemo, useState, useEffect } from "react";
-import type { FetchedCar } from "@/app/types/Car";
+import type { FetchedCarDetail } from "@/app/types/Car";
 import Pagination from "@/components/Pagination";
 import FilterSidebar from "@/components/Filter";
 
@@ -66,12 +65,12 @@ const formatEndTime = (endDate: string | null): string => {
 const getHighestBid = (bids: any[]): number => {
   if (!bids || bids.length === 0) return 0;
   return Math.max(
-    ...bids.map((bid) => parseFloat(bid.amount || bid.price || "0"))
+    ...bids.map((bid) => parseFloat(bid.amount || bid.price || "0")),
   );
 };
 
 // Utility function to format car details
-const formatCarDetails = (car: FetchedCar): string => {
+const formatCarDetails = (car: FetchedCarDetail): string => {
   const parts = [];
   if (car.mileage) parts.push(`${car.mileage.toLocaleString()} Miles`);
   if (car.exterior_color) parts.push(car.exterior_color);
@@ -97,7 +96,7 @@ const getBrandInfo = (make: string) => {
 
 const AuctionListView = () => {
   const router = useRouter();
-  const { data: cars, isLoading } = useCars();
+  const { data: auctionCars = [], isLoading } = useAuctionCarsDetailed();
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [query, setQuery] = useState("");
   const [activeQuery, setActiveQuery] = useState("");
@@ -108,12 +107,6 @@ const AuctionListView = () => {
   const itemsPerPage = 10;
 
   const normalized = (str: string) => str.toLowerCase();
-
-  // Filter cars with sale_type === "auction"
-  const auctionCars = useMemo(() => {
-    if (!cars) return [];
-    return cars.filter((car) => car.sale_type === "auction");
-  }, [cars]);
 
   // Transform cars to auction display format
   const allAuctions = useMemo(() => {
@@ -148,7 +141,9 @@ const AuctionListView = () => {
         })}`,
         currentBidValue: currentBid,
         images:
-          sortedImages.length > 0
+          car.featured_image
+            ? [car.featured_image, ...sortedImages.map((img) => img.image_url)]
+            : sortedImages.length > 0
             ? sortedImages.map((img) => img.image_url)
             : ["/placeholder.svg"],
         brand: brandInfo.initial,
@@ -207,11 +202,11 @@ const AuctionListView = () => {
     // Apply sorting
     if (sortBy === "price-low") {
       filtered = [...filtered].sort(
-        (a, b) => a.currentBidValue - b.currentBidValue
+        (a, b) => a.currentBidValue - b.currentBidValue,
       );
     } else if (sortBy === "price-high") {
       filtered = [...filtered].sort(
-        (a, b) => b.currentBidValue - a.currentBidValue
+        (a, b) => b.currentBidValue - a.currentBidValue,
       );
     } else if (sortBy === "time-left") {
       // Sort by time remaining (ending soonest first)
@@ -406,11 +401,11 @@ const AuctionListView = () => {
                     </div>
                     <div className="p-4 flex flex-col gap-4 flex-1">
                       <div className="flex items-center justify-between">
-                         <div className="flex items-center gap-2">
-                            <Skeleton className="w-6 h-6 rounded-full" />
-                            <Skeleton className="w-20 h-4" />
-                         </div>
-                         <Skeleton className="w-16 h-5" />
+                        <div className="flex items-center gap-2">
+                          <Skeleton className="w-6 h-6 rounded-full" />
+                          <Skeleton className="w-20 h-4" />
+                        </div>
+                        <Skeleton className="w-16 h-5" />
                       </div>
                       <div className="space-y-2">
                         <Skeleton className="h-6 w-3/4" />
@@ -418,12 +413,12 @@ const AuctionListView = () => {
                       </div>
                       <div className="grid grid-cols-2 gap-4 mt-auto">
                         <div className="space-y-1">
-                           <Skeleton className="h-5 w-16" />
-                           <Skeleton className="h-3 w-10" />
+                          <Skeleton className="h-5 w-16" />
+                          <Skeleton className="h-3 w-10" />
                         </div>
-                         <div className="space-y-1">
-                           <Skeleton className="h-5 w-16" />
-                           <Skeleton className="h-3 w-10" />
+                        <div className="space-y-1">
+                          <Skeleton className="h-5 w-16" />
+                          <Skeleton className="h-3 w-10" />
                         </div>
                       </div>
                     </div>
@@ -439,87 +434,128 @@ const AuctionListView = () => {
             ) : (
               <>
                 {/* Results Count */}
-                <div className="mb-6">
-                  <p className="text-xs uppercase tracking-[0.25em] text-[#4a4a4a]">
-                    {totalAuctions === 0
-                      ? "Showing 0 entries"
-                      : `Showing ${
-                          startIndex + 1
-                        } - ${endIndex} entries of ${totalAuctions}`}
-                  </p>
+                <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div>
+                    <p className="text-sm uppercase tracking-[0.25em] text-[#4a4a4a]">
+                      {activeQuery ? (
+                        <span className="flex items-center gap-1 mb-5">
+                          Results for "
+                          <span className="text-primary font-bold">
+                            {activeQuery}
+                          </span>
+                          "
+                        </span>
+                      ) : totalAuctions === 0 ? (
+                        "Showing 0 entries"
+                      ) : (
+                        `Showing ${startIndex + 1} - ${endIndex} entries of ${totalAuctions}`
+                      )}
+                    </p>
+                    {activeQuery && (
+                      <p className="mt-1 text-xs uppercase tracking-[0.25em] text-[#4a4a4a]">
+                        {totalAuctions === 0
+                          ? "Showing 0 entries"
+                          : `Showing ${startIndex + 1} - ${endIndex} entries of ${totalAuctions}`}
+                      </p>
+                    )}
+                  </div>
+                  {activeQuery && (
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setActiveQuery("");
+                        setQuery("");
+                      }}
+                      className="gap-2 self-start sm:self-auto cursor-pointer"
+                    >
+                      <X className="h-4 w-4" />
+                      Clear Search
+                    </Button>
+                  )}
                 </div>
 
                 <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                  {paginatedAuctions.map((auction) => (
-                    <Card
-                      key={auction.id}
-                      className="group shadow-sm hover:shadow-lg transition-all duration-300 bg-white border-gray-200 overflow-hidden cursor-pointer flex flex-col h-full rounded-xl p-0 gap-0"
-                      onClick={() => router.push(`/auction/${auction.id}`)}
-                    >
-                      {/* Car Image - Full Width Top */}
-                      <div className="relative h-48 w-full overflow-hidden bg-gray-100">
-                        <Image
-                          src={auction.images[0] || "/placeholder.svg"}
-                          alt={auction.title}
-                          fill
-                          className="object-cover group-hover:scale-105 transition-transform duration-500"
-                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                        />
-                        <div className="absolute top-3 right-3">
-                           <Badge
-                            variant="secondary"
-                            className="bg-white/90 backdrop-blur-sm shadow-sm text-gray-900 font-medium hover:bg-white"
-                          >
-                            {auction.auctionNumber}
-                          </Badge>
-                        </div>
-                         <div className="absolute bottom-3 left-3 flex items-center gap-2">
-                             <div
-                                className={`w-6 h-6 ${auction.brandColor} rounded-full flex items-center justify-center shadow-sm`}
-                              >
-                                <span className="text-white text-[10px] font-bold">
-                                  {auction.brand}
-                                </span>
-                              </div>
-                              <span className="text-white text-xs font-medium drop-shadow-md bg-black/30 px-2 py-0.5 rounded-full backdrop-blur-[2px]">
-                                {auction.location}
+                  {paginatedAuctions.map((auction) => {
+                    console.log("auction", auction);
+                    return (
+                      <Card
+                        key={auction.id}
+                        className="group shadow-none transition-all duration-300 bg-white border-gray-200 overflow-hidden cursor-pointer flex flex-col h-full rounded-xl p-0 gap-0"
+                        onClick={() => router.push(`/auction/${auction.id}`)}
+                      >
+                        {/* Car Image - Full Width Top */}
+                        <div className="relative h-48 w-full overflow-hidden bg-gray-100">
+                          <Image
+                            src={auction.images[0] || "/placeholder.svg"}
+                            alt={auction.title}
+                            fill
+                            className="object-contain group-hover:scale-105 transition-transform duration-500"
+                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                          />
+                          <div className="absolute bottom-3 left-3 flex items-center gap-2">
+                            <div
+                              className={`w-6 h-6 ${auction.brandColor} rounded-full flex items-center justify-center shadow-sm`}
+                            >
+                              <span className="text-white text-[10px] font-bold">
+                                {auction.brand}
                               </span>
-                         </div>
-                      </div>
-
-                      <div className="p-4 flex flex-col gap-4 flex-1">
-                        {/* Title & Details */}
-                        <div>
-                          <h3 className="text-lg font-bold text-gray-900 line-clamp-1 group-hover:text-blue-600 transition-colors">
-                            {auction.title}
-                          </h3>
-                          <p className="text-gray-500 text-sm line-clamp-1 mt-1">
-                            {auction.details}
-                          </p>
-                        </div>
-
-                        {/* Stats Grid */}
-                        <div className="grid grid-cols-2 gap-y-3 gap-x-2 mt-auto pt-4 border-t border-gray-100">
-                          <div>
-                            <p className="text-xs text-gray-400 font-medium uppercase tracking-wider">Time Left</p>
-                            <p className="text-sm font-bold text-gray-900">{auction.timeLeft}</p>
-                          </div>
-                          <div>
-                            <p className="text-xs text-gray-400 font-medium uppercase tracking-wider">Current Bid</p>
-                            <p className="text-sm font-bold text-blue-600">{auction.currentBid}</p>
-                          </div>
-                           <div>
-                            <p className="text-xs text-gray-400 font-medium uppercase tracking-wider">Active Bids</p>
-                            <p className="text-sm font-bold text-gray-900">{auction.activeBids}</p>
-                          </div>
-                           <div>
-                            <p className="text-xs text-gray-400 font-medium uppercase tracking-wider">Ends on</p>
-                            <p className="text-sm font-bold text-gray-900 truncate">{auction.endTime.split(',')[0]}</p>
+                            </div>
+                            <span className="text-white text-xs font-medium drop-shadow-md bg-black/30 px-2 py-0.5 rounded-full backdrop-blur-[2px]">
+                              {auction.location}
+                            </span>
                           </div>
                         </div>
-                      </div>
-                    </Card>
-                  ))}
+
+                        <div className="p-4 flex flex-col gap-4 flex-1">
+                          {/* Title & Details */}
+                          <div>
+                            <h3 className="text-lg font-bold text-gray-900 line-clamp-1 group-hover:text-primary transition-colors">
+                              {auction.title}
+                            </h3>
+                            <p className="text-gray-500 text-sm line-clamp-1 mt-1">
+                              {auction.details}
+                            </p>
+                          </div>
+
+                          {/* Stats Grid */}
+                          <div className="grid grid-cols-2 gap-y-3 gap-x-2 mt-auto pt-4 border-t border-gray-100">
+                            <div>
+                              <p className="text-xs text-gray-400 font-medium uppercase tracking-wider">
+                                Time Left
+                              </p>
+                              <p className="text-sm font-bold text-gray-900">
+                                {auction.timeLeft}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-gray-400 font-medium uppercase tracking-wider">
+                                Current Bid
+                              </p>
+                              <p className="text-sm font-bold text-primary">
+                                {auction.currentBid}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-gray-400 font-medium uppercase tracking-wider">
+                                Active Bids
+                              </p>
+                              <p className="text-sm font-bold text-gray-900">
+                                {auction.activeBids}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-gray-400 font-medium uppercase tracking-wider">
+                                Ends on
+                              </p>
+                              <p className="text-sm font-bold text-gray-900 truncate">
+                                {auction.endTime.split(",")[0]}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </Card>
+                    );
+                  })}
                 </div>
 
                 {/* Pagination */}

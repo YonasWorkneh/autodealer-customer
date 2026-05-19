@@ -207,6 +207,8 @@ export type FetchedCarDetail = {
   auction_end: string | null;
   priority: boolean;
 
+  featured_image?: string;
+
   created_at: string; // ISO timestamp
   updated_at: string; // ISO timestamp
   /** Display by iterating this array of feature strings */

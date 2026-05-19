@@ -39,6 +39,8 @@ export default function Header({ color }: HeaderProps) {
 
   const { toast } = useToast();
 
+  console.log("profile",profile);
+
   return (
     <header
       className={`relative z-20 flex items-center justify-between px-6 md:px-40 py-4 ${color === "black" && "border-b"
@@ -126,7 +128,7 @@ export default function Header({ color }: HeaderProps) {
           )}
         </Link>
         <Link
-          href={"/place-add"}
+          href={'/place-add'}
           className={`text-white ${
             color === "black"
               ? " bg-primary text-primary-foreground hover:bg-primary-hover"
@@ -142,7 +144,6 @@ export default function Header({ color }: HeaderProps) {
               return;
             }
 
-            // If the user is not yet a dealer or broker, show offers immediately
             if (
               profile &&
               profile.dealer_profile === null &&
