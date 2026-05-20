@@ -326,23 +326,26 @@ export default function CarMarketplace() {
             {/* Results Count */}
             <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
-                <h2 className="text-3xl font-semibold text-foreground">
+                <p className="text-sm uppercase tracking-[0.25em] text-[#4a4a4a]">
                   {activeQuery ? (
-                    <span className="flex items-center gap-2">
+                    <span className="flex items-center gap-1 mb-5">
                       Results for "
-                      <span className="text-primary">{activeQuery}</span>"
+                      <span className="text-primary font-bold">{activeQuery}</span>
+                      "
                     </span>
+                  ) : filteredCars.length === 0 ? (
+                    "Showing 0 entries"
                   ) : (
-                    "All Vehicles"
+                    `Showing ${filteredCars.length} ${filteredCars.length === 1 ? "vehicle" : "vehicles"}`
                   )}
-                </h2>
-                <p className="mt-2 text-xs uppercase tracking-[0.25em] text-muted-foreground">
-                  {filteredCars.length === 0
-                    ? "Showing 0 entries"
-                    : `Showing ${filteredCars.length} ${
-                        filteredCars.length === 1 ? "vehicle" : "vehicles"
-                      }`}
                 </p>
+                {activeQuery && (
+                  <p className="mt-1 text-xs uppercase tracking-[0.25em] text-[#4a4a4a]">
+                    {filteredCars.length === 0
+                      ? "Showing 0 entries"
+                      : `Showing ${filteredCars.length} ${filteredCars.length === 1 ? "vehicle" : "vehicles"}`}
+                  </p>
+                )}
               </div>
               {activeQuery && (
                 <Button
