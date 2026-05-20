@@ -286,7 +286,7 @@ export default function CarMarketplace() {
                     <Input
                       autoFocus
                       placeholder="Search by make, model, or body style"
-                      className="pl-9 h-10 border-border rounded-xl text-sm focus-visible:ring-0"
+                      className="w-[90%] pl-9 h-10 border-border rounded-xl text-sm focus-visible:ring-0"
                       value={query}
                       onChange={(e) => { setQuery(e.target.value); setShowSuggest(true); }}
                       onFocus={() => setShowSuggest(true)}
