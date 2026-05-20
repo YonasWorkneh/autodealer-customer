@@ -692,6 +692,38 @@ export default function PlaceAddForm() {
     reset,
   ]);
 
+  useEffect(() => {
+    const handlePaste = (e: ClipboardEvent) => {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+
+      const imageFiles: File[] = [];
+      for (const item of Array.from(items)) {
+        if (item.type.startsWith("image/")) {
+          const file = item.getAsFile();
+          if (file) imageFiles.push(file);
+        }
+      }
+
+      if (imageFiles.length === 0) return;
+
+      setImages((prev) => {
+        const updated = [...prev, ...imageFiles];
+        setValue("images", updated);
+        return updated;
+      });
+
+      toast({
+        title: "Pasted from clipboard",
+        description: `${imageFiles.length} image${imageFiles.length > 1 ? "s" : ""} added`,
+        variant: "success",
+      });
+    };
+
+    document.addEventListener("paste", handlePaste);
+    return () => document.removeEventListener("paste", handlePaste);
+  }, [setValue, toast]);
+
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const newImages = [...images, ...Array.from(e.target.files)];

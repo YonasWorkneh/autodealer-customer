@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Menu, X, Bell } from "lucide-react";
+import { X, Bell, Home, Clock, Heart, LayoutList, BarChart2, User, Car } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { useUserStore } from "@/store/user";
@@ -168,13 +168,23 @@ export default function Header({ color }: HeaderProps) {
       {/* Mobile Menu Icon */}
       <button
         onClick={() => setIsOpen(true)}
-        className="md:hidden"
+        className="md:hidden p-2 -mr-2"
         aria-label="Open Menu"
       >
-        <Menu
-          className={`h-7 w-7 ${color === "black" ? "text-black" : "text-white"
-            }`}
-        />
+        <svg
+          width="30"
+          height="30"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          className={color === "black" ? "text-black" : "text-white"}
+        >
+          <line x1="3" y1="6" x2="21" y2="6" />
+          <line x1="3" y1="12" x2="15" y2="12" />
+          <line x1="3" y1="18" x2="10" y2="18" />
+        </svg>
       </button>
 
       {/* Mobile Drawer with Framer Motion */}
@@ -193,85 +203,108 @@ export default function Header({ color }: HeaderProps) {
             {/* Drawer Panel */}
             <motion.div
               key="drawer"
-              initial={{ x: "100%" }} // enter from right
+              initial={{ x: "100%" }}
               animate={{ x: 0 }}
-              exit={{ x: "100%" }} // leave to left
+              exit={{ x: "100%" }}
               transition={{ type: "tween", duration: 0.4 }}
-              className="w-64 h-full bg-white p-6 flex flex-col space-y-6 shadow-xl"
+              className="w-72 h-full bg-white flex flex-col shadow-xl"
             >
-              <button
-                onClick={() => setIsOpen(false)}
-                className="self-end text-gray-700"
-                aria-label="Close Menu"
-              >
-                <X className="h-6 w-6" />
-              </button>
+              {/* Drawer Header */}
+              <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
+                <Image
+                  src="/logo/logo.svg"
+                  alt="hulucars"
+                  width={100}
+                  height={30}
+                  className="h-7 w-auto"
+                />
+                <button
+                  onClick={() => setIsOpen(false)}
+                  className="p-1.5 rounded-full hover:bg-gray-100 text-gray-500 transition-colors"
+                  aria-label="Close Menu"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
 
-              <Link
-                href={"/"}
-                onClick={() => setIsOpen(false)}
-                className="text-gray-800 hover:text-gray-500"
-              >
-                Home
-              </Link>
-              <Link
-                href={"/auction"}
-                onClick={() => setIsOpen(false)}
-                className="text-gray-800 hover:text-gray-500"
-              >
-                Auctions
-              </Link>
-              <Link
-                href={"/favorites"}
-                onClick={() => setIsOpen(false)}
-                className="text-gray-800 hover:text-gray-500"
-              >
-                Favourites
-              </Link>
-              <Link
-                href={"/analytics"}
-                onClick={() => setIsOpen(false)}
-                className="text-gray-800 hover:text-gray-500"
-              >
-                Analytics
-              </Link>
-              <Link
-                href={user.email ? "profile" : "/signin"}
-                onClick={() => setIsOpen(false)}
-                className="text-gray-800 hover:text-gray-500"
-              >
-                {user.email ? `Profile (${user.email})` : "Signin"}
-              </Link>
-              <Link
-                href={"/place-add"}
-                onClick={(e) => {
-                  if (!user.email) {
-                    e.preventDefault();
-                    toast({
-                      description:
-                        "❌ Log in or create an account to sell your car.",
-                    });
-                    return;
-                  }
+              {/* Nav Links */}
+              <nav className="flex-1 px-4 py-4 space-y-6 overflow-y-auto">
+                {(
+                  [
+                    { href: "/", label: "Home", icon: Home, active: pathname === "/" || pathname.startsWith("/listing") },
+                    { href: "/auction", label: "Auctions", icon: Clock, active: pathname.startsWith("/auction") },
+                    { href: "/favorites", label: "Favourites", icon: Heart, active: pathname.startsWith("/favorites") },
+                    { href: "/mylistings", label: "My Ads", icon: LayoutList, active: pathname.startsWith("/mylistings") },
+                    { href: "/analytics", label: "Analytics", icon: BarChart2, active: pathname.startsWith("/analytics") },
+                  ] as const
+                ).map(({ href, label, icon: Icon, active }) => (
+                  <Link
+                    key={href}
+                    href={href}
+                    onClick={() => setIsOpen(false)}
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
+                      active
+                        ? "bg-primary/10 text-primary"
+                        : "text-gray-700 hover:bg-gray-50"
+                    }`}
+                  >
+                    <Icon className="h-4 w-4 shrink-0" />
+                    <span className="text-xs uppercase tracking-[0.25em] font-medium">{label}</span>
+                  </Link>
+                ))}
+              </nav>
 
-                  // If the user is not yet a dealer or broker, show offers immediately
-                  if (
-                    profile &&
-                    profile.dealer_profile === null &&
-                    profile.broker_profile === null
-                  ) {
-                    e.preventDefault();
+              {/* Profile */}
+              <div className="px-4 pt-4 pb-3 border-t border-gray-100">
+                <Link
+                  href={user.email ? "/profile" : "/signin"}
+                  onClick={() => setIsOpen(false)}
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+                >
+                  {user.email || profile?.first_name ? (
+                    <span className="size-8 flex justify-center items-center rounded-full bg-primary text-primary-foreground text-xs font-semibold uppercase shrink-0">
+                      {profile?.first_name?.[0] || user.email[0]}
+                    </span>
+                  ) : (
+                    <User className="h-4 w-4 shrink-0 text-gray-400" />
+                  )}
+                  <span className="text-xs uppercase tracking-[0.25em] font-medium">
+                    {user.email || profile?.first_name ? (profile?.first_name || "Profile") : "Sign In"}
+                  </span>
+                </Link>
+              </div>
+
+              {/* Sell my Car CTA */}
+              <div className="px-4 pb-8">
+                <Link
+                  href={"/place-add"}
+                  onClick={(e) => {
+                    if (!user.email) {
+                      e.preventDefault();
+                      toast({
+                        description:
+                          "❌ Log in or create an account to sell your car.",
+                      });
+                      return;
+                    }
+                    if (
+                      profile &&
+                      profile.dealer_profile === null &&
+                      profile.broker_profile === null
+                    ) {
+                      e.preventDefault();
+                      setIsOpen(false);
+                      router.push("/pricing");
+                      return;
+                    }
                     setIsOpen(false);
-                    router.push("/pricing");
-                    return;
-                  }
-
-                  setIsOpen(false);
-                }}
-                className="bg-primary text-primary-foreground py-2 px-4 rounded-md hover:bg-primary-hover"
-              >
-                Sell my Car
-              </Link>
+                  }}
+                  className="flex items-center justify-center gap-2 w-full bg-primary text-primary-foreground py-3 px-4 rounded-xl text-xs uppercase tracking-[0.25em] font-medium hover:bg-primary-hover transition-colors"
+                >
+                  <Car className="h-4 w-4" />
+                  Sell my Car
+                </Link>
+              </div>
             </motion.div>
           </div>
         )}

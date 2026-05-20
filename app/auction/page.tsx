@@ -104,6 +104,7 @@ const AuctionListView = () => {
   const [showSuggest, setShowSuggest] = useState(false);
   const [sortBy, setSortBy] = useState<string>("best");
   const [filterOpen, setFilterOpen] = useState(false);
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const itemsPerPage = 10;
 
   const normalized = (str: string) => str.toLowerCase();
@@ -306,51 +307,130 @@ const AuctionListView = () => {
           {/* Main Content */}
           <div className="lg:col-span-3 space-y-6 pb-10">
             {/* Search and Sort */}
-            <div className="sticky top-0 bg-white z-[100] pb-4">
-              <Card className="border-gray-200 rounded-3xl shadow-none py-4">
-                <CardContent className="flex flex-col sm:flex-row flex-wrap justify-between items-center gap-4">
-                  <div className="relative w-full sm:flex-1">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+            <div className="sm:sticky top-0 bg-white z-10 sm:z-[100] pb-4">
+
+              {/* Desktop: full search card */}
+              <div className="hidden sm:block">
+                <Card className="border-gray-200 rounded-3xl shadow-none py-4">
+                  <CardContent className="flex flex-row flex-wrap justify-between items-center gap-4">
+                    <div className="relative w-full sm:flex-1">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                      <Input
+                        placeholder="Search by make, model, or body style"
+                        className="pl-10 h-12 text-lg border-none shadow-none focus:ring-0 focus:outline-none w-full focus-visible:ring-0"
+                        value={query}
+                        onChange={(e) => {
+                          setQuery(e.target.value);
+                          setShowSuggest(true);
+                        }}
+                        onFocus={() => setShowSuggest(true)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            setActiveQuery(query.trim());
+                            setShowSuggest(false);
+                          }
+                        }}
+                      />
+                      {showSuggest && suggestions.length > 0 && (
+                        <div className="absolute mt-2 left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-lg z-[200] max-h-80 overflow-auto">
+                          {suggestions.map((s) => {
+                            const idx = s.label.toLowerCase().indexOf(query.toLowerCase());
+                            const before = s.label.slice(0, idx);
+                            const match = s.label.slice(idx, idx + query.length);
+                            const after = s.label.slice(idx + query.length);
+                            return (
+                              <button
+                                key={s.label}
+                                className="w-full text-left px-4 py-3 hover:bg-primary/5 cursor-pointer transition-colors"
+                                onClick={() => {
+                                  setQuery(s.value);
+                                  setActiveQuery(s.value);
+                                  setShowSuggest(false);
+                                }}
+                              >
+                                <span className="text-gray-900">
+                                  {before}
+                                  <span className="font-semibold text-primary underline">{match}</span>
+                                  {after}
+                                </span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex flex-row border-l border-gray-200 pl-4 items-center gap-4">
+                      <p className="font-bold text-xs uppercase">Sort By</p>
+                      <Select value={sortBy} onValueChange={setSortBy}>
+                        <SelectTrigger className="w-40 text-center border-none shadow-none focus:ring-0">
+                          <SelectValue placeholder="Best match" />
+                        </SelectTrigger>
+                        <SelectContent className="z-[300]">
+                          <SelectItem value="best">Best match</SelectItem>
+                          <SelectItem value="price-low">Price: Low to High</SelectItem>
+                          <SelectItem value="price-high">Price: High to Low</SelectItem>
+                          <SelectItem value="time-left">Ending Soonest</SelectItem>
+                          <SelectItem value="bids-high">Most Bids</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Mobile: compact toolbar */}
+              <div className="sm:hidden">
+                <div className="flex items-center gap-2 py-1">
+                  <button
+                    onClick={() => { setMobileSearchOpen((o) => !o); setShowSuggest(false); }}
+                    className="p-2 rounded-full border border-gray-200 bg-white shrink-0"
+                    aria-label="Toggle search"
+                  >
+                    {mobileSearchOpen ? <X className="h-4 w-4 text-gray-400" /> : <Search className="h-4 w-4 text-gray-400" />}
+                  </button>
+                  <Select value={sortBy} onValueChange={setSortBy}>
+                    <SelectTrigger className="flex-1 h-9 text-xs border-gray-200 rounded-full px-3">
+                      <SelectValue placeholder="Sort" />
+                    </SelectTrigger>
+                    <SelectContent className="z-[200]">
+                      <SelectItem value="best">Best match</SelectItem>
+                      <SelectItem value="price-low">Price: Low to High</SelectItem>
+                      <SelectItem value="price-high">Price: High to Low</SelectItem>
+                      <SelectItem value="time-left">Ending Soonest</SelectItem>
+                      <SelectItem value="bids-high">Most Bids</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                {mobileSearchOpen && (
+                  <div className="relative mt-2">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4" />
                     <Input
+                      autoFocus
                       placeholder="Search by make, model, or body style"
-                      className="pl-10 h-12 text-lg border-none shadow-none focus:ring-0 focus:outline-none w-full focus-visible:ring-0"
+                      className="pl-9 h-10 border-gray-200 rounded-xl text-sm focus-visible:ring-0"
                       value={query}
-                      onChange={(e) => {
-                        setQuery(e.target.value);
-                        setShowSuggest(true);
-                      }}
+                      onChange={(e) => { setQuery(e.target.value); setShowSuggest(true); }}
                       onFocus={() => setShowSuggest(true)}
                       onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          setActiveQuery(query.trim());
-                          setShowSuggest(false);
-                        }
+                        if (e.key === "Enter") { setActiveQuery(query.trim()); setShowSuggest(false); }
                       }}
                     />
                     {showSuggest && suggestions.length > 0 && (
-                      <div className="absolute mt-2 left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-lg z-[200] max-h-80 overflow-auto">
+                      <div className="absolute mt-1 left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-lg z-[200] max-h-64 overflow-auto">
                         {suggestions.map((s) => {
-                          const idx = s.label
-                            .toLowerCase()
-                            .indexOf(query.toLowerCase());
+                          const idx = s.label.toLowerCase().indexOf(query.toLowerCase());
                           const before = s.label.slice(0, idx);
                           const match = s.label.slice(idx, idx + query.length);
                           const after = s.label.slice(idx + query.length);
                           return (
                             <button
                               key={s.label}
-                              className="w-full text-left px-4 py-3 hover:bg-gray-50 cursor-pointer"
-                              onClick={() => {
-                                setQuery(s.value);
-                                setActiveQuery(s.value);
-                                setShowSuggest(false);
-                              }}
+                              className="w-full text-left px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors"
+                              onClick={() => { setQuery(s.value); setActiveQuery(s.value); setShowSuggest(false); setMobileSearchOpen(false); }}
                             >
-                              <span className="text-gray-900">
+                              <span className="text-gray-900 text-sm">
                                 {before}
-                                <span className="font-semibold underline">
-                                  {match}
-                                </span>
+                                <span className="font-semibold text-primary underline">{match}</span>
                                 {after}
                               </span>
                             </button>
@@ -359,34 +439,9 @@ const AuctionListView = () => {
                       </div>
                     )}
                   </div>
+                )}
+              </div>
 
-                  <div className="flex flex-col sm:flex-row border-t sm:border-t-0 sm:border-l border-gray-200 py-4 sm:py-0 pl-0 sm:pl-4 justify-center items-center gap-4 w-full sm:w-auto">
-                    <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4">
-                      <p className="font-bold text-xs text-center uppercase">
-                        Sort By
-                      </p>
-                      <Select value={sortBy} onValueChange={setSortBy}>
-                        <SelectTrigger className="w-full sm:w-40 text-center border-none shadow-none focus:ring-0">
-                          <SelectValue placeholder="Best match" />
-                        </SelectTrigger>
-                        <SelectContent className="z-[300]">
-                          <SelectItem value="best">Best match</SelectItem>
-                          <SelectItem value="price-low">
-                            Price: Low to High
-                          </SelectItem>
-                          <SelectItem value="price-high">
-                            Price: High to Low
-                          </SelectItem>
-                          <SelectItem value="time-left">
-                            Ending Soonest
-                          </SelectItem>
-                          <SelectItem value="bids-high">Most Bids</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
             </div>
 
             {isLoading ? (
