@@ -12,6 +12,7 @@ import { Loader2, ArrowLeft, ChevronLeft, ChevronRight } from "lucide-react";
 export default function MyListingDetailPage() {
   const { id } = useParams();
   const { data: car, isLoading, error } = useCar(id as string);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   if (isLoading) {
     return (
@@ -41,7 +42,6 @@ export default function MyListingDetailPage() {
   }
 
   const imageUrls = car.images?.map((image) => image.image_url).filter(Boolean) ?? [];
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const hasImages = imageUrls.length > 0;
 
   const handlePrevImage = () => {
