@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { X, Bell, Home, Clock, Heart, LayoutList, BarChart2, User, Car } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -25,7 +25,7 @@ export default function Header({ color }: HeaderProps) {
 
   const unreadCount = notifications?.filter((n: any) => !n.is_read).length || 0;
 
-  const linkClasses = (isActive?: boolean) =>
+  const linkClasses = (_isActive?: boolean) =>
     `${color === "black"
       ? "text-black hover:text-primary data-[active=true]:text-primary"
       : "text-white hover:text-primary data-[active=true]:text-primary"
@@ -39,7 +39,7 @@ export default function Header({ color }: HeaderProps) {
 
   const { toast } = useToast();
 
-  console.log("profile",profile);
+
 
   return (
     <header
@@ -76,13 +76,15 @@ export default function Header({ color }: HeaderProps) {
         >
           Auctions
         </Link>
-        <Link
-          href={"/favorites"}
-          className={linkClasses(pathname.startsWith("/favorites"))}
-          data-active={pathname.startsWith("/favorites")}
-        >
-          Favourites
-        </Link>
+        {!(profile?.broker_profile || profile?.dealer_profile) && (
+          <Link
+            href={"/favorites"}
+            className={linkClasses(pathname.startsWith("/favorites"))}
+            data-active={pathname.startsWith("/favorites")}
+          >
+            Favourites
+          </Link>
+        )}
         <Link
           href={"/mylistings"}
           className={linkClasses(pathname.startsWith("/mylistings"))}
@@ -128,7 +130,9 @@ export default function Header({ color }: HeaderProps) {
                 : " bg-white/10 hover:bg-white/20"
                 } size-10 flex justify-center items-center rounded-full uppercase`}
             >
-              {profile?.first_name[0] || user.email[0]}
+              {profile?.first_name
+                ? `${profile.first_name[0]}${profile.last_name?.[0] ?? ""}`
+                : user.email[0]}
             </span>
           ) : (
             "Signin"
@@ -233,10 +237,12 @@ export default function Header({ color }: HeaderProps) {
                   [
                     { href: "/", label: "Home", icon: Home, active: pathname === "/" || pathname.startsWith("/listing") },
                     { href: "/auction", label: "Auctions", icon: Clock, active: pathname.startsWith("/auction") },
-                    { href: "/favorites", label: "Favourites", icon: Heart, active: pathname.startsWith("/favorites") },
+                    ...(!( profile?.broker_profile || profile?.dealer_profile)
+                      ? [{ href: "/favorites", label: "Favourites", icon: Heart, active: pathname.startsWith("/favorites") }]
+                      : []),
                     { href: "/mylistings", label: "My Ads", icon: LayoutList, active: pathname.startsWith("/mylistings") },
                     { href: "/analytics", label: "Analytics", icon: BarChart2, active: pathname.startsWith("/analytics") },
-                  ] as const
+                  ]
                 ).map(({ href, label, icon: Icon, active }) => (
                   <Link
                     key={href}
@@ -263,7 +269,9 @@ export default function Header({ color }: HeaderProps) {
                 >
                   {user.email || profile?.first_name ? (
                     <span className="size-8 flex justify-center items-center rounded-full bg-primary text-primary-foreground text-xs font-semibold uppercase shrink-0">
-                      {profile?.first_name?.[0] || user.email[0]}
+                      {profile?.first_name
+                      ? `${profile.first_name[0]}${profile.last_name?.[0] ?? ""}`
+                      : user.email[0]}
                     </span>
                   ) : (
                     <User className="h-4 w-4 shrink-0 text-gray-400" />

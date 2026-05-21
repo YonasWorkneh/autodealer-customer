@@ -25,6 +25,7 @@ import { useProfile, useUpdateProfile, useChangePassword } from "@/hooks/profile
 import { ChangePasswordParams } from "@/lib/auth/password";
 import { useToast } from "@/hooks/use-toast";
 import { useUserStore } from "@/store/user";
+import { useQueryClient } from "@tanstack/react-query";
 
 type ProfileFormValues = {
   first_name: string;
@@ -37,6 +38,7 @@ type ProfileFormValues = {
 export default function UserProfile() {
   const { data: profile, isFetched, isLoading } = useProfile();
   const { setUser } = useUserStore();
+  const queryClient = useQueryClient();
   const [loggingOut, setIsLoggingOut] = useState<boolean>(false);
   const [preview, setPreview] = useState<string | null>(null);
   const [showNewPassword, setShowNewPassword] = useState(false);
@@ -64,13 +66,13 @@ export default function UserProfile() {
     try {
       setIsLoggingOut(true);
       await logout();
-      await new Promise((res) => setTimeout(res, 2000));
+      setUser({ email: "", last_name: "", first_name: "" });
+      queryClient.removeQueries({ queryKey: ["profile"] });
       router.push("/");
     } catch (err) {
       console.error("Logout error", err);
     } finally {
       setIsLoggingOut(false);
-      setUser({ email: "", last_name: "", first_name: "" });
     }
   };
 

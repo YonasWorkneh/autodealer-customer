@@ -13,7 +13,7 @@ export const getProfile = async () => {
         Authorization: `Bearer ${access}`,
       },
     });
-    console.log("profile fetchres", res);
+    
     if (!res.ok) {
       const errData = await res.json().catch(() => ({})) as Record<string, unknown>;
       throw new Error(getBackendErrorMessage(errData, "Failed to load profile."));
@@ -22,7 +22,7 @@ export const getProfile = async () => {
     return profile;
   } catch (err: any) {
     // console.error(err.message);
-    console.log("profile fetch error", err);
+   
     throw err;
   }
 };

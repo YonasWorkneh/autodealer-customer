@@ -6,7 +6,7 @@ export default function layout({
   children: React.ReactNode;
 }>) {
   return (
-    <div className="h-screen grid place-items-center bg-background">
+    <div className="min-h-screen grid place-items-center bg-background p-4">
       {children}
     </div>
   );

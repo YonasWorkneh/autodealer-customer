@@ -54,7 +54,7 @@ export default function SignIn() {
   };
 
   return (
-    <Card className="w-[450px]">
+    <Card className="w-full max-w-[450px]">
       <CardHeader>
         <Link
           href={"/"}
@@ -184,6 +184,7 @@ export default function SignIn() {
             )}
           >
             <Button
+              type="button"
               variant="outline"
               className={cn("w-full gap-2 cursor-pointer")}
               disabled={loading}

@@ -22,6 +22,7 @@ import { signin } from "@/lib/auth/signin";
 import { useUserStore } from "@/store/user";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function SignIn() {
   const [showPassword, setShowPassword] = useState<boolean>(false);
@@ -32,6 +33,7 @@ export default function SignIn() {
   const { setUser } = useUserStore();
   const router = useRouter();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const onSubmit = async (data: any) => {
     setLoading(true);
     setErr("");
@@ -47,11 +49,12 @@ export default function SignIn() {
       return;
     }
     setUser(result.user);
+    queryClient.invalidateQueries({ queryKey: ["profile"] });
     router.push("/");
   };
 
   return (
-    <Card className="w-[380px] md:w-[450px]">
+    <Card className="w-full max-w-[450px]">
       <CardHeader>
         <Link
           href={"/"}
@@ -148,6 +151,7 @@ export default function SignIn() {
             )}
           >
             <Button
+              type="button"
               variant="outline"
               className={cn("w-full gap-2 cursor-pointer")}
               disabled={loading}

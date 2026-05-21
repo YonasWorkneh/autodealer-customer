@@ -16,7 +16,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import Image from "next/image";
-import { Plus, ChevronDown, ChevronUp, Loader2, ClipboardCheck } from "lucide-react";
+import {
+  Plus,
+  ChevronDown,
+  ChevronUp,
+  Loader2,
+  ClipboardCheck,
+} from "lucide-react";
 import {
   useMakes,
   useModels,
@@ -85,7 +91,10 @@ function parsePositiveId(value: unknown): number | null {
   return null;
 }
 
-function resolveMakeId(carData: FetchedCarDetail, makes: Make[]): number | null {
+function resolveMakeId(
+  carData: FetchedCarDetail,
+  makes: Make[],
+): number | null {
   const byId = parsePositiveId(carData.make_ref);
   if (byId != null && makes.some((m) => m.id === byId)) {
     return byId;
@@ -97,7 +106,10 @@ function resolveMakeId(carData: FetchedCarDetail, makes: Make[]): number | null 
   return found?.id ?? null;
 }
 
-function resolveModelId(carData: FetchedCarDetail, models: Model[] | undefined): number {
+function resolveModelId(
+  carData: FetchedCarDetail,
+  models: Model[] | undefined,
+): number {
   if (!models?.length) return 0;
   const byId = parsePositiveId(carData.model_ref);
   if (byId != null && models.some((m) => m.id === byId)) {
@@ -128,12 +140,14 @@ export default function PlaceAddForm() {
   const [showInspectionStep, setShowInspectionStep] = useState(false);
   const [createdCarId, setCreatedCarId] = useState<number | null>(null);
   const [showInspectionModal, setShowInspectionModal] = useState(false);
-  const [inspectionModalError, setInspectionModalError] = useState<string | null>(null);
+  const [inspectionModalError, setInspectionModalError] = useState<
+    string | null
+  >(null);
   const { toast } = useToast();
   const {
     control,
     handleSubmit,
-    formState: { errors, isValid },
+    formState: { errors },
     trigger,
     setValue,
     watch,
@@ -166,9 +180,7 @@ export default function PlaceAddForm() {
   const { data: carData, isLoading: isCarLoading } = useCar(c_id ? c_id : "");
 
   const resolvedEditMakeId =
-    c_id && carData && makes?.length
-      ? resolveMakeId(carData, makes)
-      : null;
+    c_id && carData && makes?.length ? resolveMakeId(carData, makes) : null;
 
   const effectiveMakeIdForModels =
     watchedMake > 0
@@ -637,7 +649,7 @@ export default function PlaceAddForm() {
 
     const modelId = needsModelsForName
       ? resolveModelId(carData, modelOptions)
-      : modelFromNumeric ?? 0;
+      : (modelFromNumeric ?? 0);
 
     if (modelId <= 0 && (carData.model || carData.model_ref)) {
       return;
@@ -852,7 +864,6 @@ export default function PlaceAddForm() {
       selectedExtras.forEach((extra) =>
         carForm.append(extra.field, String(extra.checked)),
       );
-      console.log("profile", profile);
       if (
         profile?.dealer_profile === null &&
         profile?.broker_profile === null
@@ -970,7 +981,9 @@ export default function PlaceAddForm() {
         });
       },
       onError: () => {
-        setInspectionModalError("Failed to submit inspection. Please try again.");
+        setInspectionModalError(
+          "Failed to submit inspection. Please try again.",
+        );
       },
     });
   };
@@ -1121,7 +1134,10 @@ export default function PlaceAddForm() {
 
           {/* Inspection modal (edit mode only) */}
           {c_id && (
-            <Dialog open={showInspectionModal} onOpenChange={setShowInspectionModal}>
+            <Dialog
+              open={showInspectionModal}
+              onOpenChange={setShowInspectionModal}
+            >
               <DialogContent className="max-w-md">
                 <DialogHeader>
                   <DialogTitle>Add inspection details</DialogTitle>
@@ -1129,7 +1145,10 @@ export default function PlaceAddForm() {
                 <p className="text-muted-foreground text-sm mb-4">
                   Optionally add inspection info for this listing.
                 </p>
-                <form onSubmit={handleSubmitInspectionModal} className="space-y-4">
+                <form
+                  onSubmit={handleSubmitInspectionModal}
+                  className="space-y-4"
+                >
                   <div className="space-y-2">
                     <Label htmlFor="modal_inspected_by">Inspected by</Label>
                     <Input
@@ -1141,7 +1160,9 @@ export default function PlaceAddForm() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="modal_inspection_date">Inspection date</Label>
+                    <Label htmlFor="modal_inspection_date">
+                      Inspection date
+                    </Label>
                     <Input
                       id="modal_inspection_date"
                       type="date"
@@ -1161,12 +1182,14 @@ export default function PlaceAddForm() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="modal_condition_status">Condition status</Label>
+                    <Label htmlFor="modal_condition_status">
+                      Condition status
+                    </Label>
                     <Select
                       value={inspectionCondition}
-                      onValueChange={(v: "excellent" | "good" | "fair" | "poor") =>
-                        setInspectionCondition(v)
-                      }
+                      onValueChange={(
+                        v: "excellent" | "good" | "fair" | "poor",
+                      ) => setInspectionCondition(v)}
                     >
                       <SelectTrigger className="h-12 border-border rounded-md">
                         <SelectValue />
@@ -1180,7 +1203,9 @@ export default function PlaceAddForm() {
                     </Select>
                   </div>
                   {inspectionModalError && (
-                    <p className="text-red-500 text-sm">{inspectionModalError}</p>
+                    <p className="text-red-500 text-sm">
+                      {inspectionModalError}
+                    </p>
                   )}
                   <div className="flex gap-3 pt-2">
                     <Button
@@ -1799,6 +1824,16 @@ export default function PlaceAddForm() {
                           {errors.images.message}
                         </p>
                       )}
+                      <p className="text-xs text-muted-foreground mt-3">
+                        Tip: You can paste images directly with{" "}
+                        <kbd className="px-1.5 py-0.5 rounded bg-muted border text-xs font-mono">
+                          Ctrl+V
+                        </kbd>{" "}
+                        /{" "}
+                        <kbd className="px-1.5 py-0.5 rounded bg-muted border text-xs font-mono">
+                          ⌘ V
+                        </kbd>
+                      </p>
                     </div>
                     {/* Price + Sales Type */}
                     <div className="grid grid-cols-2 gap-4">

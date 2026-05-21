@@ -10,6 +10,7 @@ import { useCarFavorites, useUpdateFavorite } from "@/hooks/cars";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { useUserStore } from "@/store/user";
+import { useProfile } from "@/hooks/profile";
 import { formatPrice } from "@/lib/utils";
 
 export default function Car({
@@ -24,10 +25,12 @@ export default function Car({
   variant?: "list" | "grid";
 }) {
   const { user } = useUserStore();
+  const { data: profile } = useProfile();
   const { data: favorites } = useCarFavorites();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const isLoggedIn = !!user.email;
+  const isSeller = !!(profile?.broker_profile || profile?.dealer_profile);
 
   const onSuccess = () => {
     queryClient.invalidateQueries({ queryKey: ["car-favorites"] });
@@ -105,16 +108,18 @@ export default function Car({
               alt={`${car.year} ${car.make} ${car.model}`}
               className="w-full h-48 object-cover"
             />
-            <Button
-              variant="ghost"
-              size="sm"
-              className="absolute top-2 right-2 bg-white/80 hover:bg-white cursor-pointer rounded-full"
-              onClick={handleFavoriteClick}
-            >
-              <Heart
-                className={`h-4 w-4 ${isLoggedIn && favorited !== -1 ? "fill-primary text-primary" : ""}`}
-              />
-            </Button>
+            {!isSeller && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="absolute top-2 right-2 bg-white/80 hover:bg-white cursor-pointer rounded-full"
+                onClick={handleFavoriteClick}
+              >
+                <Heart
+                  className={`h-4 w-4 ${isLoggedIn && favorited !== -1 ? "fill-primary text-primary" : ""}`}
+                />
+              </Button>
+            )}
           </div>
           <CardContent className="p-4 sm:p-6 flex flex-col gap-4">
             <div className="space-y-2 flex-1">
@@ -175,16 +180,18 @@ export default function Car({
               alt={`${car.year} ${car.make} ${car.model}`}
               className="w-full h-40 object-cover rounded-lg"
             />
-            <Button
-              variant="ghost"
-              size="sm"
-              className="absolute top-2 right-2 bg-white/80 hover:bg-white cursor-pointer"
-              onClick={handleFavoriteClick}
-            >
-              <Heart
-                className={`h-4 w-4 ${isLoggedIn && favorited !== -1 ? "fill-primary text-primary" : ""}`}
-              />
-            </Button>
+            {!isSeller && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="absolute top-2 right-2 bg-white/80 hover:bg-white cursor-pointer"
+                onClick={handleFavoriteClick}
+              >
+                <Heart
+                  className={`h-4 w-4 ${isLoggedIn && favorited !== -1 ? "fill-primary text-primary" : ""}`}
+                />
+              </Button>
+            )}
           </div>
 
           {/* Details */}

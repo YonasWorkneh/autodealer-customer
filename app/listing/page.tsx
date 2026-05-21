@@ -20,6 +20,7 @@ import FilterSidebar from "@/components/Filter";
 import Car from "@/components/Car";
 import { useCarsInfinite } from "@/hooks/cars";
 import Slider from "@/components/Slider";
+import { useProfile } from "@/hooks/profile";
 
 const carLogos = [
   { image: "/logo/byd.webp", title: "BYD" },
@@ -52,6 +53,7 @@ export default function CarMarketplace() {
   const [sortBy, setSortBy] = useState<string>("best");
   const [viewMode, setViewMode] = useState<"list" | "grid">("grid");
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  const { data: profile } = useProfile();
 
   // Flatten all pages into a single array
   const cars = useMemo(() => {
@@ -185,7 +187,6 @@ export default function CarMarketplace() {
           <div className="lg:col-span-3 space-y-6 pb-10">
             {/* Search and Sort */}
             <div className="sm:sticky top-0 bg-background z-10 sm:z-[100] pb-4">
-
               {/* Desktop: full search card */}
               <div className="hidden sm:block">
                 <Card className="border-border rounded-3xl shadow-none py-4">
@@ -196,28 +197,45 @@ export default function CarMarketplace() {
                         placeholder="Search by make, model, or body style"
                         className="pl-10 h-12 text-lg border-none shadow-none focus:ring-0 focus:outline-none w-full focus-visible:ring-0"
                         value={query}
-                        onChange={(e) => { setQuery(e.target.value); setShowSuggest(true); }}
+                        onChange={(e) => {
+                          setQuery(e.target.value);
+                          setShowSuggest(true);
+                        }}
                         onFocus={() => setShowSuggest(true)}
                         onKeyDown={(e) => {
-                          if (e.key === "Enter") { setActiveQuery(query.trim()); setShowSuggest(false); }
+                          if (e.key === "Enter") {
+                            setActiveQuery(query.trim());
+                            setShowSuggest(false);
+                          }
                         }}
                       />
                       {showSuggest && suggestions.length > 0 && (
                         <div className="absolute mt-2 left-0 right-0 bg-background border border-border rounded-lg shadow-lg z-[200] max-h-80 overflow-auto">
                           {suggestions.map((s) => {
-                            const idx = s.label.toLowerCase().indexOf(query.toLowerCase());
+                            const idx = s.label
+                              .toLowerCase()
+                              .indexOf(query.toLowerCase());
                             const before = s.label.slice(0, idx);
-                            const match = s.label.slice(idx, idx + query.length);
+                            const match = s.label.slice(
+                              idx,
+                              idx + query.length,
+                            );
                             const after = s.label.slice(idx + query.length);
                             return (
                               <button
                                 key={s.label}
                                 className="w-full text-left px-4 py-3 hover:bg-primary/5 cursor-pointer transition-colors"
-                                onClick={() => { setQuery(s.value); setActiveQuery(s.value); setShowSuggest(false); }}
+                                onClick={() => {
+                                  setQuery(s.value);
+                                  setActiveQuery(s.value);
+                                  setShowSuggest(false);
+                                }}
                               >
                                 <span className="text-foreground">
                                   {before}
-                                  <span className="font-semibold text-primary underline decoration-primary">{match}</span>
+                                  <span className="font-semibold text-primary underline decoration-primary">
+                                    {match}
+                                  </span>
                                   {after}
                                 </span>
                               </button>
@@ -228,23 +246,41 @@ export default function CarMarketplace() {
                     </div>
                     <div className="flex flex-row border-l border-border pl-4 items-center gap-4">
                       <div className="flex flex-row items-center gap-4">
-                        <p className="font-bold text-xs uppercase text-foreground">Sort By</p>
+                        <p className="font-bold text-xs uppercase text-foreground">
+                          Sort By
+                        </p>
                         <Select value={sortBy} onValueChange={setSortBy}>
                           <SelectTrigger className="w-32 text-center border-none shadow-none focus:ring-0">
                             <SelectValue placeholder="Best match" />
                           </SelectTrigger>
                           <SelectContent className="z-[300]">
                             <SelectItem value="best">Best match</SelectItem>
-                            <SelectItem value="price-low">Price: Low to High</SelectItem>
-                            <SelectItem value="price-high">Price: High to Low</SelectItem>
+                            <SelectItem value="price-low">
+                              Price: Low to High
+                            </SelectItem>
+                            <SelectItem value="price-high">
+                              Price: High to Low
+                            </SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Button variant={viewMode === "grid" ? "default" : "ghost"} size="icon" className="rounded-full cursor-pointer!" onClick={() => setViewMode("grid")} aria-label="Grid view">
+                        <Button
+                          variant={viewMode === "grid" ? "default" : "ghost"}
+                          size="icon"
+                          className="rounded-full cursor-pointer!"
+                          onClick={() => setViewMode("grid")}
+                          aria-label="Grid view"
+                        >
                           <LayoutGrid className="h-4 w-4" />
                         </Button>
-                        <Button variant={viewMode === "list" ? "default" : "ghost"} size="icon" className="rounded-full cursor-pointer!" onClick={() => setViewMode("list")} aria-label="List view">
+                        <Button
+                          variant={viewMode === "list" ? "default" : "ghost"}
+                          size="icon"
+                          className="rounded-full cursor-pointer!"
+                          onClick={() => setViewMode("list")}
+                          aria-label="List view"
+                        >
                           <List className="h-4 w-4" />
                         </Button>
                       </div>
@@ -257,11 +293,18 @@ export default function CarMarketplace() {
               <div className="sm:hidden">
                 <div className="flex items-center gap-2 py-1">
                   <button
-                    onClick={() => { setMobileSearchOpen((o) => !o); setShowSuggest(false); }}
+                    onClick={() => {
+                      setMobileSearchOpen((o) => !o);
+                      setShowSuggest(false);
+                    }}
                     className="p-2 rounded-full border border-border bg-background shrink-0"
                     aria-label="Toggle search"
                   >
-                    {mobileSearchOpen ? <X className="h-4 w-4 text-muted-foreground" /> : <Search className="h-4 w-4 text-muted-foreground" />}
+                    {mobileSearchOpen ? (
+                      <X className="h-4 w-4 text-muted-foreground" />
+                    ) : (
+                      <Search className="h-4 w-4 text-muted-foreground" />
+                    )}
                   </button>
                   <Select value={sortBy} onValueChange={setSortBy}>
                     <SelectTrigger className="flex-1 h-9 text-xs border-border rounded-full px-3">
@@ -269,14 +312,30 @@ export default function CarMarketplace() {
                     </SelectTrigger>
                     <SelectContent className="z-[200]">
                       <SelectItem value="best">Best match</SelectItem>
-                      <SelectItem value="price-low">Price: Low to High</SelectItem>
-                      <SelectItem value="price-high">Price: High to Low</SelectItem>
+                      <SelectItem value="price-low">
+                        Price: Low to High
+                      </SelectItem>
+                      <SelectItem value="price-high">
+                        Price: High to Low
+                      </SelectItem>
                     </SelectContent>
                   </Select>
-                  <Button variant={viewMode === "grid" ? "default" : "ghost"} size="icon" className="rounded-full shrink-0" onClick={() => setViewMode("grid")} aria-label="Grid view">
+                  <Button
+                    variant={viewMode === "grid" ? "default" : "ghost"}
+                    size="icon"
+                    className="rounded-full shrink-0"
+                    onClick={() => setViewMode("grid")}
+                    aria-label="Grid view"
+                  >
                     <LayoutGrid className="h-4 w-4" />
                   </Button>
-                  <Button variant={viewMode === "list" ? "default" : "ghost"} size="icon" className="rounded-full shrink-0" onClick={() => setViewMode("list")} aria-label="List view">
+                  <Button
+                    variant={viewMode === "list" ? "default" : "ghost"}
+                    size="icon"
+                    className="rounded-full shrink-0"
+                    onClick={() => setViewMode("list")}
+                    aria-label="List view"
+                  >
                     <List className="h-4 w-4" />
                   </Button>
                 </div>
@@ -288,16 +347,24 @@ export default function CarMarketplace() {
                       placeholder="Search by make, model, or body style"
                       className="w-[90%] pl-9 h-10 border-border rounded-xl text-sm focus-visible:ring-0"
                       value={query}
-                      onChange={(e) => { setQuery(e.target.value); setShowSuggest(true); }}
+                      onChange={(e) => {
+                        setQuery(e.target.value);
+                        setShowSuggest(true);
+                      }}
                       onFocus={() => setShowSuggest(true)}
                       onKeyDown={(e) => {
-                        if (e.key === "Enter") { setActiveQuery(query.trim()); setShowSuggest(false); }
+                        if (e.key === "Enter") {
+                          setActiveQuery(query.trim());
+                          setShowSuggest(false);
+                        }
                       }}
                     />
                     {showSuggest && suggestions.length > 0 && (
                       <div className="absolute mt-1 left-0 right-0 bg-background border border-border rounded-lg shadow-lg z-[200] max-h-64 overflow-auto">
                         {suggestions.map((s) => {
-                          const idx = s.label.toLowerCase().indexOf(query.toLowerCase());
+                          const idx = s.label
+                            .toLowerCase()
+                            .indexOf(query.toLowerCase());
                           const before = s.label.slice(0, idx);
                           const match = s.label.slice(idx, idx + query.length);
                           const after = s.label.slice(idx + query.length);
@@ -305,11 +372,18 @@ export default function CarMarketplace() {
                             <button
                               key={s.label}
                               className="w-full text-left px-4 py-3 hover:bg-primary/5 cursor-pointer transition-colors"
-                              onClick={() => { setQuery(s.value); setActiveQuery(s.value); setShowSuggest(false); setMobileSearchOpen(false); }}
+                              onClick={() => {
+                                setQuery(s.value);
+                                setActiveQuery(s.value);
+                                setShowSuggest(false);
+                                setMobileSearchOpen(false);
+                              }}
                             >
                               <span className="text-foreground text-sm">
                                 {before}
-                                <span className="font-semibold text-primary underline decoration-primary">{match}</span>
+                                <span className="font-semibold text-primary underline decoration-primary">
+                                  {match}
+                                </span>
                                 {after}
                               </span>
                             </button>
@@ -320,7 +394,6 @@ export default function CarMarketplace() {
                   </div>
                 )}
               </div>
-
             </div>
 
             {/* Results Count */}
@@ -330,7 +403,9 @@ export default function CarMarketplace() {
                   {activeQuery ? (
                     <span className="flex items-center gap-1 mb-5">
                       Results for "
-                      <span className="text-primary font-bold">{activeQuery}</span>
+                      <span className="text-primary font-bold">
+                        {activeQuery}
+                      </span>
                       "
                     </span>
                   ) : filteredCars.length === 0 ? (

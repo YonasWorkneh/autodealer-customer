@@ -19,10 +19,10 @@ export default function Session({ children }: { children: ReactElement }) {
         const user = await getUser();
         setUser(user);
       } catch (err: any) {
-        toast({
-          title: "Remember me failed !",
-          description: "Error setting up user.",
-        });
+        // toast({
+        //   title: "Remember me failed !",
+        //   description: "Error setting up user.",
+        // });
       } finally {
         setIsLoadingUser(false);
       }

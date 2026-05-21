@@ -33,7 +33,7 @@ export default function FavoritesPage() {
 
   const { mutate: removeFavorite, isPending: isRemoving } = useRemoveFavorite(
     onRemoveSuccess,
-    onRemoveError
+    onRemoveError,
   );
 
   // Check if user is logged in
