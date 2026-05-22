@@ -552,7 +552,6 @@ export default function CarMarketplace() {
               initial={filters}
               onApply={(f) => {
                 setFilters(f);
-                setFilterOpen(false);
               }}
               onClear={() => {
                 setFilters({});
