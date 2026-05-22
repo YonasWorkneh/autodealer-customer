@@ -33,7 +33,6 @@ export async function fetchCars(
 }
 
 export async function fetchCarById(id: string): Promise<FetchedCarDetail> {
-  const credential = await getCredentials();
   return fetcher<FetchedCarDetail>(`/inventory/cars/${id}`);
 }
 
@@ -283,6 +282,24 @@ export async function postCarInspection(payload: CarInspectionPayload) {
     throw new Error(getBackendErrorMessage(errorData, `Failed to submit inspection: ${res.status} ${res.statusText}`));
   }
   return res.json();
+}
+
+export type BidHistoryItem = {
+  id: number;
+  car_detail: { id: number; make: string; model: string };
+  profile: { id: number; first_name: string; last_name: string; contact: string };
+  amount: string;
+  created_at: string;
+};
+
+export async function fetchBidHistory(carId: string | number): Promise<BidHistoryItem[]> {
+  const credential = await getCredentials();
+  const res = await fetcher<{ all_bids: BidHistoryItem[] }>(`/bids/car/${carId}/history/`, {
+    headers: {
+      Authorization: `Bearer ${credential.access}`,
+    },
+  });
+  return res.all_bids ?? [];
 }
 
 export async function postLead(name: string, contact: string) {

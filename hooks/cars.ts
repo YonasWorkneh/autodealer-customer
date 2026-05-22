@@ -19,10 +19,12 @@ import {
   getPopularCars,
   getMarketData,
   placeBid,
+  fetchBidHistory,
   fetchRatingAnalytics,
   postCarRating,
   postLead,
   postCarInspection,
+  type BidHistoryItem,
 } from "@/lib/carApi";
 import { FetchedCarDetail, type FetchedCar } from "@/app/types/Car";
 import type { Car } from "@/app/types/Car";
@@ -203,15 +205,23 @@ export function usePlaceBid(
   return useMutation({
     mutationFn: ({ car, amount }: { car: number; amount: number }) =>
       placeBid(car, amount),
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       onSuccess?.();
-      // Invalidate car queries to refresh bid data
       queryClient.invalidateQueries({ queryKey: ["car"] });
       queryClient.invalidateQueries({ queryKey: ["cars"] });
+      queryClient.invalidateQueries({ queryKey: ["bid-history", String(variables.car)] });
     },
     onError: (error: Error) => {
       onError?.(error);
     },
+  });
+}
+
+export function useBidHistory(carId: string | number | undefined) {
+  return useQuery<BidHistoryItem[]>({
+    queryKey: ["bid-history", String(carId)],
+    queryFn: () => fetchBidHistory(carId as string | number),
+    enabled: !!carId,
   });
 }
 

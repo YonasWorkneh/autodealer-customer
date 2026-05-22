@@ -1,21 +1,22 @@
 "use client";
 
 import Header from "@/components/Header";
-import { useNotifications, useMarkNotificationAsRead } from "@/hooks/use-notifications";
+import { useNotifications, useMarkNotificationAsRead, useMarkAllNotificationsAsRead } from "@/hooks/use-notifications";
 import { formatDistanceToNow } from "date-fns";
-import { Bell, Check, RefreshCw } from "lucide-react";
+import { Bell, Check, CheckCheck, RefreshCw } from "lucide-react";
 
 export default function NotificationsPage() {
     const { notifications, isNotificationsLoading, refetchNotifications, isNotificationsRefetching } = useNotifications();
     const markAsRead = useMarkNotificationAsRead();
+    const markAllAsRead = useMarkAllNotificationsAsRead();
 
-    const handleMarkAsRead = (id: number) => {
-        markAsRead.mutate(id);
-    };
+    const sortedNotifications = notifications
+        ? [...notifications].sort((a: any, b: any) =>
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+          )
+        : [];
 
-    const sortedNotifications = notifications?.sort((a: any, b: any) =>
-        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-    );
+    const unreadCount = sortedNotifications.filter((n: any) => !n.is_read).length;
 
     return (
         <main className="min-h-screen bg-gray-50 pb-20">
@@ -26,17 +27,30 @@ export default function NotificationsPage() {
                     <div>
                         <h1 className="text-3xl font-bold text-gray-900">Notifications</h1>
                         <p className="mt-1 text-gray-500">
-                            Stay updated with your latest activities
+                            {isNotificationsLoading ? "Loading..." : unreadCount > 0 ? `${unreadCount} unread` : "All caught up"}
                         </p>
                     </div>
-                    <button
-                        onClick={() => refetchNotifications()}
-                        disabled={isNotificationsRefetching}
-                        className={`p-2 rounded-full hover:bg-primary/10 cursor-pointer transition-colors ${isNotificationsRefetching ? 'animate-spin' : ''}`}
-                        title="Refresh notifications"
-                    >
-                        <RefreshCw className="w-5 h-5 text-gray-600" />
-                    </button>
+                    <div className="flex items-center gap-2">
+                        {unreadCount > 0 && (
+                            <button
+                                onClick={() => markAllAsRead.mutate()}
+                                disabled={markAllAsRead.isPending}
+                                className="flex items-center gap-1.5 text-sm text-primary hover:text-primary-hover font-medium px-3 py-2 rounded-lg hover:bg-primary/10 cursor-pointer transition-colors disabled:opacity-50"
+                                title="Mark all as read"
+                            >
+                                <CheckCheck className="w-4 h-4" />
+                                Mark all as read
+                            </button>
+                        )}
+                        <button
+                            onClick={() => refetchNotifications()}
+                            disabled={isNotificationsRefetching}
+                            className={`p-2 rounded-full hover:bg-primary/10 cursor-pointer transition-colors ${isNotificationsRefetching ? 'animate-spin' : ''}`}
+                            title="Refresh notifications"
+                        >
+                            <RefreshCw className="w-5 h-5 text-gray-600" />
+                        </button>
+                    </div>
                 </div>
 
                 {isNotificationsLoading ? (
@@ -45,7 +59,7 @@ export default function NotificationsPage() {
                             <div key={i} className="bg-white p-6 rounded-xl border border-gray-200 animate-pulse h-24"></div>
                         ))}
                     </div>
-                ) : sortedNotifications?.length === 0 ? (
+                ) : sortedNotifications.length === 0 ? (
                     <div className="text-center py-20 rounded-xl border border-gray-200">
                         <div className="bg-primary/10 p-4 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
                             <Bell className="w-8 h-8 text-primary" />
@@ -55,11 +69,12 @@ export default function NotificationsPage() {
                     </div>
                 ) : (
                     <div className="space-y-4">
-                        {sortedNotifications?.map((notification: any) => (
+                        {sortedNotifications.map((notification: any) => (
                             <div
                                 key={notification.id}
-                                className={`group relative bg-white p-6 rounded-xl shadow-sm border transition-all duration-200 hover:shadow-md ${!notification.is_read ? 'border-l-4 border-l-primary bg-primary/5' : 'border-gray-100'
-                                    }`}
+                                className={`group relative bg-white p-6 rounded-xl shadow-sm border transition-all duration-200 hover:shadow-md ${
+                                    !notification.is_read ? 'border-l-4 border-l-primary bg-primary/5' : 'border-gray-100'
+                                }`}
                             >
                                 <div className="flex justify-between items-start gap-4">
                                     <div className="flex-1">
@@ -77,17 +92,16 @@ export default function NotificationsPage() {
                                         </p>
                                     </div>
 
-                                    <div className="flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        {!notification.is_read && (
-                                            <button
-                                                onClick={() => handleMarkAsRead(notification.id)}
-                                                className="p-2 text-gray-400 hover:text-primary hover:bg-primary/10 rounded-full transition-colors"
-                                                title="Mark as read"
-                                            >
-                                                <Check className="w-5 h-5" />
-                                            </button>
-                                        )}
-                                    </div>
+                                    {!notification.is_read && (
+                                        <button
+                                            onClick={() => markAsRead.mutate(notification.id)}
+                                            disabled={markAsRead.isPending}
+                                            className="shrink-0 p-2 text-gray-400 hover:text-primary hover:bg-primary/10 rounded-full transition-colors disabled:opacity-50 cursor-pointer"
+                                            title="Mark as read"
+                                        >
+                                            <Check className="w-5 h-5" />
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                         ))}

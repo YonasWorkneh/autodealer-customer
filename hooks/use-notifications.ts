@@ -1,7 +1,16 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getNotifications, markAsRead } from "@/lib/notificationApi";
+import { getNotifications, getUnreadNotificationCount, markAsRead, markAllAsRead } from "@/lib/notificationApi";
+
+export function useUnreadNotificationCount() {
+  return useQuery<number>({
+    queryKey: ["notifications-unread-count"],
+    queryFn: getUnreadNotificationCount,
+    staleTime: 30 * 1000,
+    refetchInterval: 30000,
+  });
+}
 
 export function useNotifications() {
   const {
@@ -25,11 +34,22 @@ export function useNotifications() {
 
 export function useMarkNotificationAsRead() {
   const queryClient = useQueryClient();
-
   return useMutation({
     mutationFn: markAsRead,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["notifications-unread-count"] });
+    },
+  });
+}
+
+export function useMarkAllNotificationsAsRead() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: markAllAsRead,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["notifications-unread-count"] });
     },
   });
 }

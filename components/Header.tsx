@@ -9,7 +9,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 import { useProfile } from "@/hooks/profile";
 import { usePathname, useRouter } from "next/navigation";
-import { useNotifications } from "@/hooks/use-notifications";
+import { useUnreadNotificationCount } from "@/hooks/use-notifications";
 
 interface HeaderProps {
   color?: string;
@@ -18,12 +18,10 @@ interface HeaderProps {
 export default function Header({ color }: HeaderProps) {
   const { user } = useUserStore();
   const { data: profile } = useProfile();
-  const { notifications } = useNotifications();
+  const { data: unreadCount = 0 } = useUnreadNotificationCount();
   const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
-
-  const unreadCount = notifications?.filter((n: any) => !n.is_read).length || 0;
 
   const linkClasses = (_isActive?: boolean) =>
     `${color === "black"

@@ -8,7 +8,7 @@ import { ArrowLeft, RefreshCw } from "lucide-react";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import { useState, useMemo, useEffect } from "react";
-import { useCar, usePlaceBid } from "@/hooks/cars";
+import { useCar, usePlaceBid, useBidHistory } from "@/hooks/cars";
 import { useToast } from "@/hooks/use-toast";
 import { useUserStore } from "@/store/user";
 import type { FetchedCar } from "@/app/types/Car";
@@ -51,6 +51,17 @@ const formatEndTime = (endDate: string | null): string => {
   const displayHours = hours % 12 || 12;
   const displayMinutes = minutes.toString().padStart(2, "0");
   return `${dayName}, ${displayHours}:${displayMinutes}${ampm}`;
+};
+
+const formatTimeAgo = (dateStr: string): string => {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "Just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  return `${days}d ago`;
 };
 
 // Utility function to get highest bid
@@ -163,6 +174,8 @@ const AuctionDetailView = () => {
     onBidSuccess,
     onBidError
   );
+
+  const { data: bidHistory = [], isLoading: isBidHistoryLoading } = useBidHistory(id);
 
   const handlePlaceBid = () => {
     if (!user.email) {
@@ -585,6 +598,55 @@ const AuctionDetailView = () => {
               )}
             </div>
           </div>
+        </div>
+
+        {/* Bid History */}
+        <div className="mt-8 border-t border-gray-200 pt-8">
+          <h3 className="text-lg font-bold text-gray-900 mb-4">Bid History</h3>
+          {isBidHistoryLoading ? (
+            <div className="space-y-3">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="flex justify-between items-center py-3 border-b border-gray-100">
+                  <Skeleton className="h-4 w-32" />
+                  <div className="flex items-center gap-6">
+                    <Skeleton className="h-4 w-20" />
+                    <Skeleton className="h-4 w-16" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : bidHistory.length === 0 ? (
+            <p className="text-gray-500 text-sm py-4">No bids placed yet. Be the first to bid!</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-xs uppercase tracking-wider text-gray-400 border-b border-gray-200">
+                    <th className="pb-3 font-medium">Bidder</th>
+                    <th className="pb-3 font-medium text-right">Amount</th>
+                    <th className="pb-3 font-medium text-right">Time</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[...bidHistory]
+                    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+                    .map((bid, idx) => (
+                      <tr key={bid.id} className={`${idx < bidHistory.length - 1 ? "border-b border-gray-100" : ""}`}>
+                        <td className="py-3 text-gray-900">
+                          {bid.profile.first_name} {bid.profile.last_name?.[0] ? `${bid.profile.last_name[0]}.` : ""}
+                        </td>
+                        <td className="py-3 text-right font-semibold text-primary">
+                          ${parseFloat(bid.amount).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                        </td>
+                        <td className="py-3 text-right text-gray-500">
+                          {formatTimeAgo(bid.created_at)}
+                        </td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       </div>
     </div>
