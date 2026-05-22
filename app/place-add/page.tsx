@@ -50,37 +50,45 @@ import {
 import { useToast } from "@/hooks/use-toast";
 
 // Validation schema
-const formSchema = z.object({
-  make: z.number().refine((val) => val > 0, "Please select a make"),
-  model: z.number().refine((val) => val > 0, "Please select a model"),
-  year: z.string().min(1, "Please select a year"),
-  mileage: z
-    .string()
-    .min(1, "Mileage is required")
-    .regex(/^\d+$/, "Please enter a valid mileage"),
-  engine: z.string().min(1, "Engine type is required"),
-  gearbox: z.string().min(1, "Gearbox type is required"),
-  bodyColor: z.string().min(1, "Exterior color is required"),
-  interiorColor: z.string().min(1, "Interior color is required"),
-  fuelType: z.string().min(1, "Fuel type is required"),
-  price: z
-    .string()
-    .refine((val) => val === "" || /^\d+$/.test(val), "Please enter a valid price"),
-  salesType: z.string().min(1, "Sales type is required"),
-  description: z.string().min(1, "Description is required"),
-  images: z.array(z.instanceof(File)),
-  bodyType: z.string().min(1, "Body type is required"),
-  vin: z.string().min(1, "VIN is required"),
-  origin: z.string().min(1, "Origin is required"),
-}).superRefine((data, ctx) => {
-  if (data.salesType === "Fixed Price" && (!data.price || !/^\d+$/.test(data.price))) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: "Price is required",
-      path: ["price"],
-    });
-  }
-});
+const formSchema = z
+  .object({
+    make: z.number().refine((val) => val > 0, "Please select a make"),
+    model: z.number().refine((val) => val > 0, "Please select a model"),
+    year: z.string().min(1, "Please select a year"),
+    mileage: z
+      .string()
+      .min(1, "Mileage is required")
+      .regex(/^\d+$/, "Please enter a valid mileage"),
+    engine: z.string().min(1, "Engine type is required"),
+    gearbox: z.string().min(1, "Gearbox type is required"),
+    bodyColor: z.string().min(1, "Exterior color is required"),
+    interiorColor: z.string().min(1, "Interior color is required"),
+    fuelType: z.string().min(1, "Fuel type is required"),
+    price: z
+      .string()
+      .refine(
+        (val) => val === "" || /^\d+$/.test(val),
+        "Please enter a valid price",
+      ),
+    salesType: z.string().min(1, "Sales type is required"),
+    description: z.string().min(1, "Description is required"),
+    images: z.array(z.instanceof(File)),
+    bodyType: z.string().min(1, "Body type is required"),
+    vin: z.string().min(1, "VIN is required"),
+    origin: z.string().min(1, "Origin is required"),
+  })
+  .superRefine((data, ctx) => {
+    if (
+      data.salesType === "Fixed Price" &&
+      (!data.price || !/^\d+$/.test(data.price))
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Price is required",
+        path: ["price"],
+      });
+    }
+  });
 
 type FormData = z.infer<typeof formSchema>;
 
@@ -144,8 +152,12 @@ export default function PlaceAddForm() {
   const [existingImages, setExistingImages] = useState<CarImage[]>([]);
   const existingImagesInitialized = useRef(false);
   // featured: 'existing' tracks an existing image by id; 'new' tracks index in `images`
-  const [featuredSource, setFeaturedSource] = useState<"existing" | "new">("new");
-  const [featuredExistingId, setFeaturedExistingId] = useState<number | null>(null);
+  const [featuredSource, setFeaturedSource] = useState<"existing" | "new">(
+    "new",
+  );
+  const [featuredExistingId, setFeaturedExistingId] = useState<number | null>(
+    null,
+  );
   const [featuredImageIndex, setFeaturedImageIndex] = useState<number>(0);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -191,7 +203,11 @@ export default function PlaceAddForm() {
   const watchedMake = watch("make");
   const watchedSalesType = watch("salesType");
   const { data: makes, isLoading: isMakesLoading } = useMakes();
-  const { data: carData, isLoading: isCarLoading } = useCar(c_id ? c_id : "");
+  const {
+    data: carData,
+    isLoading: isCarLoading,
+    isError: isCarError,
+  } = useCar(c_id ? c_id : "");
 
   const resolvedEditMakeId =
     c_id && carData && makes?.length ? resolveMakeId(carData, makes) : null;
@@ -833,23 +849,33 @@ export default function PlaceAddForm() {
             "vin",
             "origin",
           ]
-        : (getValues("salesType") === "Auction"
-            ? ["salesType", "description"]
-            : ["price", "salesType", "description"]);
+        : getValues("salesType") === "Auction"
+          ? ["salesType", "description"]
+          : ["price", "salesType", "description"];
 
     const isValid = await trigger(fieldsToValidate as any);
     if (!isValid) return;
 
-    // In create mode, require at least one image
-    if (!c_id && images.length === 0) {
-      toast({ title: "Images required", description: "Please upload at least one image.", variant: "destructive" });
-      return;
-    }
+    if (step === 2) {
+      // In create mode, require at least one image
+      if (!c_id && images.length === 0) {
+        toast({
+          title: "Images required",
+          description: "Please upload at least one image.",
+          variant: "destructive",
+        });
+        return;
+      }
 
-    // In edit mode, require at least one image remaining (existing or new)
-    if (c_id && existingImages.length === 0 && images.length === 0) {
-      toast({ title: "Images required", description: "Please keep or upload at least one image.", variant: "destructive" });
-      return;
+      // In edit mode, require at least one image remaining (existing or new)
+      if (c_id && existingImages.length === 0 && images.length === 0) {
+        toast({
+          title: "Images required",
+          description: "Please keep or upload at least one image.",
+          variant: "destructive",
+        });
+        return;
+      }
     }
 
     setStep(2);
@@ -896,7 +922,8 @@ export default function PlaceAddForm() {
       carForm.append("exterior_color", data.bodyColor);
       carForm.append("interior_color", data.interiorColor);
       carForm.append("fuel_type", data.fuelType);
-      if (data.salesType === "Fixed Price" && data.price) carForm.append("price", data.price);
+      if (data.salesType === "Fixed Price" && data.price)
+        carForm.append("price", data.price);
       carForm.append(
         "sales_type",
         data.salesType === "Fixed Price" ? "fixed_price" : "auction",
@@ -909,8 +936,12 @@ export default function PlaceAddForm() {
       // Existing images (edit mode): send their IDs so the backend keeps/updates them
       existingImages.forEach((img, index) => {
         carForm.append(`uploaded_images[${index}].id`, String(img.id));
-        const isFeatured = featuredSource === "existing" && featuredExistingId === img.id;
-        carForm.append(`uploaded_images[${index}].is_featured`, isFeatured ? "True" : "False");
+        const isFeatured =
+          featuredSource === "existing" && featuredExistingId === img.id;
+        carForm.append(
+          `uploaded_images[${index}].is_featured`,
+          isFeatured ? "True" : "False",
+        );
       });
 
       // IDs of images the user removed — these slots can be reused by new uploads
@@ -923,10 +954,17 @@ export default function PlaceAddForm() {
         const globalIndex = existingImages.length + index;
         carForm.append(`uploaded_images[${globalIndex}].image_file`, image);
         if (removedImageIds[index] !== undefined) {
-          carForm.append(`uploaded_images[${globalIndex}].id`, String(removedImageIds[index]));
+          carForm.append(
+            `uploaded_images[${globalIndex}].id`,
+            String(removedImageIds[index]),
+          );
         }
-        const isFeatured = featuredSource === "new" && index === featuredImageIndex;
-        carForm.append(`uploaded_images[${globalIndex}].is_featured`, isFeatured ? "True" : "False");
+        const isFeatured =
+          featuredSource === "new" && index === featuredImageIndex;
+        carForm.append(
+          `uploaded_images[${globalIndex}].is_featured`,
+          isFeatured ? "True" : "False",
+        );
         carForm.append(`uploaded_images[${globalIndex}].caption`, image.name);
       });
 
@@ -1075,6 +1113,47 @@ export default function PlaceAddForm() {
   }
 
   if (!hasSalesAccess) return null;
+
+  if (c_id && isCarError) {
+    return (
+      <div className="min-h-screen flex flex-col bg-background">
+        <Header color="black" />
+        <div className="flex-1 grid place-items-center px-6">
+          <div className="max-w-md p-10 text-center">
+            <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-amber-100">
+              <svg
+                className="h-8 w-8 text-amber-500"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={1.5}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"
+                />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-semibold text-slate-900 mb-3">
+              Under Review
+            </h2>
+            <p className="text-slate-500 leading-relaxed mb-8">
+              This listing is currently going through our verification process.
+              You will be able to edit it once the review is complete.
+            </p>
+            <Button
+              variant="outline"
+              onClick={() => router.push("/mylistings")}
+              className="cursor-pointer"
+            >
+              Back to My Ads
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (showInspectionStep && createdCarId) {
     return (
@@ -1886,8 +1965,13 @@ export default function PlaceAddForm() {
                             {/* Featured checkbox */}
                             <Checkbox
                               className="absolute top-1 left-1"
-                              checked={featuredSource === "existing" && featuredExistingId === img.id}
-                              onCheckedChange={() => setFeaturedExistingImage(img.id)}
+                              checked={
+                                featuredSource === "existing" &&
+                                featuredExistingId === img.id
+                              }
+                              onCheckedChange={() =>
+                                setFeaturedExistingImage(img.id)
+                              }
                             />
                             {/* Remove button */}
                             <button
@@ -1948,7 +2032,9 @@ export default function PlaceAddForm() {
                           )}
                         </div>
                       )}
-                      <div className={`space-y-2 ${watchedSalesType === "Auction" ? "col-span-2" : ""}`}>
+                      <div
+                        className={`space-y-2 ${watchedSalesType === "Auction" ? "col-span-2" : ""}`}
+                      >
                         <Label
                           htmlFor="salesType"
                           className="text-sm text-gray-500"
