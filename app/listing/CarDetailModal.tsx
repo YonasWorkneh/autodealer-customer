@@ -59,7 +59,7 @@ export function CarDetailModal({ carId, isOpen, onClose }: CarDetailModalProps) 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent
-        className="max-w-2xl p-0 gap-0"
+        className="w-[calc(100%-2rem)] max-w-2xl p-0 gap-0 max-h-[90vh] overflow-y-auto"
         title={car ? `${car.make} ${car.model}` : "Car details"}
       >
         <DialogTitle />
@@ -75,42 +75,42 @@ export function CarDetailModal({ carId, isOpen, onClose }: CarDetailModalProps) 
           <>
             {/* Header */}
             <div className="relative p-6 pb-4">
-              <div className="flex gap-4 border rounded-md shadow-[0px_8px_16px_rgba(0,0,0,.08)] p-4 mt-4 bg-white">
-                <div className="relative">
+              <div className="flex flex-col sm:flex-row gap-4 border rounded-md shadow-[0px_8px_16px_rgba(0,0,0,.08)] p-4 mt-4 bg-white">
+                <div className="relative shrink-0">
                   <Image
                     src={mainImage}
                     alt={`${car.year} ${car.make} ${car.model}`}
-                width={100}
-                height={100}
-                className="w-36 h-auto object-cover rounded-md bg-gray-100"
-              />
-            </div>
-            <div className="flex-1">
-              <h2 className="text-lg font-semibold text-gray-900">
-                {car.year} {car.make} {car.model}
-              </h2>
-              <div className="flex items-baseline gap-2 mt-1">
-                <span className="text-2xl font-bold text-gray-900">
-                  {formatPrice(car.price)}
-                </span>
-                <span className="text-sm text-gray-600 capitalize">
-                  {car.sale_type}
-                </span>
+                    width={144}
+                    height={100}
+                    className="w-full sm:w-36 h-40 sm:h-auto object-cover rounded-md bg-gray-100"
+                  />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h2 className="text-base sm:text-lg font-semibold text-gray-900 leading-snug">
+                    {car.year} {car.make} {car.model}
+                  </h2>
+                  <div className="flex items-baseline gap-2 mt-1 flex-wrap">
+                    <span className="text-xl sm:text-2xl font-bold text-gray-900">
+                      {formatPrice(car.price)}
+                    </span>
+                    <span className="text-sm text-gray-600 capitalize">
+                      {car.sale_type}
+                    </span>
+                  </div>
+                </div>
+                <Button
+                  className="size-6 mt-1 bg-transparent shadow-none hover:bg-transparent cursor-pointer self-start"
+                  onClick={() => toggleFavorite(car.id)}
+                >
+                  <Heart
+                    className={`size-6 ${
+                      favorited !== -1
+                        ? "text-primary fill-primary"
+                        : "text-black hover:text-primary"
+                    }`}
+                  />
+                </Button>
               </div>
-            </div>
-            <Button
-              className="size-6 mt-1 bg-transparent shadow-none hover:bg-transparent cursor-pointer"
-              onClick={() => toggleFavorite(car.id)}
-            >
-              <Heart
-                className={`size-6 ${
-                  favorited !== -1
-                    ? "text-primary fill-primary"
-                    : "text-black hover:text-primary"
-                }`}
-              />
-            </Button>
-          </div>
           <div className="absolute top-[calc(50%+20px)] border-t left-0 h-2 w-full -z-50" />
         </div>
 
@@ -129,7 +129,7 @@ export function CarDetailModal({ carId, isOpen, onClose }: CarDetailModalProps) 
             </Link>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Left Column */}
             <div className="space-y-4">
               <div className="flex items-center gap-3">
@@ -257,7 +257,7 @@ export function CarDetailModal({ carId, isOpen, onClose }: CarDetailModalProps) 
               </h3>
             </div>
 
-            <div className="grid grid-cols-2 gap-x-8 gap-y-3 text-sm">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-3 text-sm">
               <div className="flex justify-between">
                 <span className="text-gray-600">Make:</span>
                 <span className="font-medium text-gray-900">{car.make}</span>
