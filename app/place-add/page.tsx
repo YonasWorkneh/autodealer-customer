@@ -34,7 +34,7 @@ import {
 import type { CarInspectionPayload } from "@/lib/carApi";
 import Header from "@/components/Header";
 import { indexedDBManager, convertFormDataToCarForm } from "@/lib/indexedDB";
-import type { Feature, FetchedCarDetail } from "../types/Car";
+import type { CarImage, Feature, FetchedCarDetail } from "../types/Car";
 import type { Make } from "../types/Make";
 import type { Model } from "../types/Model";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -65,14 +65,21 @@ const formSchema = z.object({
   fuelType: z.string().min(1, "Fuel type is required"),
   price: z
     .string()
-    .min(1, "Price is required")
-    .regex(/^\d+$/, "Please enter a valid price"),
+    .refine((val) => val === "" || /^\d+$/.test(val), "Please enter a valid price"),
   salesType: z.string().min(1, "Sales type is required"),
   description: z.string().min(1, "Description is required"),
-  images: z.array(z.instanceof(File)).min(1, "At least one image is required"),
+  images: z.array(z.instanceof(File)),
   bodyType: z.string().min(1, "Body type is required"),
   vin: z.string().min(1, "VIN is required"),
   origin: z.string().min(1, "Origin is required"),
+}).superRefine((data, ctx) => {
+  if (data.salesType === "Fixed Price" && (!data.price || !/^\d+$/.test(data.price))) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Price is required",
+      path: ["price"],
+    });
+  }
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -134,6 +141,11 @@ export default function PlaceAddForm() {
     Boolean(user.email) && (isProfileLoading || profile === undefined);
   const [step, setStep] = useState(1);
   const [images, setImages] = useState<File[]>([]);
+  const [existingImages, setExistingImages] = useState<CarImage[]>([]);
+  const existingImagesInitialized = useRef(false);
+  // featured: 'existing' tracks an existing image by id; 'new' tracks index in `images`
+  const [featuredSource, setFeaturedSource] = useState<"existing" | "new">("new");
+  const [featuredExistingId, setFeaturedExistingId] = useState<number | null>(null);
   const [featuredImageIndex, setFeaturedImageIndex] = useState<number>(0);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -152,6 +164,7 @@ export default function PlaceAddForm() {
     setValue,
     watch,
     reset,
+    getValues,
   } = useForm<FormData>({
     resolver: zodResolver(formSchema),
     mode: "onChange",
@@ -176,6 +189,7 @@ export default function PlaceAddForm() {
   });
 
   const watchedMake = watch("make");
+  const watchedSalesType = watch("salesType");
   const { data: makes, isLoading: isMakesLoading } = useMakes();
   const { data: carData, isLoading: isCarLoading } = useCar(c_id ? c_id : "");
 
@@ -213,7 +227,11 @@ export default function PlaceAddForm() {
       origin: "",
     });
     setImages([]);
+    setExistingImages([]);
     setFeaturedImageIndex(0);
+    setFeaturedSource("new");
+    setFeaturedExistingId(null);
+    existingImagesInitialized.current = false;
     setTechnicalFeatures((prev) =>
       prev.map((tec) => ({ ...tec, checked: false })),
     );
@@ -610,6 +628,18 @@ export default function PlaceAddForm() {
     },
   ]);
 
+  // Initialize existing images from server data (once, on first load in edit mode)
+  useEffect(() => {
+    if (!c_id || !carData?.images || existingImagesInitialized.current) return;
+    existingImagesInitialized.current = true;
+    setExistingImages(carData.images);
+    const featured = carData.images.find((img) => img.is_featured);
+    if (featured) {
+      setFeaturedSource("existing");
+      setFeaturedExistingId(featured.id);
+    }
+  }, [c_id, carData]);
+
   /** Avoids wiping the form when React Query briefly drops `models` during refetch / key transitions */
   const editPrefillAppliedSig = useRef<string | null>(null);
 
@@ -671,7 +701,7 @@ export default function PlaceAddForm() {
       bodyColor: carData.exterior_color,
       interiorColor: carData.interior_color,
       fuelType: carData.fuel_type?.toLowerCase() || carData.fuel_type,
-      price: carData.price.toString(),
+      price: String(parseInt(String(carData.price), 10)),
       salesType:
         carData.sale_type === "fixed_price" ? "Fixed Price" : "Auction",
       description: carData.description,
@@ -763,8 +793,26 @@ export default function PlaceAddForm() {
     }
   };
 
+  const removeExistingImage = (id: number) => {
+    setExistingImages((prev) => prev.filter((img) => img.id !== id));
+    if (featuredExistingId === id) {
+      // Fall back to first new image as featured
+      setFeaturedSource("new");
+      setFeaturedExistingId(null);
+      setFeaturedImageIndex(0);
+    }
+  };
+
   const setFeaturedImage = (index: number) => {
+    setFeaturedSource("new");
+    setFeaturedExistingId(null);
     setFeaturedImageIndex(index);
+  };
+
+  const setFeaturedExistingImage = (id: number) => {
+    setFeaturedSource("existing");
+    setFeaturedExistingId(id);
+    setFeaturedImageIndex(-1);
   };
 
   const handleNext = async () => {
@@ -785,12 +833,26 @@ export default function PlaceAddForm() {
             "vin",
             "origin",
           ]
-        : ["price", "salesType", "description", "images"];
+        : (getValues("salesType") === "Auction"
+            ? ["salesType", "description"]
+            : ["price", "salesType", "description"]);
 
     const isValid = await trigger(fieldsToValidate as any);
-    if (isValid) {
-      setStep(2);
+    if (!isValid) return;
+
+    // In create mode, require at least one image
+    if (!c_id && images.length === 0) {
+      toast({ title: "Images required", description: "Please upload at least one image.", variant: "destructive" });
+      return;
     }
+
+    // In edit mode, require at least one image remaining (existing or new)
+    if (c_id && existingImages.length === 0 && images.length === 0) {
+      toast({ title: "Images required", description: "Please keep or upload at least one image.", variant: "destructive" });
+      return;
+    }
+
+    setStep(2);
   };
 
   const [showAllTechnical, setShowAllTechnical] = useState(false);
@@ -834,7 +896,7 @@ export default function PlaceAddForm() {
       carForm.append("exterior_color", data.bodyColor);
       carForm.append("interior_color", data.interiorColor);
       carForm.append("fuel_type", data.fuelType);
-      carForm.append("price", data.price);
+      if (data.salesType === "Fixed Price" && data.price) carForm.append("price", data.price);
       carForm.append(
         "sales_type",
         data.salesType === "Fixed Price" ? "fixed_price" : "auction",
@@ -844,16 +906,28 @@ export default function PlaceAddForm() {
       carForm.append("vin", data.vin);
       carForm.append("origin", data.origin);
 
-      // Add images to FormData
+      // Existing images (edit mode): send their IDs so the backend keeps/updates them
+      existingImages.forEach((img, index) => {
+        carForm.append(`uploaded_images[${index}].id`, String(img.id));
+        const isFeatured = featuredSource === "existing" && featuredExistingId === img.id;
+        carForm.append(`uploaded_images[${index}].is_featured`, isFeatured ? "True" : "False");
+      });
+
+      // IDs of images the user removed — these slots can be reused by new uploads
+      const removedImageIds = (carData?.images ?? [])
+        .filter((img) => !existingImages.some((e) => e.id === img.id))
+        .map((img) => img.id);
+
+      // New images: append after existing, pairing with freed IDs where available
       data.images.forEach((image, index) => {
-        carForm.append(`uploaded_images[${index}].image_file`, image);
-        console.log(image.name, index === featuredImageIndex);
-        carForm.append(
-          `uploaded_images[${index}].is_featured`,
-          String(index === featuredImageIndex ? "True" : "False"),
-        );
-        // caption = file name
-        carForm.append(`uploaded_images[${index}].caption`, image.name);
+        const globalIndex = existingImages.length + index;
+        carForm.append(`uploaded_images[${globalIndex}].image_file`, image);
+        if (removedImageIds[index] !== undefined) {
+          carForm.append(`uploaded_images[${globalIndex}].id`, String(removedImageIds[index]));
+        }
+        const isFeatured = featuredSource === "new" && index === featuredImageIndex;
+        carForm.append(`uploaded_images[${globalIndex}].is_featured`, isFeatured ? "True" : "False");
+        carForm.append(`uploaded_images[${globalIndex}].caption`, image.name);
       });
 
       const selectedTechnical = technicalFeatures.filter((tec) => tec.checked);
@@ -884,15 +958,9 @@ export default function PlaceAddForm() {
         }
 
         if (c_id) {
-          // Update existing car
-          carForm.append("id", c_id);
-          updateCar(carForm);
+          updateCar({ id: c_id, formData: carForm });
         } else {
-          // Create new car
-          console.log(Object.fromEntries(carForm));
           postCar(carForm);
-          // console.log("CAr Form");
-          // console.log(Object.fromEntries(carForm));
         }
       }
     } catch (error) {
@@ -1804,20 +1872,33 @@ export default function PlaceAddForm() {
                             )}
                           </div>
                         ))}
-                        {c_id &&
-                          carData?.images?.map((img: any, idx: number) => (
-                            <div
-                              key={`existing-${idx}`}
-                              className="relative w-full h-32 rounded-lg overflow-hidden border"
+                        {existingImages.map((img) => (
+                          <div
+                            key={`existing-${img.id}`}
+                            className="relative w-full h-32 rounded-lg overflow-hidden border"
+                          >
+                            <Image
+                              src={img.image_url}
+                              alt={img.caption || "Car Image"}
+                              fill
+                              className="object-cover"
+                            />
+                            {/* Featured checkbox */}
+                            <Checkbox
+                              className="absolute top-1 left-1"
+                              checked={featuredSource === "existing" && featuredExistingId === img.id}
+                              onCheckedChange={() => setFeaturedExistingImage(img.id)}
+                            />
+                            {/* Remove button */}
+                            <button
+                              type="button"
+                              onClick={() => removeExistingImage(img.id)}
+                              className="absolute top-1 right-1 bg-black/60 text-white rounded-full size-[20px] text-xs cursor-pointer hover:bg-black/70"
                             >
-                              <Image
-                                src={img.image_url}
-                                alt={img.caption || "Car Image"}
-                                fill
-                                className="object-cover"
-                              />
-                            </div>
-                          ))}
+                              ✕
+                            </button>
+                          </div>
+                        ))}
                       </div>
                       {errors.images && (
                         <p className="text-red-500 text-sm">
@@ -1837,35 +1918,37 @@ export default function PlaceAddForm() {
                     </div>
                     {/* Price + Sales Type */}
                     <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label
-                          htmlFor="price"
-                          className="text-sm text-gray-500"
-                        >
-                          Price
-                        </Label>
-                        <Controller
-                          name="price"
-                          control={control}
-                          render={({ field }) => (
-                            <Input
-                              {...field}
-                              id="price"
-                              type="number"
-                              placeholder="Enter price"
-                              className={`h-12 border-black/10 rounded-md py-8 ${
-                                errors.price ? "border-red-500" : ""
-                              }`}
-                            />
+                      {watchedSalesType !== "Auction" && (
+                        <div className="space-y-2">
+                          <Label
+                            htmlFor="price"
+                            className="text-sm text-gray-500"
+                          >
+                            Price
+                          </Label>
+                          <Controller
+                            name="price"
+                            control={control}
+                            render={({ field }) => (
+                              <Input
+                                {...field}
+                                id="price"
+                                type="number"
+                                placeholder="Enter price"
+                                className={`h-12 border-black/10 rounded-md py-8 ${
+                                  errors.price ? "border-red-500" : ""
+                                }`}
+                              />
+                            )}
+                          />
+                          {errors.price && (
+                            <p className="text-red-500 text-sm">
+                              {errors.price.message}
+                            </p>
                           )}
-                        />
-                        {errors.price && (
-                          <p className="text-red-500 text-sm">
-                            {errors.price.message}
-                          </p>
-                        )}
-                      </div>
-                      <div className="space-y-2">
+                        </div>
+                      )}
+                      <div className={`space-y-2 ${watchedSalesType === "Auction" ? "col-span-2" : ""}`}>
                         <Label
                           htmlFor="salesType"
                           className="text-sm text-gray-500"
@@ -1878,7 +1961,10 @@ export default function PlaceAddForm() {
                           render={({ field }) => (
                             <Select
                               value={field.value}
-                              onValueChange={field.onChange}
+                              onValueChange={(val) => {
+                                field.onChange(val);
+                                if (val === "Auction") setValue("price", "");
+                              }}
                             >
                               <SelectTrigger
                                 className={`w-full h-12 border-black/10 rounded-md py-8 ${

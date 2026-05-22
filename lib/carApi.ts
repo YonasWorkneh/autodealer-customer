@@ -67,6 +67,22 @@ export async function postCar(formData: FormData): Promise<Car> {
   });
 }
 
+export async function updateCar(id: string, formData: FormData): Promise<Car> {
+  const credential = await getCredentials();
+  const res = await fetch(`${API_BASE_URL}/inventory/cars/${id}/`, {
+    method: "PATCH",
+    body: formData,
+    headers: {
+      Authorization: `Bearer ${credential.access}`,
+    },
+  });
+  if (!res.ok) {
+    const errData = await res.json().catch(() => ({})) as Record<string, unknown>;
+    throw new Error(getBackendErrorMessage(errData, `Update failed: ${res.status} ${res.statusText}`));
+  }
+  return res.json() as Promise<Car>;
+}
+
 export async function getMyAds(id: number | undefined) {
   if (!id) return [];
   const credential = await getCredentials();

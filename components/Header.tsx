@@ -41,7 +41,7 @@ export default function Header({ color }: HeaderProps) {
 
   return (
     <header
-      className={`relative z-20 flex items-center justify-between px-6 md:px-40 py-4 ${color === "black" && "border-b"
+      className={`relative z-20 flex items-center justify-between px-6 md:px-10 lg:px-40 py-4 ${color === "black" && "border-b"
         }`}
     >
       {/* Logo */}
@@ -57,7 +57,7 @@ export default function Header({ color }: HeaderProps) {
       </Link>
 
       {/* Desktop Menu */}
-      <div className="hidden md:flex items-center space-x-10">
+      <div className="hidden lg:flex items-center space-x-6 xl:space-x-10">
         <Link
           href={"/"}
           className={linkClasses(
@@ -167,10 +167,10 @@ export default function Header({ color }: HeaderProps) {
         </Link>
       </div>
 
-      {/* Mobile Menu Icon */}
+      {/* Mobile/Tablet Menu Icon */}
       <button
         onClick={() => setIsOpen(true)}
-        className="md:hidden p-2 -mr-2"
+        className="lg:hidden p-2 -mr-2"
         aria-label="Open Menu"
       >
         <svg

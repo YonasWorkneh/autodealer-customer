@@ -11,6 +11,7 @@ import {
   fetchMakes,
   fetchModels,
   postCar,
+  updateCar,
   getMyAds,
   deleteCar,
   makeCarFavorite,
@@ -119,15 +120,15 @@ export function useUpdateCar(onError?: () => void, onSuccess?: () => void) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (formData: FormData) => postCar(formData),
+    mutationFn: ({ id, formData }: { id: string; formData: FormData }) =>
+      updateCar(id, formData),
     onError: () => {
-      console.log("error");
       onError?.();
     },
     onSuccess: () => {
-      // refresh list of cars after posting
       onSuccess?.();
       queryClient.invalidateQueries({ queryKey: ["cars"] });
+      queryClient.invalidateQueries({ queryKey: ["my-ads"] });
     },
   });
 }
