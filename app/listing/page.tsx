@@ -60,6 +60,10 @@ export default function CarMarketplace() {
     return data?.pages.flat() || [];
   }, [data]);
 
+  const handleFilterApply = useCallback((f: any) => setFilters(f), []);
+  const handleFilterClear = useCallback(() => setFilters({}), []);
+  const hasActiveFilters = Object.values(filters).some((v) => v !== undefined);
+
   // Intersection Observer for infinite scroll
   const observerTarget = useRef<HTMLDivElement>(null);
 
@@ -163,13 +167,28 @@ export default function CarMarketplace() {
 
       <div className="pt-16 px-4 sm:px-6 lg:px-50">
         {/* Mobile Filter Button */}
-        <div className="sm:hidden mb-4 flex justify-end">
+        <div className="sm:hidden mb-4 flex justify-end gap-2">
+          {hasActiveFilters && (
+            <Button
+              variant="outline"
+              onClick={handleFilterClear}
+              className="flex items-center gap-2"
+            >
+              <X className="h-4 w-4" />
+              Clear filters
+            </Button>
+          )}
           <Button
             onClick={() => setFilterOpen(true)}
             className="flex items-center gap-2"
           >
             <Filter className="h-4 w-4" />
             Filters
+            {hasActiveFilters && (
+              <span className="ml-0.5 bg-white text-primary rounded-full w-4 h-4 text-[10px] flex items-center justify-center font-bold leading-none">
+                •
+              </span>
+            )}
           </Button>
         </div>
 
@@ -178,8 +197,8 @@ export default function CarMarketplace() {
           <div className="hidden lg:block lg:col-span-1">
             <FilterSidebar
               initial={filters}
-              onApply={(f) => setFilters(f)}
-              onClear={() => setFilters({})}
+              onApply={handleFilterApply}
+              onClear={handleFilterClear}
             />
           </div>
 
@@ -537,29 +556,35 @@ export default function CarMarketplace() {
       {/* Footer */}
       <Footer />
 
-      {/* Mobile Filter Panel */}
-      {filterOpen && (
-        <div className="fixed inset-0 bg-black/30 z-50 flex justify-end">
-          <div className="bg-background w-3/4 max-w-xs p-4 h-full overflow-y-auto">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="font-bold text-lg text-foreground">Filters</h2>
-              <Button variant="ghost" onClick={() => setFilterOpen(false)}>
-                Close
-              </Button>
-            </div>
-            <FilterSidebar
-              close={() => setFilterOpen(false)}
-              initial={filters}
-              onApply={(f) => {
-                setFilters(f);
-              }}
-              onClear={() => {
-                setFilters({});
-              }}
-            />
+      {/* Mobile Filter Panel - always mounted so filters persist when closed */}
+      <div
+        className={`fixed inset-0 z-50 flex justify-end transition-opacity duration-300 ${
+          filterOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+        }`}
+      >
+        <div
+          className="flex-1 bg-black/30"
+          onClick={() => setFilterOpen(false)}
+        />
+        <div
+          className={`bg-background w-3/4 max-w-xs p-4 h-full overflow-y-auto shadow-xl transition-transform duration-300 ${
+            filterOpen ? "translate-x-0" : "translate-x-full"
+          }`}
+        >
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="font-bold text-lg text-foreground">Filters</h2>
+            <Button variant="ghost" onClick={() => setFilterOpen(false)}>
+              Close
+            </Button>
           </div>
+          <FilterSidebar
+            close={() => setFilterOpen(false)}
+            initial={filters}
+            onApply={handleFilterApply}
+            onClear={handleFilterClear}
+          />
         </div>
-      )}
+      </div>
 
       {detailOpened && selectedCar && (
         <CarDetailModal
