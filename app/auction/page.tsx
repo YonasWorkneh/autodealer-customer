@@ -136,7 +136,7 @@ const AuctionListView = () => {
         timeLeft: calculateTimeLeft(car.auction_end),
         endTime: formatEndTime(car.auction_end),
         activeBids: car.bids?.length || 0,
-        currentBid: `$${currentBid.toLocaleString(undefined, {
+        currentBid: `ETB${currentBid.toLocaleString(undefined, {
           minimumFractionDigits: 0,
           maximumFractionDigits: 0,
         })}`,

@@ -11,7 +11,7 @@ import { useState, useMemo, useEffect } from "react";
 import { useCar, usePlaceBid, useBidHistory } from "@/hooks/cars";
 import { useToast } from "@/hooks/use-toast";
 import { useUserStore } from "@/store/user";
-import type { FetchedCar } from "@/app/types/Car";
+import type { FetchedCar, FetchedCarDetail } from "@/app/types/Car";
 
 // Utility function to calculate time remaining
 const calculateTimeLeft = (endDate: string | null): string => {
@@ -68,12 +68,12 @@ const formatTimeAgo = (dateStr: string): string => {
 const getHighestBid = (bids: any[]): number => {
   if (!bids || bids.length === 0) return 0;
   return Math.max(
-    ...bids.map((bid) => parseFloat(bid.amount || bid.price || "0"))
+    ...bids.map((bid) => parseFloat(bid.amount || bid.price || "0")),
   );
 };
 
 // Utility function to format car details
-const formatCarDetails = (car: FetchedCar): string => {
+const formatCarDetails = (car: FetchedCarDetail): string => {
   const parts = [];
   if (car.mileage) parts.push(`${car.mileage.toLocaleString()} Miles`);
   if (car.exterior_color) parts.push(car.exterior_color);
@@ -122,7 +122,7 @@ const AuctionDetailView = () => {
       timeLeft: calculateTimeLeft(car.auction_end),
       endTime: formatEndTime(car.auction_end),
       activeBids: car.bids?.length || 0,
-      currentBid: `$${currentBid.toLocaleString(undefined, {
+      currentBid: `ETB${currentBid.toLocaleString(undefined, {
         minimumFractionDigits: 0,
         maximumFractionDigits: 0,
       })}`,
@@ -172,10 +172,11 @@ const AuctionDetailView = () => {
 
   const { mutate: placeBidMutation, isPending: isPlacingBid } = usePlaceBid(
     onBidSuccess,
-    onBidError
+    onBidError,
   );
 
-  const { data: bidHistory = [], isLoading: isBidHistoryLoading } = useBidHistory(id);
+  const { data: bidHistory = [], isLoading: isBidHistoryLoading } =
+    useBidHistory(id);
 
   const handlePlaceBid = () => {
     if (!user.email) {
@@ -606,7 +607,10 @@ const AuctionDetailView = () => {
           {isBidHistoryLoading ? (
             <div className="space-y-3">
               {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="flex justify-between items-center py-3 border-b border-gray-100">
+                <div
+                  key={i}
+                  className="flex justify-between items-center py-3 border-b border-gray-100"
+                >
                   <Skeleton className="h-4 w-32" />
                   <div className="flex items-center gap-6">
                     <Skeleton className="h-4 w-20" />
@@ -616,7 +620,9 @@ const AuctionDetailView = () => {
               ))}
             </div>
           ) : bidHistory.length === 0 ? (
-            <p className="text-gray-500 text-sm py-4">No bids placed yet. Be the first to bid!</p>
+            <p className="text-gray-500 text-sm py-4">
+              No bids placed yet. Be the first to bid!
+            </p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -629,14 +635,28 @@ const AuctionDetailView = () => {
                 </thead>
                 <tbody>
                   {[...bidHistory]
-                    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+                    .sort(
+                      (a, b) =>
+                        new Date(b.created_at).getTime() -
+                        new Date(a.created_at).getTime(),
+                    )
                     .map((bid, idx) => (
-                      <tr key={bid.id} className={`${idx < bidHistory.length - 1 ? "border-b border-gray-100" : ""}`}>
+                      <tr
+                        key={bid.id}
+                        className={`${idx < bidHistory.length - 1 ? "border-b border-gray-100" : ""}`}
+                      >
                         <td className="py-3 text-gray-900">
-                          {bid.profile.first_name} {bid.profile.last_name?.[0] ? `${bid.profile.last_name[0]}.` : ""}
+                          {bid.profile.first_name}{" "}
+                          {bid.profile.last_name?.[0]
+                            ? `${bid.profile.last_name[0]}.`
+                            : ""}
                         </td>
                         <td className="py-3 text-right font-semibold text-primary">
-                          ${parseFloat(bid.amount).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                          $
+                          {parseFloat(bid.amount).toLocaleString(undefined, {
+                            minimumFractionDigits: 0,
+                            maximumFractionDigits: 0,
+                          })}
                         </td>
                         <td className="py-3 text-right text-gray-500">
                           {formatTimeAgo(bid.created_at)}
