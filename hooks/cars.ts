@@ -259,8 +259,8 @@ export function usePostLead(
   onError?: (error: Error) => void,
 ) {
   return useMutation({
-    mutationFn: ({ name, contact }: { name: string; contact: string }) =>
-      postLead(name, contact),
+    mutationFn: ({ name, contact, carId }: { name: string; contact: string; carId: number }) =>
+      postLead(name, contact, carId),
     onSuccess: () => {
       onSuccess?.();
     },

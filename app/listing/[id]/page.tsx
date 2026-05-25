@@ -232,7 +232,7 @@ export default function CarListingPage() {
       }
     }
 
-    postLead({ name: contactName, contact: formattedContact });
+    postLead({ name: contactName, contact: formattedContact, carId: car!.id });
   };
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {

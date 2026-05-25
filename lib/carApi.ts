@@ -318,7 +318,7 @@ export async function fetchBidHistory(carId: string | number): Promise<BidHistor
   return res.all_bids ?? [];
 }
 
-export async function postLead(name: string, contact: string) {
+export async function postLead(name: string, contact: string, carId: number) {
   const credential = await getCredentials();
   try {
     const res = await fetch(`${API_BASE_URL}/sales/leads/`, {
@@ -331,6 +331,7 @@ export async function postLead(name: string, contact: string) {
         name: name,
         contact: contact,
         status: "inquiry",
+        car_id: carId,
       }),
     });
     if (!res.ok) {
