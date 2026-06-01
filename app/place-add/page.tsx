@@ -159,6 +159,7 @@ export default function PlaceAddForm() {
     null,
   );
   const [featuredImageIndex, setFeaturedImageIndex] = useState<number>(0);
+  const [refetchKey, setRefetchKey] = useState(0);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [showInspectionStep, setShowInspectionStep] = useState(false);
@@ -207,6 +208,8 @@ export default function PlaceAddForm() {
     data: carData,
     isLoading: isCarLoading,
     isError: isCarError,
+    refetch: refetchCar,
+    isFetching: isCarFetching,
   } = useCar(c_id ? c_id : "");
 
   const resolvedEditMakeId =
@@ -258,7 +261,12 @@ export default function PlaceAddForm() {
   };
 
   const onSuccessUpdate = () => {
-    resetFormToInitial();
+    toast({
+      title: "Success",
+      description: "Car updated successfully!",
+      variant: "success",
+    });
+    router.push("/mylistings");
   };
 
   const onSuccessPost = (car: { id: number }) => {
@@ -748,6 +756,7 @@ export default function PlaceAddForm() {
     effectiveMakeIdForModels,
     isModelsLoading,
     reset,
+    refetchKey,
   ]);
 
   useEffect(() => {
@@ -944,21 +953,19 @@ export default function PlaceAddForm() {
         );
       });
 
-      // IDs of images the user removed — these slots can be reused by new uploads
+      // IDs of images the user removed — sent to backend and slots reused by new uploads
       const removedImageIds = (carData?.images ?? [])
         .filter((img) => !existingImages.some((e) => e.id === img.id))
         .map((img) => img.id);
 
-      // New images: append after existing, pairing with freed IDs where available
+      removedImageIds.forEach((id, index) => {
+        carForm.append(`delete_images[${index}]`, String(id));
+      });
+
+      // New images: append after existing
       data.images.forEach((image, index) => {
         const globalIndex = existingImages.length + index;
         carForm.append(`uploaded_images[${globalIndex}].image_file`, image);
-        if (removedImageIds[index] !== undefined) {
-          carForm.append(
-            `uploaded_images[${globalIndex}].id`,
-            String(removedImageIds[index]),
-          );
-        }
         const isFeatured =
           featuredSource === "new" && index === featuredImageIndex;
         carForm.append(
@@ -1264,18 +1271,41 @@ export default function PlaceAddForm() {
               {c_id ? "Edit Car Details" : "Car Details Form"}
             </h1>
             {c_id && !isCarLoading && (
-              <Button
-                type="button"
-                variant="outline"
-                className="mt-4 gap-2 cursor-pointer"
-                onClick={() => {
-                  setInspectionModalError(null);
-                  setShowInspectionModal(true);
-                }}
-              >
-                <ClipboardCheck className="h-4 w-4" />
-                Add inspection details
-              </Button>
+              <div className="flex items-center justify-center gap-3 mt-4 flex-wrap">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="gap-2 cursor-pointer"
+                  onClick={() => {
+                    setInspectionModalError(null);
+                    setShowInspectionModal(true);
+                  }}
+                >
+                  <ClipboardCheck className="h-4 w-4" />
+                  Add inspection details
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="gap-2 cursor-pointer"
+                  disabled={isCarFetching}
+                  onClick={() => {
+                    existingImagesInitialized.current = false;
+                    editPrefillAppliedSig.current = null;
+                    setRefetchKey((k) => k + 1);
+                    refetchCar();
+                  }}
+                >
+                  {isCarFetching ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                  )}
+                  {isCarFetching ? "Reloading…" : "Reload form data"}
+                </Button>
+              </div>
             )}
           </div>
 

@@ -473,7 +473,7 @@ export default function CarListingPage() {
               alt={`${car.year} ${car.make} ${car.model}`}
               width={120}
               height={120}
-              className="w-full h-[250px] sm:h-[350px] md:h-[450px] lg:h-[550px] object-cover cursor-pointer"
+              className="w-full h-[250px] sm:h-[350px] md:h-[450px] lg:h-[550px] object-contain cursor-pointer"
               onClick={() => setIsModalOpen(true)}
             />
 
