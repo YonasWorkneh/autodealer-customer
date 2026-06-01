@@ -32,6 +32,7 @@ import {
   useUpdateFavorite,
   useRatingAnalytics,
   usePostLead,
+  usePopularCars,
 } from "@/hooks/cars";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
@@ -82,6 +83,9 @@ export default function CarListingPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [ip, setIp] = useState<string | null>(null);
+  const [carouselIndex, setCarouselIndex] = useState(0);
+  const [carouselVisible, setCarouselVisible] = useState(true);
+  const { data: popularCars } = usePopularCars();
 
   // Get dealer or broker ID (whichever is not null)
   const dealerOrBrokerId = car?.dealer || car?.broker;
@@ -388,6 +392,21 @@ export default function CarListingPage() {
   }, [car?.id]);
 
   useEffect(() => {
+    const cars = Array.isArray(popularCars)
+      ? popularCars
+      : ((popularCars as any)?.results ?? []);
+    if (cars.length < 2) return;
+    const interval = setInterval(() => {
+      setCarouselVisible(false);
+      setTimeout(() => {
+        setCarouselIndex((prev) => (prev + 1) % cars.length);
+        setCarouselVisible(true);
+      }, 400);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [popularCars]);
+
+  useEffect(() => {
     async function fetchIp() {
       try {
         const res = await fetch("https://api.ipify.org?format=json");
@@ -450,7 +469,6 @@ export default function CarListingPage() {
       </div>
     );
   }
-
   return (
     <div className="min-h-screen bg-background p-4">
       <Header color="black" />
@@ -824,32 +842,56 @@ export default function CarListingPage() {
               </CardContent>
             </Card>
 
-            {/* Inspection Badge */}
-            <Card className="bg-primary text-primary-foreground shadow-none">
-              <CardContent className="p-4">
-                <div className="text-center">
-                  <h3 className="font-semibold mb-1 text-sm sm:text-base">
-                    CARS INSPECTED
-                  </h3>
-                  <p className="text-xs sm:text-sm mb-3">by hulucars</p>
-                  <Button
-                    size="sm"
-                    className="bg-background text-foreground hover:bg-muted cursor-pointer"
-                  >
-                    View Listings
-                  </Button>
-                </div>
-                <div className="mt-2 flex justify-center">
-                  <Image
-                    src="/id6-orange.png"
-                    alt="Inspected car"
-                    width={120}
-                    height={120}
-                    className="w-1/2 h-auto object-cover rounded"
-                  />
-                </div>
-              </CardContent>
-            </Card>
+            {/* Popular Cars Carousel */}
+            {(() => {
+              const cars = Array.isArray(popularCars)
+                ? popularCars
+                : ((popularCars as any)?.results ?? []);
+              const current = cars[carouselIndex];
+              if (!cars.length) return null;
+              return (
+                <Card className="bg-primary text-primary-foreground shadow-none overflow-hidden">
+                  <CardContent className="p-4">
+                    <div className="text-center mb-3">
+                      <h3 className="font-semibold mb-1 text-sm sm:text-base">
+                        POPULAR CARS
+                      </h3>
+                      <p className="text-xs sm:text-sm opacity-80">
+                        on hulucars
+                      </p>
+                    </div>
+                    <div className="relative w-full h-28 rounded-lg overflow-hidden bg-white/10">
+                      <Image
+                        src={
+                          (current as any)?.featured_image || "/placeholder.svg"
+                        }
+                        alt={`${current?.make} ${current?.model}`}
+                        fill
+                        className={`object-contain transition-opacity duration-400 ${carouselVisible ? "opacity-100" : "opacity-0"}`}
+                      />
+                    </div>
+                    <p className={`mt-2 text-xs font-medium truncate text-center transition-opacity duration-400 ${carouselVisible ? "opacity-100" : "opacity-0"}`}>
+                      {current?.year} {current?.make} {current?.model}
+                    </p>
+                    <div className="flex justify-center gap-1 mt-3">
+                      {cars.slice(0, 6).map((_: any, i: number) => (
+                        <button
+                          key={i}
+                          onClick={() => {
+                            setCarouselVisible(false);
+                            setTimeout(() => {
+                              setCarouselIndex(i);
+                              setCarouselVisible(true);
+                            }, 400);
+                          }}
+                          className={`h-1.5 rounded-full transition-all duration-300 ${i === carouselIndex ? "w-4 bg-white" : "w-1.5 bg-white/40"}`}
+                        />
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })()}
           </div>
         </div>
 
