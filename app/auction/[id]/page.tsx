@@ -652,7 +652,7 @@ const AuctionDetailView = () => {
                             : ""}
                         </td>
                         <td className="py-3 text-right font-semibold text-primary">
-                          $
+                          ETB
                           {parseFloat(bid.amount).toLocaleString(undefined, {
                             minimumFractionDigits: 0,
                             maximumFractionDigits: 0,
