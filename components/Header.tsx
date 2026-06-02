@@ -118,7 +118,7 @@ export default function Header({ color }: HeaderProps) {
         )}
 
         <Link
-          href={user.email ? "profile" : "/signin"}
+          href={user.email ? "/profile" : "/signin"}
           className={linkClassesPlain()}
         >
           {user.email || profile?.first_name ? (
