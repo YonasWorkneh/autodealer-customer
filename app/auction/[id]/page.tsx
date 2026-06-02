@@ -122,7 +122,7 @@ const AuctionDetailView = () => {
       timeLeft: calculateTimeLeft(car.auction_end),
       endTime: formatEndTime(car.auction_end),
       activeBids: car.bids?.length || 0,
-      currentBid: `ETB${currentBid.toLocaleString(undefined, {
+      currentBid: `ETB ${currentBid.toLocaleString(undefined, {
         minimumFractionDigits: 0,
         maximumFractionDigits: 0,
       })}`,
@@ -652,7 +652,7 @@ const AuctionDetailView = () => {
                             : ""}
                         </td>
                         <td className="py-3 text-right font-semibold text-primary">
-                          ETB
+                          <span className="pr-1">ETB</span>
                           {parseFloat(bid.amount).toLocaleString(undefined, {
                             minimumFractionDigits: 0,
                             maximumFractionDigits: 0,
