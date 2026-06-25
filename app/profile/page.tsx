@@ -165,11 +165,9 @@ export default function UserProfile() {
     <>
       <Header color="black" />
       <div className="bg-white overflow-hidden px-6 sm:px-10 lg:px-50 py-10">
-        <div className="relative h-48 bg-gradient-to-r from-zinc-200 via-zinc-900/20 to-gray-200 rounded-t-xl" />
-
         {isLoading ? (
           // Skeleton Loading State
-          <div className="relative px-6 pb-6 -mt-10 animate-pulse">
+          <div className="relative px-6 pb-6 animate-pulse">
             <div className="w-28 h-28 bg-gray-200 rounded-full mb-6" />
             <div className="space-y-6">
               <div className="h-8 bg-gray-200 rounded w-1/3" />
@@ -190,7 +188,7 @@ export default function UserProfile() {
             </div>
           </div>
         ) : (
-          <div className="relative px-6 pb-6 -mt-10">
+          <div className="relative px-6 pb-6">
             {/* Avatar with camera icon */}
             <div className="relative w-28 h-28">
               <Avatar className="w-28 h-28">

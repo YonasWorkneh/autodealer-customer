@@ -80,6 +80,10 @@ export default function PricingPage() {
   ];
 
   const handleSelectPackage = (pkg: Package) => {
+    if (pkg.id === 3) {
+      window.open("https://erp.hulucar.com", "_self");
+      return;
+    }
     setSelectedPackage(pkg);
     setShowPaymentConfirmation(true);
   };

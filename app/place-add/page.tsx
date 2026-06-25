@@ -70,24 +70,11 @@ const formSchema = z
         (val) => val === "" || /^\d+$/.test(val),
         "Please enter a valid price",
       ),
-    salesType: z.string().min(1, "Sales type is required"),
     description: z.string().min(1, "Description is required"),
     images: z.array(z.instanceof(File)),
     bodyType: z.string().min(1, "Body type is required"),
     vin: z.string().min(1, "VIN is required"),
     origin: z.string().min(1, "Origin is required"),
-  })
-  .superRefine((data, ctx) => {
-    if (
-      data.salesType === "Fixed Price" &&
-      (!data.price || !/^\d+$/.test(data.price))
-    ) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Price is required",
-        path: ["price"],
-      });
-    }
   });
 
 type FormData = z.infer<typeof formSchema>;
@@ -192,7 +179,6 @@ export default function PlaceAddForm() {
       interiorColor: "",
       fuelType: "",
       price: "",
-      salesType: "",
       description: "",
       images: [],
       bodyType: "",
@@ -202,7 +188,6 @@ export default function PlaceAddForm() {
   });
 
   const watchedMake = watch("make");
-  const watchedSalesType = watch("salesType");
   const { data: makes, isLoading: isMakesLoading } = useMakes();
   const {
     data: carData,
@@ -238,7 +223,6 @@ export default function PlaceAddForm() {
       interiorColor: "",
       fuelType: "",
       price: "",
-      salesType: "",
       description: "",
       images: [],
       bodyType: "",
@@ -289,7 +273,6 @@ export default function PlaceAddForm() {
       interiorColor: "",
       fuelType: "",
       price: "",
-      salesType: "",
       description: "",
       images: [],
       bodyType: "",
@@ -361,7 +344,6 @@ export default function PlaceAddForm() {
     "Semi-Automatic",
     "Other",
   ];
-  const salesTypes = ["Auction", "Fixed Price"];
   const [technicalFeatures, setTechnicalFeatures] = useState<Feature[]>([
     {
       id: "tiptronic",
@@ -726,8 +708,6 @@ export default function PlaceAddForm() {
       interiorColor: carData.interior_color,
       fuelType: carData.fuel_type?.toLowerCase() || carData.fuel_type,
       price: String(parseInt(String(carData.price), 10)),
-      salesType:
-        carData.sale_type === "fixed_price" ? "Fixed Price" : "Auction",
       description: carData.description,
       bodyType: carData.body_type,
       vin: carData.vin ?? "",
@@ -858,9 +838,7 @@ export default function PlaceAddForm() {
             "vin",
             "origin",
           ]
-        : getValues("salesType") === "Auction"
-          ? ["salesType", "description"]
-          : ["price", "salesType", "description"];
+        : ["price", "description"];
 
     const isValid = await trigger(fieldsToValidate as any);
     if (!isValid) return;
@@ -931,12 +909,8 @@ export default function PlaceAddForm() {
       carForm.append("exterior_color", data.bodyColor);
       carForm.append("interior_color", data.interiorColor);
       carForm.append("fuel_type", data.fuelType);
-      if (data.salesType === "Fixed Price" && data.price)
-        carForm.append("price", data.price);
-      carForm.append(
-        "sales_type",
-        data.salesType === "Fixed Price" ? "fixed_price" : "auction",
-      );
+      if (data.price) carForm.append("price", data.price);
+      carForm.append("sales_type", "fixed_price");
       carForm.append("description", data.description);
       carForm.append("body_type", data.bodyType);
       carForm.append("vin", data.vin);
@@ -2030,81 +2004,34 @@ export default function PlaceAddForm() {
                         </kbd>
                       </p>
                     </div>
-                    {/* Price + Sales Type */}
-                    <div className="grid grid-cols-2 gap-4">
-                      {watchedSalesType !== "Auction" && (
-                        <div className="space-y-2">
-                          <Label
-                            htmlFor="price"
-                            className="text-sm text-gray-500"
-                          >
-                            Price
-                          </Label>
-                          <Controller
-                            name="price"
-                            control={control}
-                            render={({ field }) => (
-                              <Input
-                                {...field}
-                                id="price"
-                                type="number"
-                                placeholder="Enter price"
-                                className={`h-12 border-black/10 rounded-md py-8 ${
-                                  errors.price ? "border-red-500" : ""
-                                }`}
-                              />
-                            )}
-                          />
-                          {errors.price && (
-                            <p className="text-red-500 text-sm">
-                              {errors.price.message}
-                            </p>
-                          )}
-                        </div>
-                      )}
-                      <div
-                        className={`space-y-2 ${watchedSalesType === "Auction" ? "col-span-2" : ""}`}
+                    {/* Price */}
+                    <div className="space-y-2">
+                      <Label
+                        htmlFor="price"
+                        className="text-sm text-gray-500"
                       >
-                        <Label
-                          htmlFor="salesType"
-                          className="text-sm text-gray-500"
-                        >
-                          Sales Type
-                        </Label>
-                        <Controller
-                          name="salesType"
-                          control={control}
-                          render={({ field }) => (
-                            <Select
-                              value={field.value}
-                              onValueChange={(val) => {
-                                field.onChange(val);
-                                if (val === "Auction") setValue("price", "");
-                              }}
-                            >
-                              <SelectTrigger
-                                className={`w-full h-12 border-black/10 rounded-md py-8 ${
-                                  errors.salesType ? "border-red-500" : ""
-                                }`}
-                              >
-                                <SelectValue placeholder="Select sales type" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {salesTypes.map((sale) => (
-                                  <SelectItem key={sale} value={sale}>
-                                    {sale}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          )}
-                        />
-                        {errors.salesType && (
-                          <p className="text-red-500 text-sm">
-                            {errors.salesType.message}
-                          </p>
+                        Price
+                      </Label>
+                      <Controller
+                        name="price"
+                        control={control}
+                        render={({ field }) => (
+                          <Input
+                            {...field}
+                            id="price"
+                            type="number"
+                            placeholder="Enter price"
+                            className={`h-12 border-black/10 rounded-md py-8 ${
+                              errors.price ? "border-red-500" : ""
+                            }`}
+                          />
                         )}
-                      </div>
+                      />
+                      {errors.price && (
+                        <p className="text-red-500 text-sm">
+                          {errors.price.message}
+                        </p>
+                      )}
                     </div>
 
                     {/* Description */}

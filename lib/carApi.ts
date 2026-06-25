@@ -197,16 +197,7 @@ export async function getPopularCars() {
 }
 
 export async function getMarketData() {
-  const credential = await getCredentials();
-  try {
-    return await fetcher<MarketData>("/inventory/cars/buyer-analytics", {
-      headers: {
-        Authorization: `Bearer ${credential.access}`,
-      },
-    });
-  } catch (err) {
-    throw err;
-  }
+  return fetcher<MarketData>("/inventory/cars/buyer-analytics");
 }
 
 export async function placeBid(car: number, amount: number) {

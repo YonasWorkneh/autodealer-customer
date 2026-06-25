@@ -11,9 +11,8 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import { useState } from "react";
-import { Loader2, Key, TriangleAlert, EyeOff, Eye } from "lucide-react";
+import { Loader2, TriangleAlert, EyeOff, Eye } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
@@ -21,6 +20,8 @@ import { useForm } from "react-hook-form";
 import { signup } from "@/lib/auth/signup";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
+import { useUserStore } from "@/store/user";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function SignIn() {
   const [showPassword, setShowPassword] = useState<boolean>(false);
@@ -30,18 +31,27 @@ export default function SignIn() {
   const [err, setErr] = useState("");
   const { toast } = useToast();
   const router = useRouter();
+  const { setUser } = useUserStore();
+  const queryClient = useQueryClient();
 
   const onSubmit = async (data: any) => {
     try {
       setLoading(true);
       setErr("");
-      const user = await signup({ ...data, password2: data.password1 });
+      const response = await signup({
+        ...data,
+        password2: data.password1,
+        contact: `+251${data.contact.replace(/\D/g, "")}`,
+      });
+      setUser(response.user ?? response);
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
       toast({
         title: "Sign up Success",
-        description: "Signed up successfully. Log into your account.",
+        description: "Signed up successfully. Enjoy using hulucars.",
         variant: "success",
+        duration: 8000,
       });
-      router.push("/signin");
+      router.push("/");
     } catch (err) {
       toast({
         variant: "destructive",
@@ -76,23 +86,16 @@ export default function SignIn() {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4">
-          {/* <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 gap-2">
             <div className="grid gap-2">
               <Label htmlFor="fname">First Name</Label>
               <Input
                 id="fname"
                 type="text"
                 placeholder="John"
-                {...register("first_name", {
-                  required: "First name is required",
-                })}
+                {...register("first_name")}
                 onChange={() => setErr("")}
               />
-              {errors?.first_name && (
-                <p className="text-red-400 text-sm">
-                  {errors.first_name.message as string}
-                </p>
-              )}
             </div>
             <div className="grid gap-2">
               <Label htmlFor="lname">Last Name</Label>
@@ -100,18 +103,44 @@ export default function SignIn() {
                 id="lname"
                 type="text"
                 placeholder="Doe"
-                {...register("last_name", {
-                  required: "Last name is required",
-                })}
+                {...register("last_name")}
                 onChange={() => setErr("")}
               />
-              {errors?.last_name && (
-                <p className="text-red-400 text-sm">
-                  {errors.last_name.message as string}
-                </p>
-              )}
             </div>
-          </div> */}
+          </div>
+
+          <div className="grid gap-2">
+            <Label htmlFor="phone">Phone Number</Label>
+            <div className="flex">
+              <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-input bg-muted text-sm text-muted-foreground">
+                +251
+              </span>
+              <Input
+                id="phone"
+                type="tel"
+                placeholder="912345678"
+                className="rounded-l-none"
+                {...register("contact", {
+                  required: "Phone number is required",
+                  validate: (val: string) => {
+                    const digits = val.replace(/\D/g, "");
+                    if (digits.length !== 9) return "Phone number must be exactly 9 digits";
+                    if (!digits.startsWith("7") && !digits.startsWith("9"))
+                      return "Must start with 7 or 9";
+                    return true;
+                  },
+                  onChange: (e) => {
+                    e.target.value = e.target.value.replace(/\D/g, "").slice(0, 9);
+                    setErr("");
+                  },
+                })}
+              />
+            </div>
+            {errors?.contact && (
+              <p className="text-red-400 text-sm">{errors.contact.message as string}</p>
+            )}
+          </div>
+
           <div className="grid gap-2">
             <Label htmlFor="email">Email</Label>
             <Input
