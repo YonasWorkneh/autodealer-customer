@@ -149,7 +149,7 @@ export type FetchedCar = {
   status: "available" | "sold" | "reserved" | string;
   verification_status?: "pending" | "verified" | "rejected";
   featured_image: string;
-  seller: string;
+  seller: string | { id: number; name: string; contact_number?: string; type?: string; email?: string; is_verified?: boolean };
   created_at: string; // ISO timestamp
 };
 
