@@ -147,6 +147,7 @@ export type FetchedCar = {
     | string;
   sale_type: "fixed_price" | "auction" | string;
   status: "available" | "sold" | "reserved" | string;
+  verification_status?: "pending" | "verified" | "rejected";
   featured_image: string;
   seller: string;
   created_at: string; // ISO timestamp

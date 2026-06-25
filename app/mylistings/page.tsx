@@ -82,7 +82,7 @@ export default function MyListingsPage() {
     }
   };
   const [modalOpened, setModalOpened] = useState<boolean>(false);
-  const [underReviewOpen, setUnderReviewOpen] = useState(false);
+  const [blockedStatus, setBlockedStatus] = useState<"pending" | "rejected" | null>(null);
   const { toast } = useToast();
   const [id, setId] = useState<number>();
   const onSuccess = () => {
@@ -320,11 +320,20 @@ export default function MyListingsPage() {
                             <p className="text-xl font-bold text-gray-900 mb-3">
                                 {formatPrice(ad.price)}
                             </p>
-                            <Link href={`/mylistings/${ad.id}`}>
-                              <Button variant="outline" size="sm" className="cursor-pointer text-[#522084] my-2">
-                                View details
-                              </Button>
-                            </Link>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="cursor-pointer text-[#522084] my-2"
+                              onClick={() => {
+                                if (ad.verification_status === "pending" || ad.verification_status === "rejected") {
+                                  setBlockedStatus(ad.verification_status);
+                                } else {
+                                  router.push(`/mylistings/${ad.id}`);
+                                }
+                              }}
+                            >
+                              View details
+                            </Button>
                         </div>
 
                         <div className="pt-3 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500">
@@ -354,6 +363,51 @@ export default function MyListingsPage() {
                 isLoading={isDeleting}
               />
             )}
+
+            <Dialog open={!!blockedStatus} onOpenChange={() => setBlockedStatus(null)}>
+              <DialogContent className="max-w-md text-center">
+                <div className="flex flex-col items-center px-4 py-6">
+                  <div className={`mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full ${blockedStatus === "rejected" ? "bg-red-100" : "bg-amber-100"}`}>
+                    <svg
+                      className={`h-8 w-8 ${blockedStatus === "rejected" ? "text-red-500" : "text-amber-500"}`}
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth={1.5}
+                    >
+                      {blockedStatus === "rejected" ? (
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"
+                        />
+                      ) : (
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"
+                        />
+                      )}
+                    </svg>
+                  </div>
+                  <h2 className="text-2xl font-semibold text-slate-900 mb-3">
+                    {blockedStatus === "rejected" ? "Listing Rejected" : "Under Review"}
+                  </h2>
+                  <p className="text-slate-500 leading-relaxed mb-8">
+                    {blockedStatus === "rejected"
+                      ? "This listing has been rejected and is not visible to buyers. Please contact support for more information."
+                      : "This listing is currently going through our verification process. You will be able to view and edit it once the review is complete."}
+                  </p>
+                  <Button
+                    variant="outline"
+                    onClick={() => setBlockedStatus(null)}
+                    className="cursor-pointer"
+                  >
+                    Close
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
           </>
         )}
       </div>
