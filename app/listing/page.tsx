@@ -55,9 +55,15 @@ export default function CarMarketplace() {
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const { data: profile } = useProfile();
 
-  // Flatten all pages into a single array
+  // Flatten all pages and deduplicate by id
   const cars = useMemo(() => {
-    return data?.pages.flat() || [];
+    const flat = data?.pages.flat() || [];
+    const seen = new Set<number>();
+    return flat.filter((c) => {
+      if (seen.has(c.id)) return false;
+      seen.add(c.id);
+      return true;
+    });
   }, [data]);
 
   const handleFilterApply = useCallback((f: any) => setFilters(f), []);

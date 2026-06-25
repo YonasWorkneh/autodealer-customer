@@ -164,7 +164,6 @@ export default function PlaceAddForm() {
     setValue,
     watch,
     reset,
-    getValues,
   } = useForm<FormData>({
     resolver: zodResolver(formSchema),
     mode: "onChange",
@@ -844,21 +843,11 @@ export default function PlaceAddForm() {
     if (!isValid) return;
 
     if (step === 2) {
-      // In create mode, require at least one image
-      if (!c_id && images.length === 0) {
+      const totalImages = images.length + existingImages.length;
+      if (totalImages < 5) {
         toast({
-          title: "Images required",
-          description: "Please upload at least one image.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // In edit mode, require at least one image remaining (existing or new)
-      if (c_id && existingImages.length === 0 && images.length === 0) {
-        toast({
-          title: "Images required",
-          description: "Please keep or upload at least one image.",
+          title: "Not enough images",
+          description: `Please upload at least 5 images. You currently have ${totalImages}.`,
           variant: "destructive",
         });
         return;
@@ -1905,6 +1894,11 @@ export default function PlaceAddForm() {
                         Upload car images. Click the checkbox to mark the main
                         image for your listing.
                       </p>
+                      <p className={`text-xs font-medium ${images.length + existingImages.length < 5 ? "text-amber-500" : "text-green-600"}`}>
+                        {images.length + existingImages.length < 5
+                          ? `Minimum 5 images required — ${images.length + existingImages.length}/5 uploaded`
+                          : `${images.length + existingImages.length} images uploaded ✓`}
+                      </p>
                       <div className="grid grid-cols-3 gap-4">
                         <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-gray-400">
                           <Plus className="w-6 h-6 text-gray-500" />
@@ -2004,6 +1998,28 @@ export default function PlaceAddForm() {
                         </kbd>
                       </p>
                     </div>
+                    {/* Sales Type */}
+                    <div className="space-y-2">
+                      <Label className="text-sm text-gray-500">Sale Type</Label>
+                      <div className="flex gap-2">
+                        <div className="flex-1 flex items-center justify-center gap-2 h-12 rounded-md border-2 border-primary bg-primary/5 text-primary text-sm font-medium cursor-default">
+                          Fixed Price
+                        </div>
+                        <button
+                          type="button"
+                          className="flex-1 flex items-center justify-center gap-2 h-12 rounded-md border border-black/10 text-sm text-gray-500 hover:bg-gray-50 cursor-pointer"
+                          onClick={() =>
+                            toast({
+                              description: "ℹ️ Auction listings are not available yet. Please use Fixed Price.",
+                              duration: 4000,
+                            })
+                          }
+                        >
+                          Auction
+                        </button>
+                      </div>
+                    </div>
+
                     {/* Price */}
                     <div className="space-y-2">
                       <Label

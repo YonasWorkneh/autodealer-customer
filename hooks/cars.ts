@@ -43,10 +43,10 @@ export function useCarsInfinite() {
     queryKey: ["cars-infinite"],
     queryFn: ({ pageParam = 1 }) => fetchCars(pageParam as number, 20),
     getNextPageParam: (lastPage, allPages) => {
-      // If last page has fewer items than limit, we've reached the end
-      if (lastPage.length < 20) {
-        return undefined;
-      }
+      if (lastPage.length < 20) return undefined;
+      const seenIds = new Set(allPages.slice(0, -1).flat().map((c) => c.id));
+      const hasNewItems = lastPage.some((c) => !seenIds.has(c.id));
+      if (!hasNewItems) return undefined;
       return allPages.length + 1;
     },
     initialPageParam: 1,

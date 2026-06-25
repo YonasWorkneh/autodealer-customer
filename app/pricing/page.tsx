@@ -199,6 +199,7 @@ export default function PricingPage() {
               selectedPackage={selectedPackage}
               onClose={handleClosePayment}
               onSubmit={handlePaymentSubmit}
+              prefillContact={profile?.contact}
             />
           )}
       </div>

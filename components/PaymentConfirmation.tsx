@@ -28,25 +28,27 @@ interface PaymentConfirmationProps {
   selectedPackage: Package;
   onClose: () => void;
   onSubmit: (paymentData: any) => void;
+  prefillContact?: string;
 }
 
 export default function PaymentConfirmation({
   selectedPackage,
   onClose,
   onSubmit,
+  prefillContact,
 }: PaymentConfirmationProps) {
   const [paymentMethod, setPaymentMethod] = useState("");
   const [paymentProof, setPaymentProof] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // ✅ Profile details state
   const [profileInputs, setProfileInputs] = useState({
     national_id: "",
-    telebirr_account: "",
+    telebirr_account: prefillContact ?? "",
     company_name: "",
     license_no: "",
     tax_id: "",
   });
+  const [editingPhone, setEditingPhone] = useState(!prefillContact);
 
   const handleInputChange = (field: string, value: string) => {
     setProfileInputs((prev) => ({ ...prev, [field]: value }));
@@ -159,14 +161,31 @@ export default function PaymentConfirmation({
                       handleInputChange("national_id", e.target.value)
                     }
                   />
-                  <Input
-                    className="w-full border-gray-300 rounded-md text-left !py-8"
-                    placeholder="Telebirr account"
-                    value={profileInputs.telebirr_account}
-                    onChange={(e) =>
-                      handleInputChange("telebirr_account", e.target.value)
-                    }
-                  />
+                  {editingPhone ? (
+                    <Input
+                      autoFocus
+                      className="w-full border-gray-300 rounded-md text-left !py-8"
+                      placeholder="Phone Number"
+                      value={profileInputs.telebirr_account}
+                      onChange={(e) =>
+                        handleInputChange("telebirr_account", e.target.value)
+                      }
+                    />
+                  ) : (
+                    <div className="flex items-center justify-between border border-gray-300 rounded-md px-4 py-4 bg-gray-50">
+                      <div>
+                        <p className="text-xs text-gray-400 mb-0.5">Phone Number</p>
+                        <p className="text-sm font-medium text-gray-800">{profileInputs.telebirr_account}</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setEditingPhone(true)}
+                        className="text-xs font-semibold text-primary hover:underline ml-4 shrink-0"
+                      >
+                        Change
+                      </button>
+                    </div>
+                  )}
                 </>
               ) : (
                 <>
@@ -192,14 +211,31 @@ export default function PaymentConfirmation({
                     value={profileInputs.tax_id}
                     onChange={(e) => handleInputChange("tax_id", e.target.value)}
                   />
-                  <Input
-                    className="w-full border-gray-300 rounded-md text-left !py-8"
-                    placeholder="Telebirr account"
-                    value={profileInputs.telebirr_account}
-                    onChange={(e) =>
-                      handleInputChange("telebirr_account", e.target.value)
-                    }
-                  />
+                  {editingPhone ? (
+                    <Input
+                      autoFocus
+                      className="w-full border-gray-300 rounded-md text-left !py-8"
+                      placeholder="Phone Number"
+                      value={profileInputs.telebirr_account}
+                      onChange={(e) =>
+                        handleInputChange("telebirr_account", e.target.value)
+                      }
+                    />
+                  ) : (
+                    <div className="flex items-center justify-between border border-gray-300 rounded-md px-4 py-4 bg-gray-50">
+                      <div>
+                        <p className="text-xs text-gray-400 mb-0.5">Phone Number</p>
+                        <p className="text-sm font-medium text-gray-800">{profileInputs.telebirr_account}</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setEditingPhone(true)}
+                        className="text-xs font-semibold text-primary hover:underline ml-4 shrink-0"
+                      >
+                        Change
+                      </button>
+                    </div>
+                  )}
                 </>
               )}
             </div>

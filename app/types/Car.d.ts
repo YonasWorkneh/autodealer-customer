@@ -12,6 +12,8 @@ export interface Car {
     is_verified: boolean;
     name: string;
     type: "dealer" | "broker" | "buyer";
+    email?: string;
+    contact_number?: string;
   };
   seller_average_rating?: number;
 
@@ -165,6 +167,8 @@ export type FetchedCarDetail = {
     is_verified: boolean;
     name: string;
     type: "dealer" | "broker" | "buyer";
+    email?: string;
+    contact_number?: string;
   };
   seller_average_rating: number | null;
 
