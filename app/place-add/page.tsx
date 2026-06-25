@@ -2033,10 +2033,16 @@ export default function PlaceAddForm() {
                         control={control}
                         render={({ field }) => (
                           <Input
-                            {...field}
                             id="price"
-                            type="number"
+                            type="text"
+                            inputMode="numeric"
                             placeholder="Enter price"
+                            value={field.value ? Number(field.value).toLocaleString("en-US") : ""}
+                            onChange={(e) => {
+                              const raw = e.target.value.replace(/[^\d]/g, "");
+                              const clean = raw === "" ? "" : raw.replace(/^0+/, "") || "";
+                              field.onChange(clean);
+                            }}
                             className={`h-12 border-black/10 rounded-md py-8 ${
                               errors.price ? "border-red-500" : ""
                             }`}

@@ -26,6 +26,10 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+} from "@/components/ui/dialog";
 import { useRouter } from "next/navigation";
 import Modal from "@/components/Modal";
 import { useToast } from "@/hooks/use-toast";
@@ -38,7 +42,8 @@ interface CarAd {
   model: string;
   year: number;
   price: string;
-  status: string; // "available", "draft", etc.
+  status: string;
+  verification_status?: string;
   updated_at: string;
   created_at: string;
 }
@@ -77,6 +82,7 @@ export default function MyListingsPage() {
     }
   };
   const [modalOpened, setModalOpened] = useState<boolean>(false);
+  const [underReviewOpen, setUnderReviewOpen] = useState(false);
   const { toast } = useToast();
   const [id, setId] = useState<number>();
   const onSuccess = () => {
