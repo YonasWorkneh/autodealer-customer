@@ -165,7 +165,7 @@ export default function UserProfile() {
   return (
     <>
       <Header color="black" />
-      <div className="bg-white overflow-hidden px-6 sm:px-10 lg:px-50 py-10">
+      <div className="overflow-hidden px-6 sm:px-10 lg:px-50 py-10">
         {isLoading ? (
           // Skeleton Loading State
           <div className="relative px-6 pb-6 animate-pulse">
@@ -190,8 +190,8 @@ export default function UserProfile() {
           </div>
         ) : (
           <div className="relative px-6 pb-6">
-            {/* Avatar with camera icon */}
-            <div className="relative w-28 h-28">
+            {/* Avatar */}
+            <div className="relative w-28 h-28 mb-6">
               <Avatar className="w-28 h-28">
                 <AvatarImage
                   src={preview || profile?.image_url}
@@ -206,8 +206,6 @@ export default function UserProfile() {
                   )}
                 </AvatarFallback>
               </Avatar>
-
-              {/* Hidden file input */}
               <input
                 type="file"
                 accept="image/*"
@@ -215,8 +213,6 @@ export default function UserProfile() {
                 onChange={handleFileChange}
                 className="hidden"
               />
-
-              {/* Camera icon overlay */}
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
@@ -226,38 +222,40 @@ export default function UserProfile() {
               </button>
             </div>
 
-            <form onSubmit={handleSubmit(onSubmit)} className="mt-6">
-              <h1 className="text-2xl font-bold text-black mb-2">
-                {[profile?.first_name, profile?.last_name]
-                  .filter(Boolean)
-                  .join(" ") || " "}
-              </h1>
-              <p className="text-gray-600 mb-6">{profile?.address}</p>
+            {/* 2-column layout */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+              {/* Left: profile form */}
+              <form onSubmit={handleSubmit(onSubmit)}>
+                <h1 className="text-2xl font-bold text-black mb-2">
+                  {[profile?.first_name, profile?.last_name]
+                    .filter(Boolean)
+                    .join(" ") || " "}
+                </h1>
+                <p className="text-gray-600 mb-6">{profile?.address}</p>
 
-              <div className="space-y-6">
-                {/* Name */}
-                <div>
-                  <Label className="text-sm font-medium text-black mb-3 block">
-                    Name
-                  </Label>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <Input
-                      id="firstName"
-                      placeholder="First name"
-                      className="bg-gray-50 border-gray-200 focus:border-black focus:ring-black py-6"
-                      {...register("first_name")}
-                    />
-                    <Input
-                      id="lastName"
-                      placeholder="Last name"
-                      className="bg-gray-50 border-gray-200 focus:border-black focus:ring-black py-6"
-                      {...register("last_name")}
-                    />
+                <div className="space-y-6">
+                  {/* Name */}
+                  <div>
+                    <Label className="text-sm font-medium text-black mb-3 block">
+                      Name
+                    </Label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <Input
+                        id="firstName"
+                        placeholder="First name"
+                        className="bg-gray-50 border-gray-200 focus:border-black focus:ring-black py-6"
+                        {...register("first_name")}
+                      />
+                      <Input
+                        id="lastName"
+                        placeholder="Last name"
+                        className="bg-gray-50 border-gray-200 focus:border-black focus:ring-black py-6"
+                        {...register("last_name")}
+                      />
+                    </div>
                   </div>
-                </div>
 
-                {/* Email + Contact */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {/* Address + Contact */}
                   <div>
                     <Label
                       className="text-sm font-medium text-black mb-3 block"
@@ -269,7 +267,6 @@ export default function UserProfile() {
                       <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
                       <Input
                         id="address"
-                        // placeholder=""
                         className="pl-10 bg-gray-50 border-gray-200 focus:border-black focus:ring-black py-6"
                         {...register("address")}
                       />
@@ -292,59 +289,56 @@ export default function UserProfile() {
                     </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Actions */}
-              <div className="flex flex-col sm:flex-row justify-end gap-4 mt-8 pt-6 border-t border-gray-200">
-                <Button
-                  variant="outline"
-                  type="button"
-                  className="flex items-center gap-2 w-full sm:w-auto py-6 min-w-[100px] cursor-pointer"
-                  onClick={handleLogout}
-                >
-                  {loggingOut ? (
-                    <Loader2 size={16} className="animate-spin" />
-                  ) : (
-                    <>
-                      <LucideLogOut size={16} />
-                      <span>Log out</span>
-                    </>
-                  )}
-                </Button>
-
-                <Button
-                  type="submit"
-                  disabled={isUpdating}
-                  className="bg-primary text-primary-foreground hover:bg-primary-hover w-full sm:w-auto py-6 cursor-pointer min-w-[125px]"
-                >
-                  {isUpdating ? (
-                    <Loader2 size={16} className="animate-spin" />
-                  ) : (
-                    "Save changes"
-                  )}
-                </Button>
-              </div>
-            </form>
-
-            {/* Change Password Section */}
-            <div className="mt-12 pt-12 border-t border-gray-200">
-              <div className="flex items-center gap-2 mb-6">
-                <div className="p-2 bg-secondary rounded-lg">
-                  <Lock className="w-5 h-5 text-secondary-foreground" />
+                {/* Actions */}
+                <div className="flex flex-col sm:flex-row justify-end gap-4 mt-8 pt-6 border-t border-gray-200">
+                  <Button
+                    variant="outline"
+                    type="button"
+                    className="flex items-center gap-2 w-full sm:w-auto py-6 min-w-[100px] cursor-pointer"
+                    onClick={handleLogout}
+                  >
+                    {loggingOut ? (
+                      <Loader2 size={16} className="animate-spin" />
+                    ) : (
+                      <>
+                        <LucideLogOut size={16} />
+                        <span>Log out</span>
+                      </>
+                    )}
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={isUpdating}
+                    className="bg-primary text-primary-foreground hover:bg-primary-hover w-full sm:w-auto py-6 cursor-pointer min-w-[125px]"
+                  >
+                    {isUpdating ? (
+                      <Loader2 size={16} className="animate-spin" />
+                    ) : (
+                      "Save changes"
+                    )}
+                  </Button>
                 </div>
-                <div>
-                  <h2 className="text-xl font-bold text-black">Change Password</h2>
-                  <p className="text-sm text-gray-500">
-                    Update your password to keep your account secure
-                  </p>
-                </div>
-              </div>
+              </form>
 
-              <form
-                onSubmit={handlePasswordSubmit(onPasswordSubmit)}
-                className="space-y-4 max-w-2xl"
-              >
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Right: change password */}
+              <div className="lg:border-l lg:border-gray-200 lg:pl-10">
+                <div className="flex items-center gap-2 mb-6">
+                  <div className="p-2 bg-secondary rounded-lg">
+                    <Lock className="w-5 h-5 text-secondary-foreground" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-black">Change Password</h2>
+                    <p className="text-sm text-gray-500">
+                      Update your password to keep your account secure
+                    </p>
+                  </div>
+                </div>
+
+                <form
+                  onSubmit={handlePasswordSubmit(onPasswordSubmit)}
+                  className="space-y-4"
+                >
                   <div>
                     <Label className="text-sm font-medium text-black mb-2 block">
                       New Password
@@ -367,11 +361,7 @@ export default function UserProfile() {
                         onClick={() => setShowNewPassword(!showNewPassword)}
                         className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-black transition-colors"
                       >
-                        {showNewPassword ? (
-                          <EyeOff size={20} />
-                        ) : (
-                          <Eye size={20} />
-                        )}
+                        {showNewPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                       </button>
                     </div>
                     {passwordErrors.new_password && (
@@ -399,16 +389,10 @@ export default function UserProfile() {
                       />
                       <button
                         type="button"
-                        onClick={() =>
-                          setShowConfirmPassword(!showConfirmPassword)
-                        }
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                         className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-black transition-colors"
                       >
-                        {showConfirmPassword ? (
-                          <EyeOff size={20} />
-                        ) : (
-                          <Eye size={20} />
-                        )}
+                        {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                       </button>
                     </div>
                     {passwordErrors.confirm_password && (
@@ -417,21 +401,21 @@ export default function UserProfile() {
                       </p>
                     )}
                   </div>
-                </div>
 
-                <div className="flex justify-end pt-4">
-                  <Button
-                    type="submit"
-                    disabled={isChangingPassword}
-                    className="bg-primary text-primary-foreground hover:bg-primary-hover w-full sm:w-auto py-6 px-8 cursor-pointer"
-                  >
-                    {isChangingPassword ? (
-                      <Loader2 size={16} className="animate-spin mr-2" />
-                    ) : null}
-                    Update Password
-                  </Button>
-                </div>
-              </form>
+                  <div className="flex justify-end pt-4">
+                    <Button
+                      type="submit"
+                      disabled={isChangingPassword}
+                      className="bg-primary text-primary-foreground hover:bg-primary-hover w-full sm:w-auto py-6 px-8 cursor-pointer"
+                    >
+                      {isChangingPassword ? (
+                        <Loader2 size={16} className="animate-spin mr-2" />
+                      ) : null}
+                      Update Password
+                    </Button>
+                  </div>
+                </form>
+              </div>
             </div>
           </div>
         )}

@@ -6,7 +6,7 @@ import { Toaster } from "@/components/ui/toaster";
 import Session from "./Session";
 
 export const metadata: Metadata = {
-  title: "hulucars",
+  title: "HuluCars",
 };
 
 export default function RootLayout({
@@ -17,7 +17,8 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+        <link rel="shortcut icon" href="/favicon.svg" type="image/svg+xml" />
       </head>
       <body>
         <Session>
