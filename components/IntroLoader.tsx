@@ -19,8 +19,8 @@ export default function IntroLoader({ children }: { children: React.ReactNode })
     }
     introPlayed = true;
 
-    const t1 = setTimeout(() => setPhase("fading"), DRAW_MS + HOLD_MS);
-    const t2 = setTimeout(() => setPhase("done"), DRAW_MS + HOLD_MS + FADE_MS);
+    const t1 = setTimeout(() => setPhase("fading"), DRAW_MS);
+    const t2 = setTimeout(() => setPhase("done"), DRAW_MS + FADE_MS);
     return () => { clearTimeout(t1); clearTimeout(t2); };
   }, []);
 
