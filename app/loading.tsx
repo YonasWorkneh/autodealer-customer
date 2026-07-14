@@ -1,11 +1,9 @@
-import Image from "next/image";
+import LogoLoader from "@/components/LogoLoader";
 
 export default function Loading() {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center">
-      <div className="flex flex-col items-center">
-        <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-zinc-900 mb-4"></div>
-      </div>
+    <div className="min-h-screen flex items-center justify-center bg-background">
+      <LogoLoader className="w-72 h-72 animate-draw" />
     </div>
   );
 }

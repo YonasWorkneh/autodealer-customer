@@ -4,6 +4,7 @@ import { GeistMono } from "geist/font/mono";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import Session from "./Session";
+import IntroLoader from "@/components/IntroLoader";
 
 const SITE_URL = "https://hulucars.com";
 const SITE_NAME = "HuluCars";
@@ -153,7 +154,9 @@ export default function RootLayout({
       </head>
       <body>
         <Session>
-          <div className="root">{children}</div>
+          <IntroLoader>
+            <div className="root">{children}</div>
+          </IntroLoader>
         </Session>
         <Toaster />
       </body>
