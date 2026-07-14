@@ -147,8 +147,9 @@ export default function Header({ color }: HeaderProps) {
             if (!user.email) {
               e.preventDefault();
               toast({
-                description:
-                  "❌   Log in or create an account to sell your car.",
+                title: "Login required",
+                description: "Log in or create an account to sell your car.",
+                variant: "destructive",
               });
               return;
             }
@@ -314,8 +315,9 @@ export default function Header({ color }: HeaderProps) {
                     if (!user.email) {
                       e.preventDefault();
                       toast({
-                        description:
-                          "❌ Log in or create an account to sell your car.",
+                        title: "Login required",
+                        description: "Log in or create an account to sell your car.",
+                        variant: "destructive",
                       });
                       return;
                     }
