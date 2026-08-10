@@ -49,11 +49,16 @@ import {
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 
+// Sentinel value used for the "Other" option in the Make / Model selects
+const OTHER_ID = -1;
+
 // Validation schema
 const formSchema = z
   .object({
-    make: z.number().refine((val) => val > 0, "Please select a make"),
-    model: z.number().refine((val) => val > 0, "Please select a model"),
+    make: z.number(),
+    model: z.number(),
+    makeOther: z.string().optional(),
+    modelOther: z.string().optional(),
     year: z.string().min(1, "Please select a year"),
     mileage: z
       .string()
@@ -75,6 +80,41 @@ const formSchema = z
     bodyType: z.string().min(1, "Body type is required"),
     vin: z.string().min(1, "VIN is required"),
     origin: z.string().min(1, "Origin is required"),
+  })
+  .superRefine((data, ctx) => {
+    if (data.make === OTHER_ID) {
+      if (!data.makeOther?.trim()) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["makeOther"],
+          message: "Please enter the make name",
+        });
+      }
+    } else if (!(data.make > 0)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["make"],
+        message: "Please select a make",
+      });
+    }
+
+    // A custom (Other) make has no model list to pick from, so the model is
+    // always free text in that case regardless of the `model` sentinel value.
+    if (data.make === OTHER_ID || data.model === OTHER_ID) {
+      if (!data.modelOther?.trim()) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["modelOther"],
+          message: "Please enter the model name",
+        });
+      }
+    } else if (!(data.model > 0)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["model"],
+        message: "Please select a model",
+      });
+    }
   });
 
 type FormData = z.infer<typeof formSchema>;
@@ -170,6 +210,8 @@ export default function PlaceAddForm() {
     defaultValues: {
       make: 0,
       model: 0,
+      makeOther: "",
+      modelOther: "",
       year: "",
       mileage: "",
       engine: "",
@@ -187,6 +229,7 @@ export default function PlaceAddForm() {
   });
 
   const watchedMake = watch("make");
+  const watchedModel = watch("model");
   const { data: makes, isLoading: isMakesLoading } = useMakes();
   const {
     data: carData,
@@ -214,6 +257,8 @@ export default function PlaceAddForm() {
     reset({
       make: 0,
       model: 0,
+      makeOther: "",
+      modelOther: "",
       year: "",
       mileage: "",
       engine: "",
@@ -264,6 +309,8 @@ export default function PlaceAddForm() {
     reset({
       make: 0,
       model: 0,
+      makeOther: "",
+      modelOther: "",
       year: "",
       mileage: "",
       engine: "",
@@ -656,38 +703,59 @@ export default function PlaceAddForm() {
     }
     if (!carData || !makes?.length) return;
 
-    const makeId = resolveMakeId(carData, makes);
-    if (makeId == null) return;
+    const resolvedMakeId = resolveMakeId(carData, makes);
+    const makeNameFallback = String(
+      carData.make ?? carData.make_ref ?? "",
+    ).trim();
+    // If the make can't be matched to a known option, fall back to "Other" with the raw name — but only if we have a name to show; otherwise there's nothing to prefill.
+    if (resolvedMakeId == null && !makeNameFallback) return;
+    const makeId = resolvedMakeId ?? OTHER_ID;
 
-    const modelFromNumeric = parsePositiveId(carData.model_ref);
-    const modelOptions: Model[] | undefined = models;
+    let modelId: number;
+    let modelNameFallback = "";
 
-    // Only treat as "need name / list lookup" when list is present; `undefined` list means still loading or refetch gap — do not fall through to modelId 0
-    const needsModelsForName =
-      modelFromNumeric == null ||
-      (Array.isArray(modelOptions) &&
-        modelOptions.length > 0 &&
-        !modelOptions.some((m) => m.id === modelFromNumeric));
+    if (makeId === OTHER_ID) {
+      // Unrecognized make has no model list to match against — the model is free text too.
+      modelNameFallback = String(
+        carData.model ?? carData.model_ref ?? "",
+      ).trim();
+      modelId = OTHER_ID;
+    } else {
+      const modelFromNumeric = parsePositiveId(carData.model_ref);
+      const modelOptions: Model[] | undefined = models;
 
-    if (
-      modelFromNumeric != null &&
-      !Array.isArray(modelOptions) &&
-      isModelsLoading
-    ) {
-      return;
-    }
+      // Only treat as "need name / list lookup" when list is present; `undefined` list means still loading or refetch gap — do not fall through to modelId 0
+      const needsModelsForName =
+        modelFromNumeric == null ||
+        (Array.isArray(modelOptions) &&
+          modelOptions.length > 0 &&
+          !modelOptions.some((m) => m.id === modelFromNumeric));
 
-    if (needsModelsForName) {
-      if (effectiveMakeIdForModels !== makeId) return;
-      if (!modelOptions?.length) return;
-    }
+      if (
+        modelFromNumeric != null &&
+        !Array.isArray(modelOptions) &&
+        isModelsLoading
+      ) {
+        return;
+      }
 
-    const modelId = needsModelsForName
-      ? resolveModelId(carData, modelOptions)
-      : (modelFromNumeric ?? 0);
+      if (needsModelsForName) {
+        if (effectiveMakeIdForModels !== makeId) return;
+        if (!modelOptions?.length) return;
+      }
 
-    if (modelId <= 0 && (carData.model || carData.model_ref)) {
-      return;
+      const resolvedModelId = needsModelsForName
+        ? resolveModelId(carData, modelOptions)
+        : (modelFromNumeric ?? 0);
+
+      if (resolvedModelId > 0) {
+        modelId = resolvedModelId;
+      } else {
+        modelNameFallback = String(
+          carData.model ?? carData.model_ref ?? "",
+        ).trim();
+        modelId = modelNameFallback ? OTHER_ID : 0;
+      }
     }
 
     const prefillSig = `${c_id}|${carData.updated_at}|${makeId}|${modelId}`;
@@ -699,6 +767,8 @@ export default function PlaceAddForm() {
     reset({
       make: makeId,
       model: modelId,
+      makeOther: makeId === OTHER_ID ? makeNameFallback : "",
+      modelOther: modelId === OTHER_ID ? modelNameFallback : "",
       year: carData.year.toString(),
       mileage: carData.mileage.toString(),
       engine: carData.engine,
@@ -825,6 +895,8 @@ export default function PlaceAddForm() {
         ? [
             "make",
             "model",
+            "makeOther",
+            "modelOther",
             "year",
             "mileage",
             "engine",
@@ -888,8 +960,17 @@ export default function PlaceAddForm() {
       const carForm = new FormData();
 
       // Add all form fields to FormData
-      carForm.append("make_ref", data.make.toString());
-      carForm.append("model_ref", data.model.toString());
+      if (data.make === OTHER_ID) {
+        carForm.append("make", (data.makeOther ?? "").trim());
+      } else {
+        carForm.append("make_ref", data.make.toString());
+      }
+
+      if (data.make === OTHER_ID || data.model === OTHER_ID) {
+        carForm.append("model", (data.modelOther ?? "").trim());
+      } else {
+        carForm.append("model_ref", data.model.toString());
+      }
       carForm.append("year", data.year);
       carForm.append("mileage", data.mileage);
       carForm.append("condition", parseInt(data.mileage) > 0 ? "used" : "new");
@@ -1453,8 +1534,13 @@ export default function PlaceAddForm() {
                           <Select
                             value={field.value ? field.value.toString() : ""}
                             onValueChange={(value) => {
-                              field.onChange(Number(value));
+                              const num = Number(value);
+                              field.onChange(num);
                               setValue("model", 0); // reset model when make changes
+                              setValue("modelOther", "");
+                              if (num !== OTHER_ID) {
+                                setValue("makeOther", "");
+                              }
                             }}
                           >
                             <SelectTrigger className="w-full h-12 border-black/10 rounded-md py-8">
@@ -1466,14 +1552,19 @@ export default function PlaceAddForm() {
                                   Loading...
                                 </SelectItem>
                               ) : (
-                                makes?.map((make: any) => (
-                                  <SelectItem
-                                    key={make.id}
-                                    value={make.id.toString()}
-                                  >
-                                    {make.name}
+                                <>
+                                  {makes?.map((make: any) => (
+                                    <SelectItem
+                                      key={make.id}
+                                      value={make.id.toString()}
+                                    >
+                                      {make.name}
+                                    </SelectItem>
+                                  ))}
+                                  <SelectItem value={OTHER_ID.toString()}>
+                                    Other
                                   </SelectItem>
-                                ))
+                                </>
                               )}
                             </SelectContent>
                           </Select>
@@ -1484,6 +1575,29 @@ export default function PlaceAddForm() {
                           {errors.make.message}
                         </p>
                       )}
+                      {watchedMake === OTHER_ID && (
+                        <div className="pt-2">
+                          <Controller
+                            name="makeOther"
+                            control={control}
+                            render={({ field }) => (
+                              <Input
+                                {...field}
+                                id="makeOther"
+                                placeholder="Enter make name"
+                                className={`h-12 border-black/10 rounded-md ${
+                                  errors.makeOther ? "border-red-500" : ""
+                                }`}
+                              />
+                            )}
+                          />
+                          {errors.makeOther && (
+                            <p className="text-red-500 text-sm">
+                              {errors.makeOther.message}
+                            </p>
+                          )}
+                        </div>
+                      )}
                     </div>
 
                     {/* Model Selection */}
@@ -1491,51 +1605,115 @@ export default function PlaceAddForm() {
                       <Label htmlFor="model" className="text-sm text-gray-500">
                         Model
                       </Label>
-                      <Controller
-                        name="model"
-                        control={control}
-                        render={({ field }) => (
-                          <Select
-                            value={field.value ? field.value.toString() : ""}
-                            onValueChange={(value) =>
-                              field.onChange(Number(value))
-                            }
-                            disabled={!watchedMake || watchedMake === 0}
-                          >
-                            <SelectTrigger
-                              className={`w-full h-12 border-black/10 rounded-md py-8 ${
-                                errors.model ? "border-red-500" : ""
-                              }`}
-                            >
-                              <SelectValue placeholder="Select Model" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {isModelsLoading ? (
-                                <SelectItem value="loading" disabled>
-                                  Loading...
-                                </SelectItem>
-                              ) : (
-                                (models
-                                  ?.filter(
-                                    (model) => model.make_id === watchedMake,
-                                  )
-                                  .map((model) => (
-                                    <SelectItem
-                                      key={model.id}
-                                      value={model.id.toString()}
-                                    >
-                                      {model.name}
+                      {watchedMake === OTHER_ID ? (
+                        <>
+                          <Controller
+                            name="modelOther"
+                            control={control}
+                            render={({ field }) => (
+                              <Input
+                                {...field}
+                                id="modelOther"
+                                placeholder="Enter model name"
+                                className={`h-12 border-black/10 rounded-md ${
+                                  errors.modelOther ? "border-red-500" : ""
+                                }`}
+                              />
+                            )}
+                          />
+                          {errors.modelOther && (
+                            <p className="text-red-500 text-sm">
+                              {errors.modelOther.message}
+                            </p>
+                          )}
+                        </>
+                      ) : (
+                        <>
+                          <Controller
+                            name="model"
+                            control={control}
+                            render={({ field }) => (
+                              <Select
+                                value={
+                                  field.value ? field.value.toString() : ""
+                                }
+                                onValueChange={(value) => {
+                                  const num = Number(value);
+                                  field.onChange(num);
+                                  if (num !== OTHER_ID) {
+                                    setValue("modelOther", "");
+                                  }
+                                }}
+                                disabled={!watchedMake || watchedMake === 0}
+                              >
+                                <SelectTrigger
+                                  className={`w-full h-12 border-black/10 rounded-md py-8 ${
+                                    errors.model ? "border-red-500" : ""
+                                  }`}
+                                >
+                                  <SelectValue placeholder="Select Model" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {isModelsLoading ? (
+                                    <SelectItem value="loading" disabled>
+                                      Loading...
                                     </SelectItem>
-                                  )) ?? null)
+                                  ) : (
+                                    <>
+                                      {models
+                                        ?.filter(
+                                          (model) =>
+                                            model.make === watchedMake ||
+                                            model.make_id === watchedMake,
+                                        )
+                                        .map((model) => (
+                                          <SelectItem
+                                            key={model.id}
+                                            value={model.id.toString()}
+                                          >
+                                            {model.name}
+                                          </SelectItem>
+                                        ))}
+                                      <SelectItem value={OTHER_ID.toString()}>
+                                        Other
+                                      </SelectItem>
+                                    </>
+                                  )}
+                                </SelectContent>
+                              </Select>
+                            )}
+                          />
+                          {errors.model && (
+                            <p className="text-red-500 text-sm">
+                              {errors.model.message}
+                            </p>
+                          )}
+                          {watchedModel === OTHER_ID && (
+                            <div className="pt-2">
+                              <Controller
+                                name="modelOther"
+                                control={control}
+                                render={({ field }) => (
+                                  <Input
+                                    {...field}
+                                    id="modelOther"
+                                    placeholder="Enter model name"
+                                    className={`h-12 border-black/10 rounded-md ${
+                                      errors.modelOther
+                                        ? "border-red-500"
+                                        : ""
+                                    }`}
+                                  />
+                                )}
+                              />
+                              {errors.modelOther && (
+                                <p className="text-red-500 text-sm">
+                                  {errors.modelOther.message}
+                                </p>
                               )}
-                            </SelectContent>
-                          </Select>
-                        )}
-                      />
-                      {errors.model && (
-                        <p className="text-red-500 text-sm">
-                          {errors.model.message}
-                        </p>
+                            </div>
+                          )}
+                        </>
                       )}
                     </div>
 

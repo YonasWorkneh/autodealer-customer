@@ -3,13 +3,17 @@
 import { useEffect, useState } from "react";
 import LogoLoader from "./LogoLoader";
 
-const DRAW_MS = 6000;  // keep in sync with `draw Xs` in globals.css  
-const FADE_MS = 500;  // fade-out duration
+const DRAW_MS = 6000; // keep in sync with `draw Xs` in globals.css
+const FADE_MS = 500; // fade-out duration
 
 // Resets on every full page load; survives client-side navigation
 let introPlayed = false;
 
-export default function IntroLoader({ children }: { children: React.ReactNode }) {
+export default function IntroLoader({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const [phase, setPhase] = useState<"show" | "fading" | "done">("show");
 
   useEffect(() => {
@@ -21,7 +25,10 @@ export default function IntroLoader({ children }: { children: React.ReactNode })
 
     const t1 = setTimeout(() => setPhase("fading"), DRAW_MS);
     const t2 = setTimeout(() => setPhase("done"), DRAW_MS + FADE_MS);
-    return () => { clearTimeout(t1); clearTimeout(t2); };
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+    };
   }, []);
 
   return (
