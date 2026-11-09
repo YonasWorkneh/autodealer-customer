@@ -211,7 +211,7 @@ export default function CarMarketplace() {
           {/* Main Content */}
           <div className="lg:col-span-3 space-y-6 pb-10">
             {/* Search and Sort */}
-            <div className="sm:sticky top-0 bg-background z-10 sm:z-[100] pb-4">
+            <div className="sm:sticky top-0 bg-background z-20 pb-4">
               {/* Desktop: full search card */}
               <div className="hidden sm:block">
                 <Card className="border-border rounded-3xl shadow-none py-4">

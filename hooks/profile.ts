@@ -6,6 +6,7 @@ import {
   updateProfile,
   upgradeProfile,
   getProfileById,
+  deleteAccount,
 } from "@/lib/profileApi"; // adjust path
 import { changePassword } from "@/lib/auth/password";
 import { useToast } from "./use-toast";
@@ -39,8 +40,9 @@ export function useUpgradeProfile() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["profile"] });
       toast({
-        title: "✅ Success",
-        description: "Your profile upgrade have been saved.",
+        title: "✅ Request submitted",
+        description:
+          "Your upgrade request has been submitted. Please wait to be approved.",
       });
     },
   });
@@ -65,6 +67,19 @@ export function useChangePassword(
 ) {
   return useMutation({
     mutationFn: changePassword,
+    onError: (err: any) => onError(err),
+    onSuccess: () => {
+      onSuccess();
+    },
+  });
+}
+
+export function useDeleteAccount(
+  onError: (err: any) => void,
+  onSuccess: () => void,
+) {
+  return useMutation({
+    mutationFn: deleteAccount,
     onError: (err: any) => onError(err),
     onSuccess: () => {
       onSuccess();

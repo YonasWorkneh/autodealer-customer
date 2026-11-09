@@ -28,16 +28,18 @@ export default function Popular() {
             <CarCard
               title={car.make + " " + car.model}
               backgroundTitle={car.make}
-              km={car.mileage}
-              transmission={car.engine}
+              km={(car as any).mileage ?? 0}
+              transmission={(car as any).engine ?? ""}
               price={+car.price}
               image={
-                car.images.find((image) => image.is_featured)?.image_url ||
-                car.images[0].image_url
+                car.featured_image ||
+                (car as any).images?.find((image: any) => image.is_featured)?.image_url ||
+                (car as any).images?.[0]?.image_url ||
+                ""
               }
-              color={car.interior_color}
+              color={(car as any).interior_color ?? ""}
               selectedColor={0}
-              href={`listing/${String(car.id)}`}
+              href={`/listing/${String(car.id)}`}
               id={car.id}
             />
           </Card>

@@ -338,3 +338,37 @@ export async function postLead(name: string, contact: string, carId: number) {
     throw err;
   }
 }
+
+export type ReportCarPayload = {
+  car: number;
+  reason: string;
+  description: string;
+};
+
+export async function reportCar(payload: ReportCarPayload) {
+  const credential = await getCredentials().catch(() => null);
+  if (!credential?.access) {
+    throw new Error("You must be logged in to report a listing.");
+  }
+
+  const res = await fetch(`${API_BASE_URL}/inventory/car-reports/`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${credential.access}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!res.ok) {
+    const errorData = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+    throw new Error(
+      getBackendErrorMessage(
+        errorData,
+        `Failed to submit report: ${res.status} ${res.statusText}`
+      )
+    );
+  }
+
+  return res.json().catch(() => ({ success: true }));
+}

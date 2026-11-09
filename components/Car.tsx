@@ -1,17 +1,18 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "./ui/button";
 import { FetchedCar } from "@/app/types/Car";
-import { Heart } from "lucide-react";
+import { Heart, Flag } from "lucide-react";
 import { useCarFavorites, useUpdateFavorite } from "@/hooks/cars";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { useUserStore } from "@/store/user";
 import { useProfile } from "@/hooks/profile";
 import { formatPrice } from "@/lib/utils";
+import ReportCarModal from "@/components/ReportCarModal";
 
 export default function Car({
   setDetailOpened,
@@ -48,6 +49,22 @@ export default function Car({
     });
   const { mutate } = useUpdateFavorite(onSuccess, onError);
   const favorited = favorites?.findIndex((favorite) => favorite.car === car.id);
+  const [reportModalOpen, setReportModalOpen] = useState(false);
+
+  const handleReportClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+
+    if (!isLoggedIn) {
+      toast({
+        title: "❌ Login Required",
+        description: "Please log in to report this listing.",
+        variant: "destructive",
+      });
+    }
+
+    setReportModalOpen(true);
+  };
 
   const handleFavoriteClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -103,27 +120,42 @@ export default function Car({
 
   if (variant === "grid") {
     return (
-      <Link key={car.id} href={`/listing/${car.id}`} className="block h-full">
-        <Card className="shadow-none border-gray-200 hover:shadow-lg transition-shadow cursor-pointer flex flex-col p-0 rounded-xl min-h-[420px] max-h-[720px] overflow-hidden">
-          <div className="relative">
-            <img
-              src={mainImage}
-              alt={`${car.year} ${car.make} ${car.model}`}
-              className="w-full h-48 object-cover"
-            />
-            {!isSeller && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="absolute top-2 right-2 bg-white/80 hover:bg-white cursor-pointer rounded-full"
-                onClick={handleFavoriteClick}
-              >
-                <Heart
-                  className={`h-4 w-4 ${isLoggedIn && favorited !== -1 ? "fill-primary text-primary" : ""}`}
-                />
-              </Button>
-            )}
-          </div>
+      <>
+        <Link key={car.id} href={`/listing/${car.id}`} className="block h-full">
+          <Card className="shadow-none border-gray-200 hover:shadow-lg transition-shadow cursor-pointer flex flex-col p-0 rounded-xl min-h-[420px] max-h-[720px] overflow-hidden">
+            <div className="relative">
+              <img
+                src={mainImage}
+                alt={`${car.year} ${car.make} ${car.model}`}
+                className="w-full h-48 object-cover"
+              />
+              <div className="absolute top-2 right-2 flex items-center gap-1.5 z-10">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0 bg-white/85 hover:bg-white text-red-600 hover:text-red-700 cursor-pointer rounded-full shadow-sm transition-colors"
+                  onClick={handleReportClick}
+                  title="Report listing"
+                  aria-label="Report listing"
+                >
+                  <Flag className="h-4 w-4 text-red-600 fill-red-500/20" />
+                </Button>
+                {!isSeller && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 w-8 p-0 bg-white/85 hover:bg-white cursor-pointer rounded-full shadow-sm"
+                    onClick={handleFavoriteClick}
+                    title="Save to favorites"
+                    aria-label="Save to favorites"
+                  >
+                    <Heart
+                      className={`h-4 w-4 ${isLoggedIn && favorited !== -1 ? "fill-primary text-primary" : "text-gray-700"}`}
+                    />
+                  </Button>
+                )}
+              </div>
+            </div>
           <CardContent className="p-4 sm:p-6 flex flex-col gap-4">
             <div className="space-y-2 flex-1">
               <h3 className="text-lg sm:text-xl font-semibold text-black line-clamp-2">
@@ -197,33 +229,57 @@ export default function Car({
           </CardContent>
         </Card>
       </Link>
+      {reportModalOpen && (
+        <ReportCarModal
+          isOpen={reportModalOpen}
+          onClose={() => setReportModalOpen(false)}
+          carId={car.id}
+          carTitle={`${car.year} ${car.make} ${car.model}`}
+        />
+      )}
+    </>
     );
   }
 
   return (
-    <Link key={car.id} href={`/listing/${car.id}`} className="block relative">
-      <Card className="shadow-none border-gray-200 hover:shadow-lg transition-shadow cursor-pointer">
-        <CardContent className="p-4 sm:p-6 grid grid-cols-1 md:grid-cols-4 gap-4">
-          {/* Image */}
-          <div className="relative">
-            <img
-              src={mainImage}
-              alt={`${car.year} ${car.make} ${car.model}`}
-              className="w-full h-40 object-cover rounded-lg"
-            />
-            {!isSeller && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="absolute top-2 right-2 bg-white/80 hover:bg-white cursor-pointer"
-                onClick={handleFavoriteClick}
-              >
-                <Heart
-                  className={`h-4 w-4 ${isLoggedIn && favorited !== -1 ? "fill-primary text-primary" : ""}`}
-                />
-              </Button>
-            )}
-          </div>
+    <>
+      <Link key={car.id} href={`/listing/${car.id}`} className="block relative">
+        <Card className="shadow-none border-gray-200 hover:shadow-lg transition-shadow cursor-pointer">
+          <CardContent className="p-4 sm:p-6 grid grid-cols-1 md:grid-cols-4 gap-4">
+            {/* Image */}
+            <div className="relative">
+              <img
+                src={mainImage}
+                alt={`${car.year} ${car.make} ${car.model}`}
+                className="w-full h-40 object-cover rounded-lg"
+              />
+              <div className="absolute top-2 right-2 flex items-center gap-1.5 z-10">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0 bg-white/85 hover:bg-white text-red-600 hover:text-red-700 cursor-pointer rounded-full shadow-sm transition-colors"
+                  onClick={handleReportClick}
+                  title="Report listing"
+                  aria-label="Report listing"
+                >
+                  <Flag className="h-4 w-4 text-red-600 fill-red-500/20" />
+                </Button>
+                {!isSeller && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 w-8 p-0 bg-white/85 hover:bg-white cursor-pointer rounded-full shadow-sm"
+                    onClick={handleFavoriteClick}
+                    title="Save to favorites"
+                    aria-label="Save to favorites"
+                  >
+                    <Heart
+                      className={`h-4 w-4 ${isLoggedIn && favorited !== -1 ? "fill-primary text-primary" : "text-gray-700"}`}
+                    />
+                  </Button>
+                )}
+              </div>
+            </div>
 
           {/* Details */}
           <div className="md:col-span-2 space-y-2">
@@ -284,7 +340,7 @@ export default function Car({
         </CardContent>
       </Card>
       <Button
-        className="absolute top-1/2 -translate-y-1/2 right-2 z-20 cursor-pointer w-fit h-fit flex flex-col gap-1 bg-background/80 shadow-sm hover:bg-background border border-gray-200 rounded-xl p-2 max-[1700px]:top-auto max-[1700px]:bottom-4 max-[1700px]:absolute max-[1700px]:right-auto max-[1700px]:left-1/2 max-[1700px]:-translate-x-1/2"
+        className="absolute top-1/2 -translate-y-1/2 right-2 z-10 cursor-pointer w-fit h-fit flex flex-col gap-1 bg-background/80 shadow-sm hover:bg-background border border-gray-200 rounded-xl p-2 max-[1700px]:top-auto max-[1700px]:bottom-4 max-[1700px]:absolute max-[1700px]:right-auto max-[1700px]:left-1/2 max-[1700px]:-translate-x-1/2"
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();
@@ -296,5 +352,14 @@ export default function Car({
         <span className="inline-block size-[6px] bg-gray-500 rounded-full" />
       </Button>
     </Link>
+    {reportModalOpen && (
+      <ReportCarModal
+        isOpen={reportModalOpen}
+        onClose={() => setReportModalOpen(false)}
+        carId={car.id}
+        carTitle={`${car.year} ${car.make} ${car.model}`}
+      />
+    )}
+  </>
   );
 }

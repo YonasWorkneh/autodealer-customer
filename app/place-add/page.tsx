@@ -48,6 +48,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
+import UpgradeToBrokerModal from "@/components/UpgradeToBrokerModal";
 
 // Sentinel value used for the "Other" option in the Make / Model selects
 const OTHER_ID = -1;
@@ -78,7 +79,11 @@ const formSchema = z
     description: z.string().min(1, "Description is required"),
     images: z.array(z.instanceof(File)),
     bodyType: z.string().min(1, "Body type is required"),
-    vin: z.string().min(1, "VIN is required"),
+    vin: z
+      .string()
+      .trim()
+      .min(1, "VIN is required")
+      .length(17, "VIN must be exactly 17 characters"),
     origin: z.string().min(1, "Origin is required"),
   })
   .superRefine((data, ctx) => {
@@ -230,6 +235,7 @@ export default function PlaceAddForm() {
 
   const watchedMake = watch("make");
   const watchedModel = watch("model");
+  const watchedVin = watch("vin") || "";
   const { data: makes, isLoading: isMakesLoading } = useMakes();
   const {
     data: carData,
@@ -1066,15 +1072,6 @@ export default function PlaceAddForm() {
     }
   }, [user.email, router]);
 
-  useEffect(() => {
-    if (!user.email) return;
-    if (isProfileLoading || profile === undefined) return;
-
-    if (!hasSalesAccess) {
-      router.push("/pricing");
-    }
-  }, [user.email, isProfileLoading, profile, hasSalesAccess, router]);
-
   const [inspectionInspectedBy, setInspectionInspectedBy] = useState("");
   const [inspectionDate, setInspectionDate] = useState(() =>
     new Date().toISOString().slice(0, 10),
@@ -1163,7 +1160,17 @@ export default function PlaceAddForm() {
     );
   }
 
-  if (!hasSalesAccess) return null;
+  if (!hasSalesAccess) {
+    return (
+      <div className="min-h-screen flex flex-col bg-background">
+        <Header color="black" />
+        <UpgradeToBrokerModal
+          isOpen={true}
+          onClose={() => router.push("/")}
+        />
+      </div>
+    );
+  }
 
   if (c_id && isCarError) {
     return (
@@ -1720,20 +1727,52 @@ export default function PlaceAddForm() {
                     {/* Vin and Origin */}
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="vin" className="text-sm text-gray-500">
-                          VIN
-                        </Label>
+                        <div className="flex items-center justify-between">
+                          <Label htmlFor="vin" className="text-sm text-gray-500">
+                            VIN
+                          </Label>
+                          <span
+                            className={`text-xs font-medium tabular-nums ${
+                              watchedVin.length === 17
+                                ? "text-emerald-600 font-semibold"
+                                : watchedVin.length > 0
+                                ? "text-amber-600"
+                                : "text-gray-400"
+                            }`}
+                          >
+                            {watchedVin.length}/17
+                          </span>
+                        </div>
                         <Input
                           id="vin"
-                          placeholder="Enter VIN"
-                          {...control.register("vin")}
-                          className="w-full h-12 border-black/10 rounded-md"
+                          placeholder="Enter 17-character VIN"
+                          maxLength={17}
+                          {...control.register("vin", {
+                            onChange: (e) => {
+                              const sanitized = e.target.value
+                                .toUpperCase()
+                                .replace(/\s/g, "")
+                                .slice(0, 17);
+                              e.target.value = sanitized;
+                              setValue("vin", sanitized, { shouldValidate: true });
+                            },
+                          })}
+                          className="w-full h-12 border-black/10 rounded-md uppercase font-mono tracking-wider text-sm"
                         />
-                        {errors.vin && (
+                        {errors.vin ? (
                           <p className="text-red-500 text-sm">
                             {errors.vin.message}
                           </p>
-                        )}
+                        ) : watchedVin.length > 0 && watchedVin.length < 17 ? (
+                          <p className="text-xs text-amber-600">
+                            {17 - watchedVin.length} more character
+                            {17 - watchedVin.length > 1 ? "s" : ""} needed
+                          </p>
+                        ) : watchedVin.length === 17 ? (
+                          <p className="text-xs text-emerald-600 font-medium">
+                            ✓ Exactly 17 characters
+                          </p>
+                        ) : null}
                       </div>
                       <div className="space-y-2">
                         <Label

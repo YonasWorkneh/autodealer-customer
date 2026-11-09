@@ -25,6 +25,8 @@ import {
   postCarRating,
   postLead,
   postCarInspection,
+  reportCar,
+  type ReportCarPayload,
   type BidHistoryItem,
 } from "@/lib/carApi";
 import { FetchedCarDetail, type FetchedCar } from "@/app/types/Car";
@@ -261,6 +263,21 @@ export function usePostLead(
   return useMutation({
     mutationFn: ({ name, contact, carId }: { name: string; contact: string; carId: number }) =>
       postLead(name, contact, carId),
+    onSuccess: () => {
+      onSuccess?.();
+    },
+    onError: (error: Error) => {
+      onError?.(error);
+    },
+  });
+}
+
+export function useReportCar(
+  onSuccess?: () => void,
+  onError?: (error: Error) => void,
+) {
+  return useMutation({
+    mutationFn: (payload: ReportCarPayload) => reportCar(payload),
     onSuccess: () => {
       onSuccess?.();
     },

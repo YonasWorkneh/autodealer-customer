@@ -16,16 +16,34 @@ import {
   Lock,
   Eye,
   EyeOff,
+  Trash2,
+  AlertTriangle,
+  AlertCircle,
 } from "lucide-react";
 import Header from "@/components/Header";
 import { logout } from "@/lib/auth/logout";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
-import { useProfile, useUpdateProfile, useChangePassword } from "@/hooks/profile";
+import {
+  useProfile,
+  useUpdateProfile,
+  useChangePassword,
+  useDeleteAccount,
+} from "@/hooks/profile";
 import { ChangePasswordParams } from "@/lib/auth/password";
 import { useToast } from "@/hooks/use-toast";
 import { useUserStore } from "@/store/user";
 import { useQueryClient } from "@tanstack/react-query";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+} from "@/components/ui/alert-dialog";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 type ProfileFormValues = {
   first_name: string;
@@ -43,6 +61,8 @@ export default function UserProfile() {
   const [preview, setPreview] = useState<string | null>(null);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const router = useRouter();
   const { toast } = useToast();
@@ -122,6 +142,43 @@ export default function UserProfile() {
 
   const onPasswordSubmit = (data: ChangePasswordParams) => {
     changePassword(data);
+  };
+
+  const onDeleteSuccess = async () => {
+    try {
+      await logout();
+      setUser({ email: "", last_name: "", first_name: "" });
+      queryClient.clear();
+      setShowDeleteModal(false);
+      toast({
+        title: "Account Deleted",
+        description: "Your account has been permanently removed.",
+        variant: "success",
+      });
+      router.push("/");
+    } catch (err) {
+      console.error("Cleanup error after account deletion:", err);
+      router.push("/");
+    }
+  };
+
+  const onDeleteError = (error: any) => {
+    const errorMsg =
+      error?.message || "Failed to delete account. Please try again.";
+    setDeleteError(errorMsg);
+    toast({
+      title: "❌ Account deletion failed",
+      description: errorMsg,
+      variant: "destructive",
+    });
+  };
+
+  const { mutate: deleteAccountMutate, isPending: isDeleting } =
+    useDeleteAccount(onDeleteError, onDeleteSuccess);
+
+  const handleConfirmDelete = () => {
+    setDeleteError(null);
+    deleteAccountMutate();
   };
 
   const onSubmit = async (data: ProfileFormValues) => {
@@ -417,8 +474,97 @@ export default function UserProfile() {
                 </form>
               </div>
             </div>
+
+            {/* Danger Zone: Delete Account */}
+            <div className="mt-12 pt-8 border-t border-gray-200">
+              <div className="rounded-2xl border border-red-200 bg-red-50/50 p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="space-y-1">
+                  <h3 className="text-base font-semibold text-red-900 flex items-center gap-2">
+                    <Trash2 className="w-5 h-5 text-red-600" />
+                    Delete Account
+                  </h3>
+                  <p className="text-sm text-red-700/80 max-w-xl">
+                    Permanently delete your account, listings, favorites, and profile data. Once deleted, this action cannot be undone.
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  variant="destructive"
+                  onClick={() => {
+                    setDeleteError(null);
+                    setShowDeleteModal(true);
+                  }}
+                  className="bg-red-600 hover:bg-red-700 text-white shrink-0 cursor-pointer shadow-sm py-5 px-5 font-medium"
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Delete Account
+                </Button>
+              </div>
+            </div>
           </div>
         )}
+
+        {/* Delete Account Warning Confirmation Modal */}
+        <AlertDialog open={showDeleteModal} onOpenChange={setShowDeleteModal}>
+          <AlertDialogContent className="max-w-md p-6 rounded-2xl bg-background border border-border shadow-2xl">
+            <AlertDialogHeader className="space-y-3 text-left">
+              <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-950/60 text-red-600 flex items-center justify-center shrink-0">
+                <AlertTriangle className="w-6 h-6" />
+              </div>
+              <AlertDialogTitle className="text-xl font-bold text-foreground">
+                Delete Account Confirmation
+              </AlertDialogTitle>
+              <AlertDialogDescription className="text-sm text-muted-foreground leading-relaxed">
+                Are you sure you want to delete your account? This action is{" "}
+                <strong className="text-red-600 dark:text-red-400 font-semibold">
+                  permanent and cannot be undone
+                </strong>
+                . All your vehicle listings, favorites, saved preferences, and
+                profile information will be permanently removed.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+
+            {deleteError && (
+              <Alert variant="destructive" className="py-2.5">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription className="text-xs font-medium">
+                  {deleteError}
+                </AlertDescription>
+              </Alert>
+            )}
+
+            <AlertDialogFooter className="flex flex-col-reverse sm:flex-row gap-2 mt-4 pt-3 border-t border-border">
+              <AlertDialogCancel
+                disabled={isDeleting}
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setDeleteError(null);
+                }}
+                className="w-full sm:w-auto cursor-pointer"
+              >
+                Cancel
+              </AlertDialogCancel>
+              <Button
+                variant="destructive"
+                disabled={isDeleting}
+                onClick={handleConfirmDelete}
+                className="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white cursor-pointer gap-2 font-medium"
+              >
+                {isDeleting ? (
+                  <>
+                    <Loader2 size={16} className="animate-spin" />
+                    <span>Deleting...</span>
+                  </>
+                ) : (
+                  <>
+                    <Trash2 size={16} />
+                    <span>Yes, Delete Account</span>
+                  </>
+                )}
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </>
   );

@@ -1,7 +1,7 @@
 "use client";
 
 import { CardContent } from "@/components/ui/card";
-import { Gauge, Heart, Settings } from "lucide-react";
+import { Gauge, Heart, Settings, Flag } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
@@ -10,6 +10,8 @@ import { Button } from "./ui/button";
 import { useCarFavorites, useUpdateCar, useUpdateFavorite } from "@/hooks/cars";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+import ReportCarModal from "./ReportCarModal";
+import { useUserStore } from "@/store/user";
 
 type Props = {
   title: string;
@@ -36,9 +38,12 @@ export default function CarCard({
   href,
   id,
 }: Props) {
+  const { user } = useUserStore();
+  const isLoggedIn = !!user.email;
   const { data: favorites } = useCarFavorites();
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const [isReportOpen, setIsReportOpen] = useState(false);
 
   const onSuccess = () => {
     queryClient.invalidateQueries({ queryKey: ["car-favorites"] });
@@ -61,7 +66,8 @@ export default function CarCard({
     new Intl.NumberFormat(undefined, { maximumFractionDigits: 0 }).format(n);
 
   return (
-    <Link href={href} className="flex h-full flex-col cursor-pointer p-0">
+    <>
+      <Link href={href} className="flex h-full flex-col cursor-pointer p-0">
       <div className="relative h-[280px] w-full">
         {/* Car image */}
         <div className="relative z-10 flex h-full w-full items-end justify-center">
@@ -103,20 +109,43 @@ export default function CarCard({
 
         {/* Colors + Price */}
         <div className="mt-1 flex items-center justify-between">
-          <button
-            className="flex items-center gap-3 cursor-pointer"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              makeFavorite(id);
-            }}
-          >
-            <Heart
-              className={`${
-                isFavorite === -1 ? "" : "fill-primary text-primary"
-              } cursor-pointer`}
-            />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              className="flex items-center gap-3 cursor-pointer"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                makeFavorite(id);
+              }}
+              title="Save to favorites"
+              aria-label="Save to favorites"
+            >
+              <Heart
+                className={`${
+                  isFavorite === -1 ? "" : "fill-primary text-primary"
+                } cursor-pointer`}
+              />
+            </button>
+            <button
+              className="p-1 rounded-full text-red-600 hover:bg-red-50 hover:text-red-700 cursor-pointer transition-colors"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (!isLoggedIn) {
+                  toast({
+                    title: "❌ Login Required",
+                    description: "Please log in to report this listing.",
+                    variant: "destructive",
+                  });
+                }
+                setIsReportOpen(true);
+              }}
+              title="Report listing"
+              aria-label="Report listing"
+            >
+              <Flag className="h-4 w-4 fill-red-500/20" />
+            </button>
+          </div>
 
           <div className="text-sm">
             <span className="text-neutral-500">From</span>{" "}
@@ -127,5 +156,14 @@ export default function CarCard({
         </div>
       </CardContent>
     </Link>
+    {isReportOpen && (
+      <ReportCarModal
+        isOpen={isReportOpen}
+        onClose={() => setIsReportOpen(false)}
+        carId={id}
+        carTitle={title}
+      />
+    )}
+  </>
   );
 }

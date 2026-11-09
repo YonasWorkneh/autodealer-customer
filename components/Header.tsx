@@ -10,6 +10,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useProfile } from "@/hooks/profile";
 import { usePathname, useRouter } from "next/navigation";
 import { useUnreadNotificationCount } from "@/hooks/use-notifications";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import UpgradeToBrokerModal from "@/components/UpgradeToBrokerModal";
 
 interface HeaderProps {
   color?: string;
@@ -19,7 +21,9 @@ export default function Header({ color }: HeaderProps) {
   const { user } = useUserStore();
   const { data: profile } = useProfile();
   const { data: unreadCount = 0 } = useUnreadNotificationCount();
+  const profileImage = profile?.image_url || profile?.image;
   const [isOpen, setIsOpen] = useState(false);
+  const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -41,7 +45,7 @@ export default function Header({ color }: HeaderProps) {
 
   return (
     <header
-      className={`relative z-20 flex items-center justify-between px-6 md:px-10 lg:px-40 py-4 ${color === "black" && "border-b"
+      className={`relative ${isOpen ? "z-[60]" : "z-30"} flex items-center justify-between px-6 md:px-10 lg:px-40 py-4 ${color === "black" && "border-b"
         }`}
     >
       {/* Logo */}
@@ -122,16 +126,25 @@ export default function Header({ color }: HeaderProps) {
           className={linkClassesPlain()}
         >
           {user.email || profile?.first_name ? (
-            <span
-              className={`${color === "black"
-                ? "bg-primary text-primary-foreground hover:bg-primary-hover"
-                : " bg-white/10 hover:bg-white/20"
-                } size-10 flex justify-center items-center rounded-full uppercase`}
-            >
-              {profile?.first_name
-                ? `${profile.first_name[0]}${profile.last_name?.[0] ?? ""}`
-                : user.email[0]}
-            </span>
+            <Avatar className="size-10">
+              {profileImage && (
+                <AvatarImage
+                  src={profileImage}
+                  alt={profile?.first_name || "Profile"}
+                  className="object-cover"
+                />
+              )}
+              <AvatarFallback
+                className={`${color === "black"
+                  ? "bg-primary text-primary-foreground hover:bg-primary-hover"
+                  : "bg-white/10 text-white hover:bg-white/20"
+                  } size-10 flex justify-center items-center rounded-full uppercase font-medium transition-colors`}
+              >
+                {profile?.first_name
+                  ? `${profile.first_name[0]}${profile.last_name?.[0] ?? ""}`
+                  : user.email[0]}
+              </AvatarFallback>
+            </Avatar>
           ) : (
             "Signin"
           )}
@@ -160,7 +173,7 @@ export default function Header({ color }: HeaderProps) {
               profile.broker_profile === null
             ) {
               e.preventDefault();
-              router.push("/pricing");
+              setIsUpgradeModalOpen(true);
             }
           }}
         >
@@ -193,7 +206,7 @@ export default function Header({ color }: HeaderProps) {
       {/* Mobile Drawer with Framer Motion */}
       <AnimatePresence>
         {isOpen && (
-          <div className="fixed inset-0 z-30 flex">
+          <div className="fixed inset-0 z-[60] flex">
             {/* Overlay */}
             <motion.div
               className="flex-1 bg-black/50"
@@ -293,11 +306,20 @@ export default function Header({ color }: HeaderProps) {
                   className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
                 >
                   {user.email || profile?.first_name ? (
-                    <span className="size-8 flex justify-center items-center rounded-full bg-primary text-primary-foreground text-xs font-semibold uppercase shrink-0">
-                      {profile?.first_name
-                      ? `${profile.first_name[0]}${profile.last_name?.[0] ?? ""}`
-                      : user.email[0]}
-                    </span>
+                    <Avatar className="size-8 shrink-0">
+                      {profileImage && (
+                        <AvatarImage
+                          src={profileImage}
+                          alt={profile?.first_name || "Profile"}
+                          className="object-cover"
+                        />
+                      )}
+                      <AvatarFallback className="size-8 flex justify-center items-center rounded-full bg-primary text-primary-foreground text-xs font-semibold uppercase">
+                        {profile?.first_name
+                          ? `${profile.first_name[0]}${profile.last_name?.[0] ?? ""}`
+                          : user.email[0]}
+                      </AvatarFallback>
+                    </Avatar>
                   ) : (
                     <User className="h-4 w-4 shrink-0 text-gray-400" />
                   )}
@@ -328,7 +350,7 @@ export default function Header({ color }: HeaderProps) {
                     ) {
                       e.preventDefault();
                       setIsOpen(false);
-                      router.push("/pricing");
+                      setIsUpgradeModalOpen(true);
                       return;
                     }
                     setIsOpen(false);
@@ -343,6 +365,11 @@ export default function Header({ color }: HeaderProps) {
           </div>
         )}
       </AnimatePresence>
+
+      <UpgradeToBrokerModal
+        isOpen={isUpgradeModalOpen}
+        onClose={() => setIsUpgradeModalOpen(false)}
+      />
     </header>
   );
 }

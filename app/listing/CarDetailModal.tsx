@@ -1,6 +1,7 @@
 "use client";
 
-import { Heart, Gauge, Fuel, Palette, Car, Loader2 } from "lucide-react";
+import { useState } from "react";
+import { Heart, Gauge, Fuel, Palette, Car, Loader2, Flag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import Image from "next/image";
@@ -10,6 +11,8 @@ import { useCar, useCarFavorites, useUpdateFavorite } from "@/hooks/cars";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { formatPrice } from "@/lib/utils";
+import ReportCarModal from "@/components/ReportCarModal";
+import { useUserStore } from "@/store/user";
 
 interface CarDetailModalProps {
   carId: string | null;
@@ -20,8 +23,22 @@ interface CarDetailModalProps {
 export function CarDetailModal({ carId, isOpen, onClose }: CarDetailModalProps) {
   const { data: car, isLoading } = useCar(carId ?? "");
   const { data: favorites } = useCarFavorites();
+  const { user } = useUserStore();
+  const isLoggedIn = !!user.email;
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [isReportOpen, setIsReportOpen] = useState(false);
+
+  const handleReportClick = () => {
+    if (!isLoggedIn) {
+      toast({
+        title: "❌ Login Required",
+        description: "Please log in to report this listing.",
+        variant: "destructive",
+      });
+    }
+    setIsReportOpen(true);
+  };
 
   const onSuccess = () => {
     queryClient.invalidateQueries({ queryKey: ["car-favorites"] });
@@ -98,18 +115,32 @@ export function CarDetailModal({ carId, isOpen, onClose }: CarDetailModalProps) 
                     </span>
                   </div>
                 </div>
-                <Button
-                  className="size-6 mt-1 bg-transparent shadow-none hover:bg-transparent cursor-pointer self-start"
-                  onClick={() => toggleFavorite(car.id)}
-                >
-                  <Heart
-                    className={`size-6 ${
-                      favorited !== -1
-                        ? "text-primary fill-primary"
-                        : "text-black hover:text-primary"
-                    }`}
-                  />
-                </Button>
+                <div className="flex items-center gap-1.5 self-start mt-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="size-8 p-0 rounded-full text-red-600 hover:text-red-700 hover:bg-red-50 cursor-pointer transition-colors"
+                    onClick={handleReportClick}
+                    title="Report listing"
+                    aria-label="Report listing"
+                  >
+                    <Flag className="size-5 text-red-600 fill-red-500/20" />
+                  </Button>
+                  <Button
+                    className="size-8 p-0 bg-transparent shadow-none hover:bg-transparent cursor-pointer"
+                    onClick={() => toggleFavorite(car.id)}
+                    title="Save to favorites"
+                    aria-label="Save to favorites"
+                  >
+                    <Heart
+                      className={`size-6 ${
+                        favorited !== -1
+                          ? "text-primary fill-primary"
+                          : "text-black hover:text-primary"
+                      }`}
+                    />
+                  </Button>
+                </div>
               </div>
           <div className="absolute top-[calc(50%+20px)] border-t left-0 h-2 w-full -z-50" />
         </div>
@@ -306,6 +337,14 @@ export function CarDetailModal({ carId, isOpen, onClose }: CarDetailModalProps) 
           </>
         )}
       </DialogContent>
+      {isReportOpen && car && (
+        <ReportCarModal
+          isOpen={isReportOpen}
+          onClose={() => setIsReportOpen(false)}
+          carId={car.id}
+          carTitle={`${car.year} ${car.make} ${car.model}`}
+        />
+      )}
     </Dialog>
   );
 }

@@ -104,3 +104,25 @@ export const getProfileById = async (id: number) => {
     throw err;
   }
 };
+
+export const deleteAccount = async () => {
+  const credential = await getCredentials();
+  const res = await fetch(`${API_BASE_URL}/users/me/`, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${credential.access}`,
+    },
+  });
+
+  if (!res.ok) {
+    const errData = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+    throw new Error(
+      getBackendErrorMessage(
+        errData,
+        `Failed to delete account: ${res.status} ${res.statusText}`
+      )
+    );
+  }
+
+  return { success: true };
+};

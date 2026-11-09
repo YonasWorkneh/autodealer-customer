@@ -22,9 +22,12 @@ import {
   MoreVertical,
   ArrowLeft,
   CheckCircle,
+  Flag,
 } from "lucide-react";
 import Image from "next/image";
 import Header from "@/components/Header";
+import ReportCarModal from "@/components/ReportCarModal";
+import { useUserStore } from "@/store/user";
 import { useParams, useRouter } from "next/navigation";
 import {
   useCar,
@@ -65,6 +68,7 @@ export default function CarListingPage() {
   const [showAllFeatures, setShowAllFeatures] = useState(false);
   const [readIndex, setReadIndex] = useState<number>(140);
   const [isShareDropdownOpen, setIsShareDropdownOpen] = useState(false);
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [isContactDialogOpen, setIsContactDialogOpen] = useState(false);
   const [contactName, setContactName] = useState("");
   const [contactNumber, setContactNumber] = useState("");
@@ -80,7 +84,20 @@ export default function CarListingPage() {
   const { data: favorites } = useCarFavorites();
   const { data: ratingData } = useRatingAnalytics(id as string);
   const { data: profile } = useProfile();
+  const { user } = useUserStore();
+  const isLoggedIn = !!user.email;
   const { toast } = useToast();
+
+  const handleReportClick = () => {
+    if (!isLoggedIn) {
+      toast({
+        title: "❌ Login Required",
+        description: "Please log in to report this listing.",
+        variant: "destructive",
+      });
+    }
+    setIsReportModalOpen(true);
+  };
   const queryClient = useQueryClient();
   const [ip, setIp] = useState<string | null>(null);
   const [carouselIndex, setCarouselIndex] = useState(0);
@@ -570,30 +587,16 @@ export default function CarListingPage() {
                   ))}
                 </DropdownMenuContent>
               </DropdownMenu>
-              {/* <Button
-                variant="outline"
-                size="sm"
-                className="flex items-center gap-2 bg-transparent cursor-pointer"
-                onClick={() => setIsShareDropdownOpen(!isShareDropdownOpen)}
-              >
-                <Share2 className="w-4 h-4" />
-                Share
-              </Button>
-              {isShareDropdownOpen && (
-                <div className="absolute top-full left-0 mt-2 w-48 bg-white shadow-lg rounded-lg z-10">
-                  {shareLinks.map((link) => (
-                    <button
-                      key={link.name}
-                      className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left cursor-pointer"
-                      onClick={() => handleShare(link.url, link.name)}
-                    >
-                      {link.icon}
-                      {link.name}
-                    </button>
-                  ))}
-                </div>
-              )} */}
             </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-2 bg-transparent cursor-pointer text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700 hover:border-red-300 transition-colors"
+              onClick={handleReportClick}
+            >
+              <Flag className="w-4 h-4 text-red-600 fill-red-500/20" />
+              Report
+            </Button>
           </div>
         </div>
 
@@ -793,7 +796,7 @@ export default function CarListingPage() {
                       <p className="text-xs sm:text-sm text-gray-600 capitalize">
                         {car.seller.type}
                       </p>
-                      {car.seller_average_rating > 0 && (
+                      {Boolean(car.seller_average_rating && car.seller_average_rating > 0) && (
                         <p className="text-xs sm:text-sm text-gray-600">
                           Rating: {car.seller_average_rating}
                         </p>
@@ -973,6 +976,13 @@ export default function CarListingPage() {
                   </div>
                 )}
               </div>
+              <button
+                className="flex items-center gap-1 px-2 sm:px-3 py-1.5 sm:py-2 text-red-400 hover:text-red-300 bg-[#111] hover:bg-[#222] rounded-lg transition-colors cursor-pointer text-xs sm:text-sm"
+                onClick={handleReportClick}
+              >
+                <Flag className="w-4 h-4 text-red-500 fill-red-500/20" />
+                Report
+              </button>
             </div>
 
             {/* Main image */}
@@ -1137,6 +1147,15 @@ export default function CarListingPage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {isReportModalOpen && car && (
+          <ReportCarModal
+            isOpen={isReportModalOpen}
+            onClose={() => setIsReportModalOpen(false)}
+            carId={car.id}
+            carTitle={`${car.year} ${car.make} ${car.model}`}
+          />
+        )}
       </div>
     </div>
   );
