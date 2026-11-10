@@ -19,6 +19,7 @@ import {
   Trash2,
   AlertTriangle,
   AlertCircle,
+  Sparkles,
 } from "lucide-react";
 import Header from "@/components/Header";
 import { logout } from "@/lib/auth/logout";
@@ -34,6 +35,8 @@ import { ChangePasswordParams } from "@/lib/auth/password";
 import { useToast } from "@/hooks/use-toast";
 import { useUserStore } from "@/store/user";
 import { useQueryClient } from "@tanstack/react-query";
+import { Badge } from "@/components/ui/badge";
+import UpgradeToBrokerModal from "@/components/UpgradeToBrokerModal";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -63,9 +66,12 @@ export default function UserProfile() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const router = useRouter();
   const { toast } = useToast();
+
+  const isBroker = Boolean(profile?.broker_profile);
 
   const {
     register,
@@ -279,15 +285,70 @@ export default function UserProfile() {
               </button>
             </div>
 
+            {/* Upgrade to Broker Banner if user is not already a broker */}
+            {!isBroker && (
+              <div className="mb-8 rounded-2xl border border-primary/20 bg-gradient-to-r from-primary/5 via-primary/10 to-transparent p-5 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-5 h-5 text-primary shrink-0" />
+                    <h3 className="font-bold text-foreground text-base sm:text-lg">
+                      Want to sell cars on HuluCars?
+                    </h3>
+                  </div>
+                  <p className="text-sm text-muted-foreground max-w-xl leading-relaxed">
+                    You are currently registered as a buyer. Upgrade to a Broker account with your 12-digit Ethiopian National ID to post and manage car listings.
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  onClick={() => setShowUpgradeModal(true)}
+                  className="bg-primary hover:bg-primary-hover text-primary-foreground font-semibold px-5 py-5 rounded-xl flex items-center gap-2 shrink-0 shadow-sm cursor-pointer"
+                >
+                  <Sparkles className="w-4 h-4" />
+                  Upgrade to Broker
+                </Button>
+              </div>
+            )}
+
             {/* 2-column layout */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
               {/* Left: profile form */}
               <form onSubmit={handleSubmit(onSubmit)}>
-                <h1 className="text-2xl font-bold text-black mb-2">
-                  {[profile?.first_name, profile?.last_name]
-                    .filter(Boolean)
-                    .join(" ") || " "}
-                </h1>
+                <div className="flex items-center gap-3 flex-wrap mb-2">
+                  <h1 className="text-2xl font-bold text-black">
+                    {[profile?.first_name, profile?.last_name]
+                      .filter(Boolean)
+                      .join(" ") || " "}
+                  </h1>
+                  {isBroker ? (
+                    <Badge className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-700 text-xs font-semibold">
+                      Broker
+                    </Badge>
+                  ) : profile?.dealer_profile ? (
+                    <Badge className="bg-blue-500/10 text-blue-700 dark:text-blue-400 border border-blue-300 dark:border-blue-700 text-xs font-semibold">
+                      Dealer
+                    </Badge>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <Badge
+                        variant="outline"
+                        className="bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-300 dark:border-amber-700 text-xs font-semibold"
+                      >
+                        Buyer
+                      </Badge>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setShowUpgradeModal(true)}
+                        className="text-xs text-primary font-semibold hover:text-primary-hover hover:bg-primary/10 h-7 px-2.5 rounded-md cursor-pointer gap-1"
+                      >
+                        <Sparkles className="w-3.5 h-3.5" />
+                        Upgrade to Broker
+                      </Button>
+                    </div>
+                  )}
+                </div>
                 <p className="text-gray-600 mb-6">{profile?.address}</p>
 
                 <div className="space-y-6">
@@ -565,6 +626,12 @@ export default function UserProfile() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        {/* Upgrade to Broker Modal */}
+        <UpgradeToBrokerModal
+          isOpen={showUpgradeModal}
+          onClose={() => setShowUpgradeModal(false)}
+        />
       </div>
     </>
   );

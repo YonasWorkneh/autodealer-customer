@@ -78,15 +78,13 @@ export default function Header({ color }: HeaderProps) {
         >
           Auctions
         </Link>
-        {!(profile?.broker_profile || profile?.dealer_profile) && (
-          <Link
-            href={"/favorites"}
-            className={linkClasses(pathname.startsWith("/favorites"))}
-            data-active={pathname.startsWith("/favorites")}
-          >
-            Favourites
-          </Link>
-        )}
+        <Link
+          href={"/favorites"}
+          className={linkClasses(pathname.startsWith("/favorites"))}
+          data-active={pathname.startsWith("/favorites")}
+        >
+          Favourites
+        </Link>
         <Link
           href={"/mylistings"}
           className={linkClasses(pathname.startsWith("/mylistings"))}
@@ -249,9 +247,7 @@ export default function Header({ color }: HeaderProps) {
                   [
                     { href: "/", label: "Home", icon: Home, active: pathname === "/" || pathname.startsWith("/listing") },
                     { href: "/auction", label: "Auctions", icon: Clock, active: pathname.startsWith("/auction") },
-                    ...(!( profile?.broker_profile || profile?.dealer_profile)
-                      ? [{ href: "/favorites", label: "Favourites", icon: Heart, active: pathname.startsWith("/favorites") }]
-                      : []),
+                    { href: "/favorites", label: "Favourites", icon: Heart, active: pathname.startsWith("/favorites") },
                     { href: "/mylistings", label: "My Ads", icon: LayoutList, active: pathname.startsWith("/mylistings") },
                     { href: "/analytics", label: "Analytics", icon: BarChart2, active: pathname.startsWith("/analytics") },
                   ]

@@ -31,7 +31,6 @@ export default function Car({
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const isLoggedIn = !!user.email;
-  const isSeller = !!(profile?.broker_profile || profile?.dealer_profile);
 
   const onSuccess = () => {
     queryClient.invalidateQueries({ queryKey: ["car-favorites"] });
@@ -133,27 +132,29 @@ export default function Car({
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-8 w-8 p-0 bg-white/85 hover:bg-white text-red-600 hover:text-red-700 cursor-pointer rounded-full shadow-sm transition-colors"
+                  className="h-8 w-8 p-0 bg-white/90 hover:bg-white cursor-pointer rounded-full shadow-sm transition-colors"
+                  onClick={handleFavoriteClick}
+                  title={isLoggedIn && favorited !== -1 ? "Remove from favorites" : "Save to favorites"}
+                  aria-label={isLoggedIn && favorited !== -1 ? "Remove from favorites" : "Save to favorites"}
+                >
+                  <Heart
+                    className={`h-4 w-4 transition-colors ${
+                      isLoggedIn && favorited !== -1
+                        ? "fill-primary text-primary"
+                        : "text-gray-700 hover:text-primary"
+                    }`}
+                  />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0 bg-white/90 hover:bg-white text-red-600 hover:text-red-700 cursor-pointer rounded-full shadow-sm transition-colors"
                   onClick={handleReportClick}
                   title="Report listing"
                   aria-label="Report listing"
                 >
                   <Flag className="h-4 w-4 text-red-600 fill-red-500/20" />
                 </Button>
-                {!isSeller && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 w-8 p-0 bg-white/85 hover:bg-white cursor-pointer rounded-full shadow-sm"
-                    onClick={handleFavoriteClick}
-                    title="Save to favorites"
-                    aria-label="Save to favorites"
-                  >
-                    <Heart
-                      className={`h-4 w-4 ${isLoggedIn && favorited !== -1 ? "fill-primary text-primary" : "text-gray-700"}`}
-                    />
-                  </Button>
-                )}
               </div>
             </div>
           <CardContent className="p-4 sm:p-6 flex flex-col gap-4">
@@ -257,27 +258,29 @@ export default function Car({
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-8 w-8 p-0 bg-white/85 hover:bg-white text-red-600 hover:text-red-700 cursor-pointer rounded-full shadow-sm transition-colors"
+                  className="h-8 w-8 p-0 bg-white/90 hover:bg-white cursor-pointer rounded-full shadow-sm transition-colors"
+                  onClick={handleFavoriteClick}
+                  title={isLoggedIn && favorited !== -1 ? "Remove from favorites" : "Save to favorites"}
+                  aria-label={isLoggedIn && favorited !== -1 ? "Remove from favorites" : "Save to favorites"}
+                >
+                  <Heart
+                    className={`h-4 w-4 transition-colors ${
+                      isLoggedIn && favorited !== -1
+                        ? "fill-primary text-primary"
+                        : "text-gray-700 hover:text-primary"
+                    }`}
+                  />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0 bg-white/90 hover:bg-white text-red-600 hover:text-red-700 cursor-pointer rounded-full shadow-sm transition-colors"
                   onClick={handleReportClick}
                   title="Report listing"
                   aria-label="Report listing"
                 >
                   <Flag className="h-4 w-4 text-red-600 fill-red-500/20" />
                 </Button>
-                {!isSeller && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 w-8 p-0 bg-white/85 hover:bg-white cursor-pointer rounded-full shadow-sm"
-                    onClick={handleFavoriteClick}
-                    title="Save to favorites"
-                    aria-label="Save to favorites"
-                  >
-                    <Heart
-                      className={`h-4 w-4 ${isLoggedIn && favorited !== -1 ? "fill-primary text-primary" : "text-gray-700"}`}
-                    />
-                  </Button>
-                )}
               </div>
             </div>
 
