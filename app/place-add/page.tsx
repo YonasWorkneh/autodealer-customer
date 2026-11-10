@@ -21,7 +21,6 @@ import {
   ChevronDown,
   ChevronUp,
   Loader2,
-  ClipboardCheck,
 } from "lucide-react";
 import {
   useMakes,
@@ -29,9 +28,7 @@ import {
   usePostCar,
   useCar,
   useUpdateCar,
-  usePostCarInspection,
 } from "@/hooks/cars";
-import type { CarInspectionPayload } from "@/lib/carApi";
 import Header from "@/components/Header";
 import { indexedDBManager, convertFormDataToCarForm } from "@/lib/indexedDB";
 import type { CarImage, Feature, FetchedCarDetail } from "../types/Car";
@@ -194,12 +191,6 @@ export default function PlaceAddForm() {
   const [refetchKey, setRefetchKey] = useState(0);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [showInspectionStep, setShowInspectionStep] = useState(false);
-  const [createdCarId, setCreatedCarId] = useState<number | null>(null);
-  const [showInspectionModal, setShowInspectionModal] = useState(false);
-  const [inspectionModalError, setInspectionModalError] = useState<
-    string | null
-  >(null);
   const { toast } = useToast();
   const {
     control,
@@ -303,12 +294,15 @@ export default function PlaceAddForm() {
     router.push("/mylistings");
   };
 
-  const onSuccessPost = (car: { id: number }) => {
+  const onSuccessPost = () => {
     setSubmitError(null);
-    setCreatedCarId(car.id);
-    setShowInspectionStep(true);
-    setSubmitSuccess(true);
-    setTimeout(() => setSubmitSuccess(false), 5000);
+    toast({
+      title: "Success",
+      description: "Car posted successfully!",
+      variant: "success",
+    });
+    resetFormToInitial();
+    router.push("/mylistings");
   };
 
   const onError = () => {
@@ -352,8 +346,6 @@ export default function PlaceAddForm() {
     isPending: isUpdatePending,
     isSuccess: isUpdateSuccess,
   } = useUpdateCar(onError, onSuccessUpdate);
-  const { mutate: postInspection, isPending: isInspectionPending } =
-    usePostCarInspection();
 
   // Generate years from 1921 to current year
   const currentYear = new Date().getFullYear();
@@ -1072,76 +1064,6 @@ export default function PlaceAddForm() {
     }
   }, [user.email, router]);
 
-  const [inspectionInspectedBy, setInspectionInspectedBy] = useState("");
-  const [inspectionDate, setInspectionDate] = useState(() =>
-    new Date().toISOString().slice(0, 10),
-  );
-  const [inspectionRemarks, setInspectionRemarks] = useState("");
-  const [inspectionCondition, setInspectionCondition] = useState<
-    "excellent" | "good" | "fair" | "poor"
-  >("excellent");
-
-  const handleSkipInspection = () => {
-    setSubmitError(null);
-    setShowInspectionStep(false);
-    setCreatedCarId(null);
-    resetFormToInitial();
-    router.push("/mylistings");
-  };
-
-  const handleSubmitInspection = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!createdCarId) return;
-    const payload: CarInspectionPayload = {
-      car_id: createdCarId,
-      inspected_by: inspectionInspectedBy,
-      inspection_date: inspectionDate,
-      remarks: inspectionRemarks,
-      condition_status: inspectionCondition,
-    };
-    postInspection(payload, {
-      onSuccess: () => {
-        setShowInspectionStep(false);
-        setCreatedCarId(null);
-        resetFormToInitial();
-        router.push("/mylistings");
-      },
-      onError: () => {
-        setSubmitError(
-          "Failed to submit inspection. You can skip and add it later.",
-        );
-      },
-    });
-  };
-
-  const handleSubmitInspectionModal = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!c_id) return;
-    setInspectionModalError(null);
-    const payload: CarInspectionPayload = {
-      car_id: parseInt(c_id, 10),
-      inspected_by: inspectionInspectedBy,
-      inspection_date: inspectionDate,
-      remarks: inspectionRemarks,
-      condition_status: inspectionCondition,
-    };
-    postInspection(payload, {
-      onSuccess: () => {
-        setShowInspectionModal(false);
-        toast({
-          title: "Success",
-          description: "Inspection details have been saved.",
-          variant: "success",
-        });
-      },
-      onError: () => {
-        setInspectionModalError(
-          "Failed to submit inspection. Please try again.",
-        );
-      },
-    });
-  };
-
   if (!user.email) return null;
 
   if (isCheckingPermissions) {
@@ -1213,105 +1135,6 @@ export default function PlaceAddForm() {
     );
   }
 
-  if (showInspectionStep && createdCarId) {
-    return (
-      <div>
-        <Header color="black" />
-        <div className="grid my-auto place-items-center pt-5 pb-12">
-          <div className="w-full max-w-2xl bg-transparent rounded-lg p-8">
-            <div className="mb-6 p-4 bg-green-100 border border-green-400 text-green-700 rounded-md">
-              <p className="text-sm font-medium">
-                Your car has been posted successfully. Optionally add inspection
-                details below.
-              </p>
-            </div>
-            <h2 className="text-2xl font-semibold text-foreground mb-2">
-              Add inspection details (optional)
-            </h2>
-            <p className="text-muted-foreground text-sm mb-6">
-              Submit inspection info to help buyers, or skip to go to My Ads.
-            </p>
-            <form onSubmit={handleSubmitInspection} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="inspected_by">Inspected by</Label>
-                <Input
-                  id="inspected_by"
-                  value={inspectionInspectedBy}
-                  onChange={(e) => setInspectionInspectedBy(e.target.value)}
-                  placeholder="e.g. Top Garage Motors"
-                  className="h-12 border-border rounded-md"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="inspection_date">Inspection date</Label>
-                <Input
-                  id="inspection_date"
-                  type="date"
-                  value={inspectionDate}
-                  onChange={(e) => setInspectionDate(e.target.value)}
-                  className="h-12 border-border rounded-md"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="remarks">Remarks</Label>
-                <Textarea
-                  id="remarks"
-                  value={inspectionRemarks}
-                  onChange={(e) => setInspectionRemarks(e.target.value)}
-                  placeholder="e.g. Engine and brakes are in excellent condition."
-                  className="min-h-[100px] border-border rounded-md"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="condition_status">Condition status</Label>
-                <Select
-                  value={inspectionCondition}
-                  onValueChange={(v: "excellent" | "good" | "fair" | "poor") =>
-                    setInspectionCondition(v)
-                  }
-                >
-                  <SelectTrigger className="h-12 border-border rounded-md">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="excellent">Excellent</SelectItem>
-                    <SelectItem value="good">Good</SelectItem>
-                    <SelectItem value="fair">Fair</SelectItem>
-                    <SelectItem value="poor">Poor</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              {submitError && (
-                <p className="text-red-500 text-sm">{submitError}</p>
-              )}
-              <div className="flex flex-col sm:flex-row gap-3 pt-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleSkipInspection}
-                  className="flex-1 cursor-pointer"
-                >
-                  Skip and go to My Ads
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={isInspectionPending}
-                  className="flex-1 cursor-pointer bg-primary text-primary-foreground hover:bg-primary-hover"
-                >
-                  {isInspectionPending ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    "Submit inspection"
-                  )}
-                </Button>
-              </div>
-            </form>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div>
       <Header color="black" />
@@ -1323,18 +1146,6 @@ export default function PlaceAddForm() {
             </h1>
             {c_id && !isCarLoading && (
               <div className="flex items-center justify-center gap-3 mt-4 flex-wrap">
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="gap-2 cursor-pointer"
-                  onClick={() => {
-                    setInspectionModalError(null);
-                    setShowInspectionModal(true);
-                  }}
-                >
-                  <ClipboardCheck className="h-4 w-4" />
-                  Add inspection details
-                </Button>
                 <Button
                   type="button"
                   variant="outline"
@@ -1359,107 +1170,6 @@ export default function PlaceAddForm() {
               </div>
             )}
           </div>
-
-          {/* Inspection modal (edit mode only) */}
-          {c_id && (
-            <Dialog
-              open={showInspectionModal}
-              onOpenChange={setShowInspectionModal}
-            >
-              <DialogContent className="max-w-md">
-                <DialogHeader>
-                  <DialogTitle>Add inspection details</DialogTitle>
-                </DialogHeader>
-                <p className="text-muted-foreground text-sm mb-4">
-                  Optionally add inspection info for this listing.
-                </p>
-                <form
-                  onSubmit={handleSubmitInspectionModal}
-                  className="space-y-4"
-                >
-                  <div className="space-y-2">
-                    <Label htmlFor="modal_inspected_by">Inspected by</Label>
-                    <Input
-                      id="modal_inspected_by"
-                      value={inspectionInspectedBy}
-                      onChange={(e) => setInspectionInspectedBy(e.target.value)}
-                      placeholder="e.g. Top Garage Motors"
-                      className="h-12 border-border rounded-md"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="modal_inspection_date">
-                      Inspection date
-                    </Label>
-                    <Input
-                      id="modal_inspection_date"
-                      type="date"
-                      value={inspectionDate}
-                      onChange={(e) => setInspectionDate(e.target.value)}
-                      className="h-12 border-border rounded-md"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="modal_remarks">Remarks</Label>
-                    <Textarea
-                      id="modal_remarks"
-                      value={inspectionRemarks}
-                      onChange={(e) => setInspectionRemarks(e.target.value)}
-                      placeholder="e.g. Engine and brakes are in excellent condition."
-                      className="min-h-[100px] border-border rounded-md"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="modal_condition_status">
-                      Condition status
-                    </Label>
-                    <Select
-                      value={inspectionCondition}
-                      onValueChange={(
-                        v: "excellent" | "good" | "fair" | "poor",
-                      ) => setInspectionCondition(v)}
-                    >
-                      <SelectTrigger className="h-12 border-border rounded-md">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="excellent">Excellent</SelectItem>
-                        <SelectItem value="good">Good</SelectItem>
-                        <SelectItem value="fair">Fair</SelectItem>
-                        <SelectItem value="poor">Poor</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  {inspectionModalError && (
-                    <p className="text-red-500 text-sm">
-                      {inspectionModalError}
-                    </p>
-                  )}
-                  <div className="flex gap-3 pt-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="flex-1 cursor-pointer"
-                      onClick={() => setShowInspectionModal(false)}
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      type="submit"
-                      disabled={isInspectionPending}
-                      className="flex-1 cursor-pointer bg-primary text-primary-foreground hover:bg-primary-hover"
-                    >
-                      {isInspectionPending ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        "Submit inspection"
-                      )}
-                    </Button>
-                  </div>
-                </form>
-              </DialogContent>
-            </Dialog>
-          )}
 
           {/* Loading State for Edit Mode */}
           {c_id && isCarLoading ? (

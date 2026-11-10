@@ -266,29 +266,56 @@ export async function postCarRating(
   }
 }
 
-export type CarInspectionPayload = {
-  car_id: number;
-  inspected_by: string;
-  inspection_date: string;
-  remarks: string;
-  condition_status: "excellent" | "good" | "fair" | "poor";
-};
+export interface CarInspection {
+  id: number;
+  car: {
+    id: number;
+    make: string;
+    model: string;
+  } | number;
+  car_display?: string;
+  inspector?: string;
+  inspection_score?: number;
+  odometer_verified?: boolean;
+  accident_history?: boolean;
+  inspection_date?: string;
+  remarks?: string;
+  condition_status?: "excellent" | "good" | "fair" | "poor" | string;
+  signed_report?: string;
+  report_url?: string;
+  status?: "pending" | "verified" | "approved" | "rejected" | string;
+  verified_by_email?: string;
+  verified_at?: string;
+  admin_remarks?: string;
+  uploaded_by_email?: string;
+  created_at?: string;
+  updated_at?: string;
+}
 
-export async function postCarInspection(payload: CarInspectionPayload) {
-  const credential = await getCredentials();
-  const res = await fetch(`${API_BASE_URL}/inspections/`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${credential.access}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(payload),
-  });
-  if (!res.ok) {
-    const errorData = await res.json().catch(() => ({})) as Record<string, unknown>;
-    throw new Error(getBackendErrorMessage(errorData, `Failed to submit inspection: ${res.status} ${res.statusText}`));
+export async function fetchInspections(carId?: string | number): Promise<CarInspection[]> {
+  const credential = await getCredentials().catch(() => null);
+  const headers: HeadersInit = {};
+  if (credential?.access) {
+    headers["Authorization"] = `Bearer ${credential.access}`;
   }
-  return res.json();
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/inspections/`, { headers });
+    if (!res.ok) return [];
+    const data = await res.json();
+    const list: CarInspection[] = Array.isArray(data) ? data : (data.results || []);
+    if (carId !== undefined && carId !== null && carId !== "") {
+      const targetId = Number(carId);
+      return list.filter((item) => {
+        const itemCarId = typeof item.car === "object" && item.car !== null ? item.car.id : Number(item.car);
+        return itemCarId === targetId;
+      });
+    }
+    return list;
+  } catch (err) {
+    console.error("Error fetching inspections:", err);
+    return [];
+  }
 }
 
 export type BidHistoryItem = {

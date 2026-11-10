@@ -12,6 +12,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { formatPrice } from "@/lib/utils";
 import ReportCarModal from "@/components/ReportCarModal";
+import CarInspectionSection from "@/components/CarInspectionSection";
 import { useUserStore } from "@/store/user";
 
 interface CarDetailModalProps {
@@ -333,6 +334,13 @@ export function CarDetailModal({ carId, isOpen, onClose }: CarDetailModalProps) 
               </div>
             </div>
           </div>
+
+          {/* Inspection Section */}
+          {isLoggedIn && (
+            <div className="mt-4 border-t pt-4">
+              <CarInspectionSection carId={car.id} variant="compact" />
+            </div>
+          )}
         </div>
           </>
         )}

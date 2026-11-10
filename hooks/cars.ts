@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import {
   useQuery,
   useMutation,
@@ -24,7 +25,8 @@ import {
   fetchRatingAnalytics,
   postCarRating,
   postLead,
-  postCarInspection,
+  fetchInspections,
+  type CarInspection,
   reportCar,
   type ReportCarPayload,
   type BidHistoryItem,
@@ -104,10 +106,32 @@ export function usePostCar(
   });
 }
 
-export function usePostCarInspection() {
-  return useMutation({
-    mutationFn: postCarInspection,
+export function useInspections(enabled: boolean = true) {
+  return useQuery({
+    queryKey: ["inspections"],
+    queryFn: () => fetchInspections(),
+    enabled,
+    staleTime: 5 * 60 * 1000,
   });
+}
+
+export function useCarInspections(carId?: string | number, enabled: boolean = true) {
+  const query = useInspections(enabled);
+  const targetId = carId !== undefined && carId !== null && carId !== "" ? Number(carId) : null;
+
+  const data = useMemo(() => {
+    if (!query.data) return undefined;
+    if (targetId === null) return query.data;
+    return query.data.filter((item: CarInspection) => {
+      const itemCarId = typeof item.car === "object" && item.car !== null ? item.car.id : Number(item.car);
+      return itemCarId === targetId;
+    });
+  }, [query.data, targetId]);
+
+  return {
+    ...query,
+    data,
+  };
 }
 
 export function useMyAds(id: number | undefined) {

@@ -27,6 +27,7 @@ import {
 import Image from "next/image";
 import Header from "@/components/Header";
 import ReportCarModal from "@/components/ReportCarModal";
+import CarInspectionSection from "@/components/CarInspectionSection";
 import { useUserStore } from "@/store/user";
 import { useParams, useRouter } from "next/navigation";
 import {
@@ -693,6 +694,9 @@ export default function CarListingPage() {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Vehicle Inspection Report */}
+            {isLoggedIn && <CarInspectionSection carId={car.id} />}
 
             {/* Description */}
             <Card className="bg-white/20 shadow-none">
